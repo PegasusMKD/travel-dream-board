@@ -1,0 +1,69 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+/svedprint-api
+/svedprint
+bin/
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+coverage.out
+coverage.html
+
+# Generated code (sqlc)
+internal/*/db/sqlc/*
+!internal/*/db/sqlc/.gitkeep
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Backups
+backups/*.sql
+backups/*.dump
+!backups/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+
+
+# Mockery
+mocks
+
+# Claude
+.claude
+
+# Logs
+logs/*
+
+# Coverage
+coverage*
+
+# Executables
+*.exe
+/api
+/server
+/depgraph

@@ -1,0 +1,22 @@
+with-expecter: true
+dir: "mocks"
+all: true
+recursive: true
+keeptree: false
+# Address deprecation warnings for v3 compatibility
+resolve-type-alias: false
+disable-version-string: true
+issue-845-fix: true
+
+packages:
+  depgraph:
+    config:
+      recursive: true
+      all: true
+      with-expecter: true
+      dir: "mocks"
+      outpkg: mocks
+      mockname: "Mock{{.InterfaceName}}"
+      filename: "{{.InterfaceName}}.go"
+      exclude:
+        - "internal/db"
