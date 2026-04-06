@@ -27,7 +27,7 @@ She frequently researches trips and shares links — hotels, flights, activities
 | Timeline | ~1 month (hard birthday deadline) |
 | Developer stack | Rust / Go / Java (backend), React 18 + Vite + TailwindCSS (frontend) |
 | Existing frontend | React + Vite + TailwindCSS PoC already scaffolded |
-| Infrastructure | GCP familiarity; can deploy simply for this project |
+| Infrastructure | Railway — personal project deployment platform |
 | Auth philosophy | Google OAuth only — no custom auth; friends use shareable links, no account required |
 | AI API cost | Claude Haiku 4.5 — negligible at personal scale (~$0.000005/scrape, $5 free credits on signup) |
 
@@ -174,7 +174,7 @@ Board
 | Auth | Google OAuth 2.0 + JWT | One button; no custom auth complexity |
 | Scraping | Go HTTP client + goquery | Lightweight HTML parsing for OG tags |
 | AI Fallback | Claude Haiku 4.5 API | Extraction fallback for sites without clean OG tags |
-| Deployment | GCP (Cloud Run or existing K8s) | Developer's existing infrastructure |
+| Deployment | Railway | Personal project platform; simpler than GCP, supports Go + Postgres natively |
 
 ---
 
@@ -214,7 +214,7 @@ Board
 | Week 1 | Backend foundations | DB schema + migrations, Go API scaffold, Google OAuth, basic board/item CRUD |
 | Week 2 | Scraping + core UI | Scraper service (OG tags + AI fallback), React board view, item cards |
 | Week 3 | Collaboration features | Voting, commenting, share link system, section finalization + status tracking |
-| Week 4 | Polish + deployment | UI polish, error states, responsive layout, GCP deployment, final QA |
+| Week 4 | Polish + deployment | UI polish, error states, responsive layout, Railway deployment, final QA |
 
 ---
 
@@ -227,6 +227,7 @@ When scaffolding this project:
 - **golang-migrate** for DB migrations (developer already uses this pattern)
 - **TailwindCSS only** — no component libraries unless explicitly chosen later
 - **UI aesthetic** — clean, modern, slightly warm/feminine; think Pinterest-style card layout, not a developer dashboard. She scrolls Pinterest and TikTok daily — the visual bar is high
+- **Railway** for deployment — backend as a Railway service, Postgres as a Railway managed database. No Dockerfiles needed unless you want them; Railway detects Go projects automatically
 - **Makefile** for dev commands (developer's existing workflow)
 - **No Windows-specific tooling** — developer runs Fedora + Hyprland/Wayland + NeoVim
 - **Polish (pl) as the default UI language**
