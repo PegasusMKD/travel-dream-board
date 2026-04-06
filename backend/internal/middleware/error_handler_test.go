@@ -2,7 +2,7 @@ package middleware_test
 
 import (
 	"fmt"
-	"depgraph/internal/middleware"
+	"github.com/PegasusMKD/travel-dream-board/internal/middleware"
 	"net/http"
 	"net/http/httptest"
 	"testing"

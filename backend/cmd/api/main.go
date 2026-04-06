@@ -1,13 +1,13 @@
 package main
 
 import (
-	"depgraph/internal/config"
-	"depgraph/internal/logger"
-	"depgraph/internal/server"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/PegasusMKD/travel-dream-board/internal/config"
+	"github.com/PegasusMKD/travel-dream-board/internal/logger"
+	"github.com/PegasusMKD/travel-dream-board/internal/server"
 	"github.com/joho/godotenv"
 )
 
@@ -32,7 +32,7 @@ func main() {
 
 	// Now create the main logger after initialization
 	log := logger.New("Main")
-	log.Info("Initializing DepGraph service...")
+	log.Info("Initializing Travel Dream Board service...")
 	server := server.NewServer()
 	if server == nil {
 		return

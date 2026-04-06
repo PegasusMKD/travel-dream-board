@@ -2,8 +2,8 @@ package database
 
 import (
 	"fmt"
+	embeds "github.com/PegasusMKD/travel-dream-board/sql"
 	"io/fs"
-	embeds "depgraph/sql"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"

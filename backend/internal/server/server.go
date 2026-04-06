@@ -9,16 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"depgraph/internal/config"
-	"depgraph/internal/cron"
-	"depgraph/internal/database"
-	"depgraph/internal/db"
-	"depgraph/internal/dependencies"
-	"depgraph/internal/github"
-	"depgraph/internal/graph"
-	"depgraph/internal/middleware"
-	"depgraph/internal/modules"
-	scanruns "depgraph/internal/scan_runs"
+	"github.com/PegasusMKD/travel-dream-board/internal/config"
+	"github.com/PegasusMKD/travel-dream-board/internal/database"
+	"github.com/PegasusMKD/travel-dream-board/internal/db"
+	"github.com/PegasusMKD/travel-dream-board/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -56,7 +50,7 @@ func (srv *GinServer) Stop() {
 func NewServer() *GinServer {
 	cfg, err := config.Load()
 	if err != nil {
-		log.Error("Failed loading config for DepGraph!", "error", err)
+		log.Error("Failed loading config for github.com/PegasusMKD/travel-dream-board!", "error", err)
 	}
 
 	addr := fmt.Sprintf(":%s", cfg.Port)

@@ -2,8 +2,8 @@ package database_test
 
 import (
 	"context"
-	"depgraph/internal/database"
-	"depgraph/internal/testutil"
+	"github.com/PegasusMKD/travel-dream-board/internal/database"
+	"github.com/PegasusMKD/travel-dream-board/internal/testutil"
 	"testing"
 	"time"
 

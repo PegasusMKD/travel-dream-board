@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"depgraph/internal/database"
-	"depgraph/internal/db"
+	"github.com/PegasusMKD/travel-dream-board/internal/database"
+	"github.com/PegasusMKD/travel-dream-board/internal/db"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"

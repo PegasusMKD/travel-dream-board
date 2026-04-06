@@ -3,19 +3,19 @@
 ## Week 1 — Backend Foundations
 
 ### Project Setup
-- [ ] Monorepo structure (`/frontend`, `/backend`)
-- [ ] Makefile with dev commands
-- [ ] Go module init
-- [ ] Railway project setup (backend service + Postgres database)
-- [ ] Environment variable config (`.env` + Railway vars)
+- [X] Monorepo structure (`/frontend`, `/backend`)
+- [X] Makefile with dev commands
+- [X] Go module init
+- [X] Railway project setup (backend service + Postgres database)
+- [X] Environment variable config (`.env` + Railway vars)
 
 ### Database
-- [ ] golang-migrate setup
-- [ ] Migration: `boards`
+- [X] golang-migrate setup
+- [X] Migration: `boards`
 - [ ] Migration: `share_tokens`
-- [ ] Migration: `items`
-- [ ] Migration: `votes`
-- [ ] Migration: `comments`
+- [X] Migration: `items`
+- [X] Migration: `votes`
+- [X] Migration: `comments`
 
 ### Auth
 - [ ] Google OAuth 2.0 integration

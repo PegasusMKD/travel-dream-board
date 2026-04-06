@@ -14,14 +14,14 @@ else
 endif
 
 # Variables
-BINARY_NAME=depgraph-api
+BINARY_NAME=travel-dream-board-api
 BINARY_PATH=bin/$(BINARY_NAME)
 MAIN_PATH=./cmd/api/main.go
 COVERAGE_FILE=coverage.out
 
 # Database migration variables
 MIGRATIONS_PATH=sql/migrations
-DATABASE_URL?=postgres://postgres:password@localhost:5432/depgraph?sslmode=disable
+DATABASE_URL?=postgres://postgres:password@localhost:5432/travel-dream-board?sslmode=disable
 
 # Default target
 help:
@@ -201,4 +201,4 @@ migrate-force:
 	@echo "Migration version forced"
 
 deploy:
-	@kubectl rollout restart deployment depgraph-service -n dev-nl
+	@kubectl rollout restart deployment travel-dream-board-service -n dev-nl

@@ -1,7 +1,7 @@
 package utility_test
 
 import (
-	"depgraph/internal/utility"
+	"github.com/PegasusMKD/travel-dream-board/internal/utility"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

@@ -50,7 +50,7 @@ var globalCfg = &globalConfig{
 	stdoutLevel: INFO,
 	fileLevel:   DEBUG,
 	filePath:    "./logs",
-	filePrefix:  "depgraph",
+	filePrefix:  "travel-dream-board",
 }
 
 type output struct {

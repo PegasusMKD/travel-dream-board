@@ -1,9 +1,9 @@
 package database_test
 
 import (
-	"depgraph/internal/database"
-	"depgraph/internal/testutil"
-	embeds "depgraph/sql"
+	"github.com/PegasusMKD/travel-dream-board/internal/database"
+	"github.com/PegasusMKD/travel-dream-board/internal/testutil"
+	embeds "github.com/PegasusMKD/travel-dream-board/sql"
 	"testing"
 	"time"
 
