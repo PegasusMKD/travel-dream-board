@@ -1,0 +1,208 @@
+export const translations = {
+  pl: {
+    appName: 'Podróże Marzeń',
+    newTrip: 'Nowa podróż',
+    heroTagline: 'Planuj wymarzone podróże',
+    heroTitle: 'Twoje tablice podróży',
+    heroSubtitle: 'Zbieraj linki, głosujcie z przyjaciółkami i zaplanujcie idealną wycieczkę.',
+    allBoards: 'Wszystkie tablice',
+    boardNotFound: 'Nie znaleziono tablicy.',
+    backToList: 'Wróć do listy',
+    share: 'Udostępnij',
+    addLink: 'Dodaj link',
+    noLinks: 'Brak linków — dodaj pierwszy!',
+    someday: 'Kiedyś...',
+    booked: 'Zarezerwowane',
+    selected: 'Wybrane',
+    bookingRef: 'Nr rezerwacji',
+    addComment: 'Dodaj komentarz...',
+    links: 'linków',
+    link: 'link',
+
+    // Sections
+    accommodation: 'Noclegi',
+    transport: 'Transport',
+    activities: 'Aktywności',
+
+    // Statuses
+    considering: 'Rozważane',
+    finalist: 'Finalista',
+    rejected: 'Odrzucone',
+    completed: 'Ukończone',
+
+    // Add modal
+    addAccommodation: 'Dodaj nocleg',
+    addTransport: 'Dodaj transport',
+    addActivity: 'Dodaj aktywność',
+    pasteLink: 'Wklej link do hotelu, lotu, atrakcji...',
+    addLinkHelp: 'Link zostanie automatycznie pobrany — tytuł, zdjęcie i opis pojawią się na karcie. Wszystko możesz potem edytować.',
+    addLinkBtn: 'Dodaj link',
+    fetching: 'Pobieram dane...',
+
+    // Share modal
+    shareBoard: 'Udostępnij tablicę',
+    shareDesc: 'Wyślij ten link znajomym — będą mogli głosować i komentować na tablicy',
+    friendAccess: 'Dostęp znajomych',
+    canVote: 'Głosowanie na opcje',
+    canComment: 'Dodawanie komentarzy',
+    canView: 'Przeglądanie wszystkich linków',
+
+    // Detail sidebar
+    details: 'Szczegóły',
+    notes: 'Notatki',
+    noNotes: 'Brak notatek',
+    comments: 'Komentarze',
+    noComments: 'Brak komentarzy',
+    votes: 'Głosy',
+    openLink: 'Otwórz link',
+    status: 'Status',
+    close: 'Zamknij',
+
+    // Tabs
+    tabPlanning: 'Planowanie',
+    tabMemories: 'Wspomnienia',
+
+    // Memory board
+    memories: 'Wspomnienia',
+    noMemories: 'Brak zdjęć — dodaj pierwsze wspomnienie!',
+    addMemory: 'Dodaj zdjęcie',
+    memoryTakenAt: 'Data',
+    memoryLocation: 'Lokalizacja',
+    memoryCamera: 'Aparat',
+    memorySize: 'Rozmiar',
+    memoryCaption: 'Podpis',
+    memoryCaptionPlaceholder: 'Dodaj podpis do zdjęcia...',
+    memoryPrev: 'Poprzednie',
+    memoryNext: 'Następne',
+    memoryOf: 'z',
+    memoryUploadTitle: 'Dodaj wspomnienia',
+    memoryUploadDesc: 'Przeciągnij zdjęcia tutaj lub kliknij aby wybrać',
+    memoryUploadBtn: 'Wybierz zdjęcia',
+
+    // Edit mode
+    edit: 'Edytuj',
+    save: 'Zapisz',
+    cancel: 'Anuluj',
+    editTitle: 'Tytuł',
+    editNotes: 'Notatki',
+    editNotesPlaceholder: 'Dodaj notatkę...',
+    editUrl: 'Link',
+    editImage: 'Zdjęcie',
+    editImageUrl: 'URL zdjęcia',
+    editImagePlaceholder: 'Wklej URL zdjęcia...',
+    changeImage: 'Zmień zdjęcie',
+    removeImage: 'Usuń zdjęcie',
+    editBookingRef: 'Nr rezerwacji',
+    editBookingRefPlaceholder: 'np. BOOKING-12345',
+    changeStatus: 'Zmień status',
+    markAsFinal: 'Oznacz jako wybrane',
+    unmarkAsFinal: 'Odznacz jako wybrane',
+
+    // Theme
+    lightMode: 'Jasny',
+    darkMode: 'Ciemny',
+  },
+  en: {
+    appName: 'Dream Travels',
+    newTrip: 'New trip',
+    heroTagline: 'Plan your dream travels',
+    heroTitle: 'Your trip boards',
+    heroSubtitle: 'Collect links, vote with friends, and plan the perfect trip.',
+    allBoards: 'All boards',
+    boardNotFound: 'Board not found.',
+    backToList: 'Back to list',
+    share: 'Share',
+    addLink: 'Add link',
+    noLinks: 'No links yet — add the first one!',
+    someday: 'Someday...',
+    booked: 'Booked',
+    selected: 'Selected',
+    bookingRef: 'Booking ref',
+    addComment: 'Add a comment...',
+    links: 'links',
+    link: 'link',
+
+    // Sections
+    accommodation: 'Accommodation',
+    transport: 'Transport',
+    activities: 'Activities',
+
+    // Statuses
+    considering: 'Considering',
+    finalist: 'Finalist',
+    rejected: 'Rejected',
+    completed: 'Completed',
+
+    // Add modal
+    addAccommodation: 'Add accommodation',
+    addTransport: 'Add transport',
+    addActivity: 'Add activity',
+    pasteLink: 'Paste a link to a hotel, flight, attraction...',
+    addLinkHelp: 'The link will be auto-fetched — title, image, and description will appear on the card. You can edit everything later.',
+    addLinkBtn: 'Add link',
+    fetching: 'Fetching data...',
+
+    // Share modal
+    shareBoard: 'Share board',
+    shareDesc: 'Send this link to friends — they can vote and comment on',
+    friendAccess: 'Friend access',
+    canVote: 'Vote on options',
+    canComment: 'Add comments',
+    canView: 'Browse all links',
+
+    // Detail sidebar
+    details: 'Details',
+    notes: 'Notes',
+    noNotes: 'No notes',
+    comments: 'Comments',
+    noComments: 'No comments yet',
+    votes: 'Votes',
+    openLink: 'Open link',
+    status: 'Status',
+    close: 'Close',
+
+    // Tabs
+    tabPlanning: 'Planning',
+    tabMemories: 'Memories',
+
+    // Memory board
+    memories: 'Memories',
+    noMemories: 'No photos yet — add your first memory!',
+    addMemory: 'Add photo',
+    memoryTakenAt: 'Date',
+    memoryLocation: 'Location',
+    memoryCamera: 'Camera',
+    memorySize: 'Size',
+    memoryCaption: 'Caption',
+    memoryCaptionPlaceholder: 'Add a caption...',
+    memoryPrev: 'Previous',
+    memoryNext: 'Next',
+    memoryOf: 'of',
+    memoryUploadTitle: 'Add memories',
+    memoryUploadDesc: 'Drag photos here or click to browse',
+    memoryUploadBtn: 'Choose photos',
+
+    // Edit mode
+    edit: 'Edit',
+    save: 'Save',
+    cancel: 'Cancel',
+    editTitle: 'Title',
+    editNotes: 'Notes',
+    editNotesPlaceholder: 'Add a note...',
+    editUrl: 'Link',
+    editImage: 'Image',
+    editImageUrl: 'Image URL',
+    editImagePlaceholder: 'Paste image URL...',
+    changeImage: 'Change image',
+    removeImage: 'Remove image',
+    editBookingRef: 'Booking reference',
+    editBookingRefPlaceholder: 'e.g. BOOKING-12345',
+    changeStatus: 'Change status',
+    markAsFinal: 'Mark as selected',
+    unmarkAsFinal: 'Unmark as selected',
+
+    // Theme
+    lightMode: 'Light',
+    darkMode: 'Dark',
+  },
+}
