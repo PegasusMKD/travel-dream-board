@@ -1,20 +1,20 @@
--- name: CreateAccomodation :one
-insert into accomodations (url, title, image_url, board_uuid)
+-- name: CreateTransport :one
+insert into transport (url, title, image_url, board_uuid)
 values (@url, @title, @image_url, @board_uuid)
 returning *;
 
--- name: GetAccomodationByUuid :one
+-- name: GetTransportByUuid :one
 select *
-from accomodations
+from transport
 where uuid = @uuid;
 
--- name: FindAllAccomodationsByBoardUuid :many
+-- name: FindAllTransportByBoardUuid :many
 select *
-from accomodations
+from transport
 where board_uuid = @board_uuid;
 
--- name: UpdateAccomodationByUuid :exec
-update accomodations
+-- name: UpdateTransportByUuid :exec
+update transport
 set url = @url,
     title = @title,
     image_url = @image_url,
@@ -25,8 +25,8 @@ set url = @url,
 where uuid = @uuid;
 
 
--- name: DeleteAccomodationByUuid :exec
-delete from accomodations
+-- name: DeleteTransportByUuid :exec
+delete from transport
 where uuid = @uuid;
 
 

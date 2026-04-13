@@ -1,20 +1,20 @@
--- name: CreateAccomodation :one
-insert into accomodations (url, title, image_url, board_uuid)
+-- name: CreateActivity :one
+insert into activities (url, title, image_url, board_uuid)
 values (@url, @title, @image_url, @board_uuid)
 returning *;
 
--- name: GetAccomodationByUuid :one
+-- name: GetActivityByUuid :one
 select *
-from accomodations
+from activities
 where uuid = @uuid;
 
--- name: FindAllAccomodationsByBoardUuid :many
+-- name: FindAllActivitiesByBoardUuid :many
 select *
-from accomodations
+from activities
 where board_uuid = @board_uuid;
 
--- name: UpdateAccomodationByUuid :exec
-update accomodations
+-- name: UpdateActivityByUuid :exec
+update activities
 set url = @url,
     title = @title,
     image_url = @image_url,
@@ -25,8 +25,8 @@ set url = @url,
 where uuid = @uuid;
 
 
--- name: DeleteAccomodationByUuid :exec
-delete from accomodations
+-- name: DeleteActivityByUuid :exec
+delete from activities
 where uuid = @uuid;
 
 

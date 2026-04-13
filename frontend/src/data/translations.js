@@ -98,6 +98,18 @@ export const translations = {
     markAsFinal: 'Oznacz jako wybrane',
     unmarkAsFinal: 'Odznacz jako wybrane',
 
+    // Edit board
+    editBoard: 'Edytuj tablicę',
+    editBoardName: 'Nazwa podróży',
+    editBoardNamePlaceholder: 'np. Paryż na wiosnę',
+    editBoardDestination: 'Cel podróży',
+    editBoardDestinationPlaceholder: 'np. Paryż, Francja',
+    editBoardStartDate: 'Data rozpoczęcia',
+    editBoardEndDate: 'Data zakończenia',
+    editBoardCoverImage: 'URL zdjęcia okładki',
+    editBoardCoverImagePlaceholder: 'Wklej URL zdjęcia...',
+    saving: 'Zapisywanie...',
+
     // Theme
     lightMode: 'Jasny',
     darkMode: 'Ciemny',
@@ -200,6 +212,18 @@ export const translations = {
     changeStatus: 'Change status',
     markAsFinal: 'Mark as selected',
     unmarkAsFinal: 'Unmark as selected',
+
+    // Edit board
+    editBoard: 'Edit board',
+    editBoardName: 'Trip name',
+    editBoardNamePlaceholder: 'e.g. Spring in Paris',
+    editBoardDestination: 'Destination',
+    editBoardDestinationPlaceholder: 'e.g. Paris, France',
+    editBoardStartDate: 'Start date',
+    editBoardEndDate: 'End date',
+    editBoardCoverImage: 'Cover image URL',
+    editBoardCoverImagePlaceholder: 'Paste image URL...',
+    saving: 'Saving...',
 
     // Theme
     lightMode: 'Light',

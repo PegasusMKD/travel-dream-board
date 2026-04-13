@@ -19,6 +19,7 @@ import ItemCard from '../components/ItemCard'
 import AddItemModal from '../components/AddItemModal'
 import ShareModal from '../components/ShareModal'
 import ItemDetailSidebar from '../components/ItemDetailSidebar'
+import EditBoardModal from '../components/EditBoardModal'
 import MemoryGallery from '../components/MemoryGallery'
 
 const sectionConfig = {
@@ -44,6 +45,7 @@ export default function BoardDetail() {
   const [showShare, setShowShare] = useState(false)
   const [selectedItem, setSelectedItem] = useState(null)
   const [selectedSection, setSelectedSection] = useState(null)
+  const [showEditBoard, setShowEditBoard] = useState(false)
 
   if (!board) {
     return (
@@ -102,7 +104,10 @@ export default function BoardDetail() {
             <Share2 className="w-3.5 h-3.5" />
             {t.share}
           </button>
-          <button className="w-9 h-9 flex items-center justify-center bg-white/90 backdrop-blur-sm text-gray-800 rounded-xl hover:bg-white transition-colors shadow-sm cursor-pointer">
+          <button
+            onClick={() => setShowEditBoard(true)}
+            className="w-9 h-9 flex items-center justify-center bg-white/90 backdrop-blur-sm text-gray-800 rounded-xl hover:bg-white transition-colors shadow-sm cursor-pointer"
+          >
             <Settings className="w-4 h-4" />
           </button>
         </div>
@@ -209,6 +214,7 @@ export default function BoardDetail() {
       {/* Modals */}
       {addingTo && <AddItemModal sectionType={addingTo} onClose={() => setAddingTo(null)} />}
       {showShare && <ShareModal boardName={board.name} onClose={() => setShowShare(false)} />}
+      {showEditBoard && <EditBoardModal board={board} onClose={() => setShowEditBoard(false)} />}
 
       {/* Detail sidebar */}
       {selectedItem && (

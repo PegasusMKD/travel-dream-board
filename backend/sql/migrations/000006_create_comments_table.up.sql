@@ -4,7 +4,7 @@ create type commented_on as enum (
 	'activities'
 );
 
-create table item_comments (
+create table comments (
 	uuid uuid primary key default gen_random_uuid(),
 	updated_at timestamp not null default now(),
 	created_at timestamp not null default now(),

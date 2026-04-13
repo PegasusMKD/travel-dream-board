@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/PegasusMKD/travel-dream-board/internal/accomodations"
+	"github.com/PegasusMKD/travel-dream-board/internal/boards"
 	"github.com/PegasusMKD/travel-dream-board/internal/config"
 	"github.com/PegasusMKD/travel-dream-board/internal/database"
 	"github.com/PegasusMKD/travel-dream-board/internal/db"
@@ -18,16 +20,12 @@ import (
 )
 
 type GinServer struct {
-	addr      string
-	engine    *gin.Engine
-	scheduler *cron.Scheduler
-	server    *http.Server
+	addr   string
+	engine *gin.Engine
+	server *http.Server
 }
 
 func (srv *GinServer) Run() {
-	go srv.scheduler.Start()
-	log.Info("Starting scheduler...")
-
 	log.Info("Starting server on", "addr", srv.addr)
 	if err := srv.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Error("Server failed", "error", err)
@@ -44,7 +42,6 @@ func (srv *GinServer) Stop() {
 	}
 
 	log.Info("Stopping scheduler...")
-	srv.scheduler.Stop()
 }
 
 func NewServer() *GinServer {
@@ -112,40 +109,17 @@ func (srv *GinServer) setupRoutes(router *gin.Engine, queries *db.Queries, cfg *
 		ctx.JSON(200, gin.H{"status": "healthy"})
 	})
 
-	scanRunRepository := scanruns.NewScanRunRepository(queries)
-	scanRunService := scanruns.NewScanRunService(scanRunRepository)
+	boardsRepository := boards.NewRepository(queries)
+	boardsService := boards.NewService(boardsRepository)
+	boardsHandler := boards.NewHandler(boardsService)
 
-	moduleRepository := modules.NewModuleRepository(queries)
-	moduleService := modules.NewModuleService(moduleRepository)
-
-	depsRepository := dependencies.NewDependenciesRepository(queries)
-	depsService := dependencies.NewDependenciesService(depsRepository)
-
-	ghClient := github.NewClient(cfg.GithubToken)
-
-	queryService := graph.NewGraphQueryService(scanRunService, moduleService, depsService)
-	graphConstructor := graph.NewGraphConstructor(scanRunService, moduleService, depsService, ghClient, cfg)
-	graphCronJob := cron.NewGraphConstructionJob(graphConstructor, cfg)
-	graphHandler := graph.NewGraphHandler(queryService, graphConstructor)
+	accomodationsRepository := accomodations.NewRepository(queries)
+	accomodationsService := accomodations.NewService(accomodationsRepository)
 
 	v1Group := router.Group("/api/v1")
 	{
-		graphHandler.RegisterRoutes(v1Group)
+		boardsHandler.RegisterRoutes(v1Group)
 	}
-
-	scheduler, err := cron.NewScheduler(cfg)
-	if err != nil {
-		log.Error("Unable to create scheduler", "error", err)
-		return
-	}
-
-	err = scheduler.Register(graphCronJob)
-	if err != nil {
-		log.Error("Failed registering cron job", "error", err)
-		return
-	}
-
-	srv.scheduler = scheduler
 }
 
 func (srv *GinServer) setupFrontend(router *gin.Engine, frontendDir string) {

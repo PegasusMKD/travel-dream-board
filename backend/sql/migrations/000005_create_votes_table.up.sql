@@ -4,7 +4,7 @@ create type voted_on as enum (
 	'activities'
 );
 
-create table comments (
+create table votes (
 	uuid uuid primary key default gen_random_uuid(),
 	updated_at timestamp not null default now(),
 	created_at timestamp not null default now(),
@@ -12,6 +12,6 @@ create table comments (
 	voted_by text not null,
 	rank int not null,
 
-	voted_on_ commented_on not null,
+	voted_on_ voted_on not null,
 	voted_on_uuid uuid not null
 );
