@@ -13,7 +13,7 @@ func NewHandler(svc Service) *Handler {
 }
 
 func (h *Handler) CreateShareToken(ctx *gin.Context) {
-	boardUuid := ctx.Param("boardUuid")
+	boardUuid := ctx.Param("uuid")
 	if boardUuid == "" {
 		ctx.JSON(400, gin.H{"error": "boardUuid parameter is required"})
 		return
@@ -29,7 +29,7 @@ func (h *Handler) CreateShareToken(ctx *gin.Context) {
 }
 
 func (h *Handler) GetShareTokensForBoard(ctx *gin.Context) {
-	boardUuid := ctx.Param("boardUuid")
+	boardUuid := ctx.Param("uuid")
 	if boardUuid == "" {
 		ctx.JSON(400, gin.H{"error": "boardUuid parameter is required"})
 		return
@@ -45,7 +45,7 @@ func (h *Handler) GetShareTokensForBoard(ctx *gin.Context) {
 }
 
 func (h *Handler) DeleteShareToken(ctx *gin.Context) {
-	boardUuid := ctx.Param("boardUuid")
+	boardUuid := ctx.Param("uuid")
 	token := ctx.Param("token")
 
 	if boardUuid == "" || token == "" {
@@ -64,7 +64,7 @@ func (h *Handler) DeleteShareToken(ctx *gin.Context) {
 
 func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 	// Let's attach these under /boards/:boardUuid/share-tokens
-	group := router.Group("/boards/:boardUuid/share-tokens")
+	group := router.Group("/boards/:uuid/share-tokens")
 	{
 		group.POST("/", h.CreateShareToken)
 		group.GET("/", h.GetShareTokensForBoard)

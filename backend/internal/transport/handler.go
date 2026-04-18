@@ -19,6 +19,12 @@ func (h *Handler) CreateTransport(ctx *gin.Context) {
 		return
 	}
 
+	boardUuid := ctx.Query("boardUuid")
+	if url == "" {
+		ctx.JSON(400, gin.H{"error": "Board UUID parameter is required"})
+		return
+	}
+
 	userUuidRaw, exists := ctx.Get("user_uuid")
 	if !exists {
 		ctx.AbortWithStatusJSON(401, gin.H{"error": "Unauthorized"})
@@ -26,7 +32,7 @@ func (h *Handler) CreateTransport(ctx *gin.Context) {
 	}
 	userUuid := userUuidRaw.(string)
 
-	data, err := h.svc.CreateTransport(ctx, url, userUuid)
+	data, err := h.svc.CreateTransport(ctx, url, boardUuid, userUuid)
 	if err != nil {
 		ctx.AbortWithError(500, err)
 		return

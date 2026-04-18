@@ -46,8 +46,8 @@ func (svc *accomodationServiceImpl) CreateActivity(ctx context.Context, url, boa
 	//
 	data := Activity{
 		Url:      url,
-		Title:    extractedData.Title,
-		ImageUrl: &extractedData.ImageUrl,
+		Title:    *extractedData.Title,
+		ImageUrl: extractedData.ImageUrl,
 
 		UserUuid:  userUuid,
 		BoardUuid: boardUuid,

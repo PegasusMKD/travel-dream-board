@@ -44,8 +44,8 @@ func (svc *accomodationServiceImpl) CreateAccomodation(ctx context.Context, url,
 	//
 	data := Accomodation{
 		Url:      url,
-		Title:    extractedData.Title,
-		ImageUrl: &extractedData.ImageUrl,
+		Title:    *extractedData.Title,
+		ImageUrl: extractedData.ImageUrl,
 
 		UserUuid:  userUuid,
 		BoardUuid: boardUuid,

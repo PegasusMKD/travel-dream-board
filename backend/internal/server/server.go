@@ -18,6 +18,7 @@ import (
 	"github.com/PegasusMKD/travel-dream-board/internal/database"
 	"github.com/PegasusMKD/travel-dream-board/internal/db"
 	"github.com/PegasusMKD/travel-dream-board/internal/middleware"
+	scrapeaudit "github.com/PegasusMKD/travel-dream-board/internal/scrape_audit"
 	scrapeprocess "github.com/PegasusMKD/travel-dream-board/internal/scrape_process"
 	"github.com/PegasusMKD/travel-dream-board/internal/sharetokens"
 	"github.com/PegasusMKD/travel-dream-board/internal/transport"

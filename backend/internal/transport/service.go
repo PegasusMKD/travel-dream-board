@@ -46,8 +46,8 @@ func (svc *accomodationServiceImpl) CreateTransport(ctx context.Context, url, bo
 	//
 	data := Transport{
 		Url:      url,
-		Title:    extractedData.Title,
-		ImageUrl: &extractedData.ImageUrl,
+		Title:    *extractedData.Title,
+		ImageUrl: extractedData.ImageUrl,
 
 		UserUuid:  userUuid,
 		BoardUuid: boardUuid,
