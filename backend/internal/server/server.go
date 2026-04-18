@@ -54,7 +54,7 @@ func NewServer() *GinServer {
 
 	queries, err := setupSqlc(cfg)
 	if err != nil {
-		log.Error("Failed to initialize database - cannot start server")
+		log.Error("Failed to initialize database - cannot start server", "error", err)
 		return nil
 	}
 

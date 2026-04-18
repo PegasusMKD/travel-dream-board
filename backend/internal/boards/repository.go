@@ -33,7 +33,7 @@ func (repo *repositoryImpl) CreateBoard(ctx context.Context, data *Board) (*Boar
 
 	ent, err := repo.queries.CreateBoard(ctx, params)
 	if err != nil {
-		log.Error("Failed creating board", "name", data.Name, "location_name", data.LocationName)
+		log.Error("Failed creating board", "name", data.Name, "location_name", data.LocationName, "error", err)
 		return nil, err
 	}
 
@@ -44,13 +44,13 @@ func (repo *repositoryImpl) CreateBoard(ctx context.Context, data *Board) (*Boar
 func (repo *repositoryImpl) GetBoardById(ctx context.Context, uuid string) (*Board, error) {
 	id, err := utility.UuidFromString(uuid)
 	if err != nil {
-		log.Error("Failed parsing passed UUID", "uuid", uuid)
+		log.Error("Failed parsing passed UUID", "uuid", uuid, "error", err)
 		return nil, err
 	}
 
 	ent, err := repo.queries.GetBoardById(ctx, id)
 	if err != nil {
-		log.Error("Failed fetching an entity", "uuid", uuid)
+		log.Error("Failed fetching an entity", "uuid", uuid, "error", err)
 		return nil, err
 	}
 
@@ -75,7 +75,7 @@ func (repo *repositoryImpl) GetAllBoards(ctx context.Context) ([]*Board, error) 
 func (repo *repositoryImpl) UpdateBoardById(ctx context.Context, uuid string, data *Board) error {
 	id, err := utility.UuidFromString(uuid)
 	if err != nil {
-		log.Error("Failed parsing provided id", "uuid", uuid)
+		log.Error("Failed parsing provided id", "uuid", uuid, "error", err)
 		return err
 	}
 
@@ -95,7 +95,7 @@ func (repo *repositoryImpl) UpdateBoardById(ctx context.Context, uuid string, da
 func (repo *repositoryImpl) DeleteBoardById(ctx context.Context, uuid string) error {
 	id, err := utility.UuidFromString(uuid)
 	if err != nil {
-		log.Error("Failed parsing provided id", "uuid", uuid)
+		log.Error("Failed parsing provided id", "uuid", uuid, "error", err)
 		return err
 	}
 

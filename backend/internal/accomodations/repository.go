@@ -28,7 +28,7 @@ func NewRepository(queries *db.Queries) Repository {
 func (repo *repositoryImpl) CreateAccomodation(ctx context.Context, data *Accomodation) (*Accomodation, error) {
 	boardUuid, err := utility.UuidFromString(data.BoardUuid)
 	if err != nil {
-		log.Error("Failed parsing UUID", "uuid", uuid)
+		log.Error("Failed parsing UUID", "uuid", uuid, "error", err)
 		return nil, err
 	}
 
@@ -41,7 +41,7 @@ func (repo *repositoryImpl) CreateAccomodation(ctx context.Context, data *Accomo
 
 	entity, err := repo.queries.CreateAccomodation(ctx, params)
 	if err != nil {
-		log.Error("Failed creating entity", "url", data.Url)
+		log.Error("Failed creating entity", "url", data.Url, "error", err)
 		return nil, err
 	}
 
@@ -51,13 +51,13 @@ func (repo *repositoryImpl) CreateAccomodation(ctx context.Context, data *Accomo
 func (repo *repositoryImpl) GetAccomodationById(ctx context.Context, uuid string) (*Accomodation, error) {
 	id, err := utility.UuidFromString(uuid)
 	if err != nil {
-		log.Error("Failed parsing passed UUID", "uuid", uuid)
+		log.Error("Failed parsing passed UUID", "uuid", uuid, "error", err)
 		return nil, err
 	}
 
 	ent, err := repo.queries.GetAccomodationByUuid(ctx, id)
 	if err != nil {
-		log.Error("Failed fetching an entity", "uuid", uuid)
+		log.Error("Failed fetching an entity", "uuid", uuid, "error", err)
 		return nil, err
 	}
 
@@ -67,13 +67,13 @@ func (repo *repositoryImpl) GetAccomodationById(ctx context.Context, uuid string
 func (repo *repositoryImpl) GetAllAccomodationsByBoardId(ctx context.Context, uuid string) ([]*Accomodation, error) {
 	id, err := utility.UuidFromString(uuid)
 	if err != nil {
-		log.Error("Failed parsing passed UUID", "uuid", uuid)
+		log.Error("Failed parsing passed UUID", "uuid", uuid, "error", err)
 		return nil, err
 	}
 
 	ent, err := repo.queries.FindAllAccomodationsByBoardUuid(ctx, id)
 	if err != nil {
-		log.Error("Failed fetching an entity", "uuid", uuid)
+		log.Error("Failed fetching an entity", "uuid", uuid, "error", err)
 		return nil, err
 	}
 
@@ -88,7 +88,7 @@ func (repo *repositoryImpl) GetAllAccomodationsByBoardId(ctx context.Context, uu
 func (repo *repositoryImpl) UpdateAccomodationById(ctx context.Context, uuid string, data *Accomodation) error {
 	id, err := utility.UuidFromString(uuid)
 	if err != nil {
-		log.Error("Failed parsing passed UUID", "uuid", uuid)
+		log.Error("Failed parsing passed UUID", "uuid", uuid, "error", err)
 		return err
 	}
 
@@ -109,7 +109,7 @@ func (repo *repositoryImpl) UpdateAccomodationById(ctx context.Context, uuid str
 func (repo *repositoryImpl) DeleteAccomodationById(ctx context.Context, uuid string) error {
 	id, err := utility.UuidFromString(uuid)
 	if err != nil {
-		log.Error("Failed parsing UUID", "uuid", uuid)
+		log.Error("Failed parsing UUID", "uuid", uuid, "error", err)
 		return err
 	}
 
