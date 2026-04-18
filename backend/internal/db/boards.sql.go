@@ -55,10 +55,11 @@ func (q *Queries) DeleteBoardById(ctx context.Context, uuid pgtype.UUID) error {
 const getAllBoards = `-- name: GetAllBoards :many
 select uuid, updated_at, created_at, name, details, location_name, starts_at, lasts_until, status, thumbnail_url, user_uuid
 from boards
+where user_uuid = $1
 `
 
-func (q *Queries) GetAllBoards(ctx context.Context) ([]Board, error) {
-	rows, err := q.db.Query(ctx, getAllBoards)
+func (q *Queries) GetAllBoards(ctx context.Context, userUuid pgtype.UUID) ([]Board, error) {
+	rows, err := q.db.Query(ctx, getAllBoards, userUuid)
 	if err != nil {
 		return nil, err
 	}

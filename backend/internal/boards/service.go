@@ -11,7 +11,7 @@ import (
 type Service interface {
 	CreateBoard(ctx context.Context, data *Board) (*Board, error)
 	GetBoardById(ctx context.Context, uuid string) (*AggregatedBoard, error)
-	GetAllBoards(ctx context.Context) ([]*Board, error)
+	GetAllBoards(ctx context.Context, userUuid string) ([]*Board, error)
 	UpdateBoardById(ctx context.Context, uuid string, data *Board) error
 	DeleteBoardById(ctx context.Context, uuid string) error
 }
@@ -66,8 +66,8 @@ func (svc *serviceImpl) GetBoardById(ctx context.Context, uuid string) (*Aggrega
 	}, nil
 }
 
-func (svc *serviceImpl) GetAllBoards(ctx context.Context) ([]*Board, error) {
-	return svc.repo.GetAllBoards(ctx)
+func (svc *serviceImpl) GetAllBoards(ctx context.Context, userUuid string) ([]*Board, error) {
+	return svc.repo.GetAllBoards(ctx, userUuid)
 }
 
 func (svc *serviceImpl) UpdateBoardById(ctx context.Context, uuid string, data *Board) error {

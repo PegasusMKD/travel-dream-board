@@ -10,7 +10,8 @@ where uuid = @uuid;
 
 -- name: GetAllBoards :many
 select *
-from boards;
+from boards
+where user_uuid = @user_uuid;
 
 -- name: UpdateBoardById :exec
 update boards

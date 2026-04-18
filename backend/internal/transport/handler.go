@@ -19,7 +19,14 @@ func (h *Handler) CreateTransport(ctx *gin.Context) {
 		return
 	}
 
-	data, err := h.svc.CreateTransport(ctx, url)
+	userUuidRaw, exists := ctx.Get("user_uuid")
+	if !exists {
+		ctx.AbortWithStatusJSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+	userUuid := userUuidRaw.(string)
+
+	data, err := h.svc.CreateTransport(ctx, url, userUuid)
 	if err != nil {
 		ctx.AbortWithError(500, err)
 		return
@@ -52,8 +59,7 @@ func (h *Handler) UpdateTransportById(ctx *gin.Context) {
 	}
 
 	var body Transport
-	if err := ctx.ShouldBindJSON(body); err != nil {
-		log.Error("Failed parsing body", "error", err)
+	if err := ctx.ShouldBindJSON(&body); err != nil {
 		ctx.AbortWithError(500, err)
 		return
 	}

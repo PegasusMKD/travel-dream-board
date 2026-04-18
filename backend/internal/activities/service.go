@@ -9,7 +9,7 @@ import (
 )
 
 type Service interface {
-	CreateActivity(ctx context.Context, url string) (*Activity, error)
+	CreateActivity(ctx context.Context, url string, userUuid string) (*Activity, error)
 	GetActivityById(ctx context.Context, uuid string) (*AggregatedActivity, error)
 	GetActivitiesByBoardId(ctx context.Context, uuid string) ([]*Activity, error)
 	UpdateActivityById(ctx context.Context, uuid string, data *Activity) error
@@ -31,9 +31,12 @@ func NewService(repo Repository, commentsSvc comments.Service, votesSvc votes.Se
 	}
 }
 
-func (svc *accomodationServiceImpl) CreateActivity(ctx context.Context, url string) (*Activity, error) {
+func (svc *accomodationServiceImpl) CreateActivity(ctx context.Context, url string, userUuid string) (*Activity, error) {
 	// TODO: Scrape the data
-	data := Activity{}
+	data := Activity{
+		Url:      url,
+		UserUuid: userUuid,
+	}
 
 	return svc.repo.CreateActivity(ctx, &data)
 }

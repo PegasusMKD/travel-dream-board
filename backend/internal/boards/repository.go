@@ -11,7 +11,7 @@ import (
 type Repository interface {
 	CreateBoard(ctx context.Context, data *Board) (*Board, error)
 	GetBoardById(ctx context.Context, uuid string) (*Board, error)
-	GetAllBoards(ctx context.Context) ([]*Board, error)
+	GetAllBoards(ctx context.Context, userUuid string) ([]*Board, error)
 	UpdateBoardById(ctx context.Context, uuid string, data *Board) error
 	DeleteBoardById(ctx context.Context, uuid string) error
 	GetShareToken(ctx context.Context, token string) (*db.ShareToken, error)
@@ -69,8 +69,14 @@ func (repo *repositoryImpl) GetBoardById(ctx context.Context, uuid string) (*Boa
 	return FromEntity(&ent), nil
 }
 
-func (repo *repositoryImpl) GetAllBoards(ctx context.Context) ([]*Board, error) {
-	ents, err := repo.queries.GetAllBoards(ctx)
+func (repo *repositoryImpl) GetAllBoards(ctx context.Context, userUuid string) ([]*Board, error) {
+	id, err := utility.UuidFromString(userUuid)
+	if err != nil {
+		log.Error("Failed parsing provided id", "uuid", userUuid, "error", err)
+		return nil, err
+	}
+
+	ents, err := repo.queries.GetAllBoards(ctx, id)
 	if err != nil {
 		log.Error("Failed fetching boards", "error", err)
 		return nil, err

@@ -14,11 +14,19 @@ func NewHandler(svc Service) *Handler {
 
 func (h *Handler) CreateBoard(ctx *gin.Context) {
 	var body Board
-	if err := ctx.ShouldBindJSON(body); err != nil {
+	if err := ctx.ShouldBindJSON(&body); err != nil {
 		log.Error("Failed parsing body", "error", err)
 		ctx.AbortWithError(500, err)
 		return
 	}
+
+	userUuidRaw, exists := ctx.Get("user_uuid")
+	if !exists {
+		ctx.AbortWithStatusJSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+	userUuid := userUuidRaw.(string)
+	body.UserUuid = &userUuid
 
 	board, err := h.svc.CreateBoard(ctx, &body)
 	if err != nil {
@@ -46,7 +54,14 @@ func (h *Handler) GetBoardById(ctx *gin.Context) {
 }
 
 func (h *Handler) GetAllBoards(ctx *gin.Context) {
-	boards, err := h.svc.GetAllBoards(ctx)
+	userUuidRaw, exists := ctx.Get("user_uuid")
+	if !exists {
+		ctx.AbortWithStatusJSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+	userUuid := userUuidRaw.(string)
+
+	boards, err := h.svc.GetAllBoards(ctx, userUuid)
 	if err != nil {
 		ctx.AbortWithError(500, err)
 		return

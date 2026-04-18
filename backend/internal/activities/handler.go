@@ -19,7 +19,14 @@ func (h *Handler) CreateActivity(ctx *gin.Context) {
 		return
 	}
 
-	data, err := h.svc.CreateActivity(ctx, url)
+	userUuidRaw, exists := ctx.Get("user_uuid")
+	if !exists {
+		ctx.AbortWithStatusJSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+	userUuid := userUuidRaw.(string)
+
+	data, err := h.svc.CreateActivity(ctx, url, userUuid)
 	if err != nil {
 		ctx.AbortWithError(500, err)
 		return
@@ -52,8 +59,7 @@ func (h *Handler) UpdateActivityById(ctx *gin.Context) {
 	}
 
 	var body Activity
-	if err := ctx.ShouldBindJSON(body); err != nil {
-		log.Error("Failed parsing body", "error", err)
+	if err := ctx.ShouldBindJSON(&body); err != nil {
 		ctx.AbortWithError(500, err)
 		return
 	}

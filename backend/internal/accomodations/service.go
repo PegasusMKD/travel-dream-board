@@ -9,7 +9,7 @@ import (
 )
 
 type Service interface {
-	CreateAccomodation(ctx context.Context, url string) (*Accomodation, error)
+	CreateAccomodation(ctx context.Context, url string, userUuid string) (*Accomodation, error)
 	GetAccomodationById(ctx context.Context, uuid string) (*AggregatedAccomodation, error)
 	GetAccomodationsByBoardId(ctx context.Context, uuid string) ([]*Accomodation, error)
 	UpdateAccomodationById(ctx context.Context, uuid string, data *Accomodation) error
@@ -31,9 +31,12 @@ func NewService(repo Repository, commentsSvc comments.Service, votesSvc votes.Se
 	}
 }
 
-func (svc *accomodationServiceImpl) CreateAccomodation(ctx context.Context, url string) (*Accomodation, error) {
+func (svc *accomodationServiceImpl) CreateAccomodation(ctx context.Context, url string, userUuid string) (*Accomodation, error) {
 	// TODO: Scrape the data
-	data := Accomodation{}
+	data := Accomodation{
+		Url:      url,
+		UserUuid: userUuid,
+	}
 
 	return svc.repo.CreateAccomodation(ctx, &data)
 }

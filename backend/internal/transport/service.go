@@ -9,7 +9,7 @@ import (
 )
 
 type Service interface {
-	CreateTransport(ctx context.Context, url string) (*Transport, error)
+	CreateTransport(ctx context.Context, url string, userUuid string) (*Transport, error)
 	GetTransportById(ctx context.Context, uuid string) (*AggregatedTransport, error)
 	GetTransportsByBoardId(ctx context.Context, uuid string) ([]*Transport, error)
 	UpdateTransportById(ctx context.Context, uuid string, data *Transport) error
@@ -31,9 +31,12 @@ func NewService(repo Repository, commentsSvc comments.Service, votesSvc votes.Se
 	}
 }
 
-func (svc *accomodationServiceImpl) CreateTransport(ctx context.Context, url string) (*Transport, error) {
+func (svc *accomodationServiceImpl) CreateTransport(ctx context.Context, url string, userUuid string) (*Transport, error) {
 	// TODO: Scrape the data
-	data := Transport{}
+	data := Transport{
+		Url:      url,
+		UserUuid: userUuid,
+	}
 
 	return svc.repo.CreateTransport(ctx, &data)
 }
