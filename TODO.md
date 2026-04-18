@@ -23,11 +23,11 @@
 - [ ] Protected route middleware
 
 ### API — Boards
-- [ ] `POST /boards`
-- [ ] `GET /boards` (owner's boards)
-- [ ] `GET /boards/:id`
-- [ ] `PATCH /boards/:id`
-- [ ] `DELETE /boards/:id`
+- [X] `POST /boards`
+- [X] `GET /boards`
+- [X] `GET /boards/:id`
+- [X] `PATCH /boards/:id`
+- [X] `DELETE /boards/:id`
 
 ### API — Items
 - [ ] `POST /boards/:id/items`

@@ -60,7 +60,7 @@ func (repo *repositoryImpl) GetBoardById(ctx context.Context, uuid string) (*Boa
 func (repo *repositoryImpl) GetAllBoards(ctx context.Context) ([]*Board, error) {
 	ents, err := repo.queries.GetAllBoards(ctx)
 	if err != nil {
-		log.Error("Failed fetching boards")
+		log.Error("Failed fetching boards", "error", err)
 		return nil, err
 	}
 

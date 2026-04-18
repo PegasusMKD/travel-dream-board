@@ -25,20 +25,85 @@ func NewRepository(queries *db.Queries) Repository {
 	}
 }
 
-func (repo *repositoryImpl) CreateAccomodation(ctx context.Context, data *Accomodation) error {
-	return nil
+func (repo *repositoryImpl) CreateAccomodation(ctx context.Context, data *Accomodation) (*Accomodation, error) {
+	boardUuid, err := utility.UuidFromString(data.BoardUuid)
+	if err != nil {
+		log.Error("Failed parsing UUID", "uuid", uuid)
+		return nil, err
+	}
+
+	params := db.CreateAccomodationParams{
+		Url:       data.Url,
+		Title:     data.Title,
+		ImageUrl:  data.ImageUrl,
+		BoardUuid: boardUuid,
+	}
+
+	entity, err := repo.queries.CreateAccomodation(ctx, params)
+	if err != nil {
+		log.Error("Failed creating entity", "url", data.Url)
+		return nil, err
+	}
+
+	return FromEntity(entity), nil
 }
 
 func (repo *repositoryImpl) GetAccomodationById(ctx context.Context, uuid string) (*Accomodation, error) {
-	return nil, nil
+	id, err := utility.UuidFromString(uuid)
+	if err != nil {
+		log.Error("Failed parsing passed UUID", "uuid", uuid)
+		return nil, err
+	}
+
+	ent, err := repo.queries.GetAccomodationByUuid(ctx, id)
+	if err != nil {
+		log.Error("Failed fetching an entity", "uuid", uuid)
+		return nil, err
+	}
+
+	return FromEntity(ent), nil
 }
 
 func (repo *repositoryImpl) GetAllAccomodationsByBoardId(ctx context.Context, uuid string) ([]*Accomodation, error) {
-	return nil, nil
+	id, err := utility.UuidFromString(uuid)
+	if err != nil {
+		log.Error("Failed parsing passed UUID", "uuid", uuid)
+		return nil, err
+	}
+
+	ent, err := repo.queries.FindAllAccomodationsByBoardUuid(ctx, id)
+	if err != nil {
+		log.Error("Failed fetching an entity", "uuid", uuid)
+		return nil, err
+	}
+
+	data := []*Accomodation{}
+	for _, val := range ent {
+		data = append(data, FromEntity(val))
+	}
+
+	return data, nil
 }
 
 func (repo *repositoryImpl) UpdateAccomodationById(ctx context.Context, uuid string, data *Accomodation) error {
-	return nil
+	id, err := utility.UuidFromString(uuid)
+	if err != nil {
+		log.Error("Failed parsing passed UUID", "uuid", uuid)
+		return err
+	}
+
+	params := db.UpdateAccomodationByUuidParams{
+		Url:              data.Url,
+		Title:            data.Title,
+		ImageUrl:         data.ImageUrl,
+		Notes:            data.Notes,
+		Status:           data.Status,
+		BookingReference: data.BookingReference,
+		Selected:         data.Selected,
+		Uuid:             id,
+	}
+
+	return repo.queries.UpdateAccomodationByUuid(ctx, params)
 }
 
 func (repo *repositoryImpl) DeleteAccomodationById(ctx context.Context, uuid string) error {
@@ -48,5 +113,5 @@ func (repo *repositoryImpl) DeleteAccomodationById(ctx context.Context, uuid str
 		return err
 	}
 
-	return repo.queries.DeleteAccomodationById(ctx, id)
+	return repo.queries.DeleteAccomodationByUuid(ctx, id)
 }

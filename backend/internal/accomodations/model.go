@@ -18,6 +18,19 @@ type Accomodation struct {
 	Selected         bool                   `json:"selected"`
 }
 
+func FromEntity(entity db.Accomodation) *Accomodation {
+	return &Accomodation{
+		Uuid:             entity.Uuid.String(),
+		Url:              entity.Url,
+		Title:            entity.Title,
+		ImageUrl:         entity.ImageUrl,
+		Notes:            entity.Notes,
+		Status:           entity.Status,
+		BookingReference: entity.BookingReference,
+		Selected:         entity.Selected,
+	}
+}
+
 type AggregatedAccomodation struct {
 	Accomodation
 
