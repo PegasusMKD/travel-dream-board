@@ -12,15 +12,15 @@
 ### Database
 - [X] golang-migrate setup
 - [X] Migration: `boards`
-- [ ] Migration: `share_tokens`
+- [X] Migration: `share_tokens`
 - [X] Migration: `items`
 - [X] Migration: `votes`
 - [X] Migration: `comments`
 
 ### Auth
-- [ ] Google OAuth 2.0 integration
-- [ ] JWT issuance + validation middleware
-- [ ] Protected route middleware
+- [X] Google OAuth 2.0 integration
+- [X] JWT issuance + validation middleware
+- [X] Protected route middleware
 
 ### API — Boards
 - [X] `POST /boards`
@@ -78,9 +78,9 @@
 ## Week 3 — Collaboration Features
 
 ### API — Collaboration
-- [ ] `POST /boards/:uuid/share-tokens` (generate share link)
-- [ ] `DELETE /boards/:uuid/share-tokens/:token` (revoke)
-- [ ] Share token validation middleware
+- [X] `POST /boards/:uuid/share-tokens` (generate share link)
+- [X] `DELETE /boards/:uuid/share-tokens/:token` (revoke)
+- [X] Share token validation middleware
 - [X] `POST /votes`
 - [X] `PATCH /votes/:uuid` (change vote)
 - [X] `DELETE /votes/:uuid`

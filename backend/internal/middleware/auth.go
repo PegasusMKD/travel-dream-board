@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/PegasusMKD/travel-dream-board/internal/auth"
-	"github.com/PegasusMKD/travel-dream-board/internal/boards"
+	"github.com/PegasusMKD/travel-dream-board/internal/sharetokens"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -30,7 +30,7 @@ func RequireAuth(authService auth.Service) gin.HandlerFunc {
 }
 
 // RequireBoardAccess requires either a valid JWT (owner) OR a valid Share Token (guest)
-func RequireBoardAccess(authService auth.Service, boardsRepo boards.Repository) gin.HandlerFunc {
+func RequireBoardAccess(authService auth.Service, shareTokenSvc sharetokens.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		boardUuidStr := c.Param("uuid") // assuming route matches /boards/:uuid/...
 
@@ -52,12 +52,12 @@ func RequireBoardAccess(authService auth.Service, boardsRepo boards.Repository) 
 		}
 
 		if shareToken != "" {
-			tokenRecord, err := boardsRepo.GetShareToken(c.Request.Context(), shareToken)
+			tokenRecord, err := shareTokenSvc.GetShareToken(c.Request.Context(), shareToken)
 			if err == nil {
 				// Convert pgtype.UUID to string for comparison or format
 				var boardUuid pgtype.UUID
 				err = boardUuid.Scan(boardUuidStr) // basic pgtype scanning
-				if err == nil && boardUuid == tokenRecord.BoardUuid {
+				if err == nil && boardUuid.String() == tokenRecord.BoardUuid {
 					c.Set("share_token", shareToken)
 					c.Next()
 					return

@@ -18,6 +18,7 @@ import (
 	"github.com/PegasusMKD/travel-dream-board/internal/database"
 	"github.com/PegasusMKD/travel-dream-board/internal/db"
 	"github.com/PegasusMKD/travel-dream-board/internal/middleware"
+	"github.com/PegasusMKD/travel-dream-board/internal/sharetokens"
 	"github.com/PegasusMKD/travel-dream-board/internal/transport"
 	"github.com/PegasusMKD/travel-dream-board/internal/votes"
 
@@ -128,6 +129,10 @@ func (srv *GinServer) setupRoutes(router *gin.Engine, queries *db.Queries, cfg *
 	authService := auth.NewService(authRepo, oauthConfig, cfg.JWTSecret)
 	authHandler := auth.NewHandler(authService, oauthConfig)
 
+	shareTokensRepository := sharetokens.NewRepository(queries)
+	shareTokensService := sharetokens.NewService(shareTokensRepository)
+	shareTokensHandler := sharetokens.NewHandler(shareTokensService)
+
 	commentsRepository := comments.NewRepository(queries)
 	commentsService := comments.NewService(commentsRepository)
 	commentsHandler := comments.NewHandler(commentsService)
@@ -155,6 +160,7 @@ func (srv *GinServer) setupRoutes(router *gin.Engine, queries *db.Queries, cfg *
 	v1Group := router.Group("/api/v1")
 	{
 		authHandler.RegisterRoutes(v1Group)
+		shareTokensHandler.RegisterRoutes(v1Group)
 		commentsHandler.RegisterRoutes(v1Group)
 		votesHandler.RegisterRoutes(v1Group)
 		accomodationsHandler.RegisterRoutes(v1Group)

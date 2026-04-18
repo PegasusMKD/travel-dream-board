@@ -14,7 +14,6 @@ type Repository interface {
 	GetAllBoards(ctx context.Context, userUuid string) ([]*Board, error)
 	UpdateBoardById(ctx context.Context, uuid string, data *Board) error
 	DeleteBoardById(ctx context.Context, uuid string) error
-	GetShareToken(ctx context.Context, token string) (*db.ShareToken, error)
 }
 
 type repositoryImpl struct {
@@ -118,12 +117,4 @@ func (repo *repositoryImpl) DeleteBoardById(ctx context.Context, uuid string) er
 	}
 
 	return repo.queries.DeleteBoardById(ctx, id)
-}
-
-func (repo *repositoryImpl) GetShareToken(ctx context.Context, token string) (*db.ShareToken, error) {
-	ent, err := repo.queries.GetShareToken(ctx, token)
-	if err != nil {
-		return nil, err
-	}
-	return &ent, nil
 }
