@@ -25,16 +25,27 @@
 ### API — Boards
 - [X] `POST /boards`
 - [X] `GET /boards`
-- [X] `GET /boards/:id`
-- [X] `PATCH /boards/:id`
-- [X] `DELETE /boards/:id`
+- [X] `GET /boards/:uuid`
+- [X] `PATCH /boards/:uuid`
+- [X] `DELETE /boards/:uuid`
 
-### API — Items
-- [ ] `POST /boards/:id/items`
-- [ ] `PATCH /items/:id`
-- [ ] `DELETE /items/:id`
-- [ ] `PATCH /items/:id/finalize`
-- [ ] `PATCH /items/:id/status`
+### API — Accommodations
+- [X] `POST /accomodations`
+- [X] `GET /accomodations/:uuid`
+- [X] `PATCH /accomodations/:uuid`
+- [X] `DELETE /accomodations/:uuid`
+
+### API — Activities
+- [X] `POST /activities`
+- [X] `GET /activities/:uuid`
+- [X] `PATCH /activities/:uuid`
+- [X] `DELETE /activities/:uuid`
+
+### API — Transport
+- [X] `POST /transport`
+- [X] `GET /transport/:uuid`
+- [X] `PATCH /transport/:uuid`
+- [X] `DELETE /transport/:uuid`
 
 ---
 
@@ -67,13 +78,15 @@
 ## Week 3 — Collaboration Features
 
 ### API — Collaboration
-- [ ] `POST /boards/:id/share-tokens` (generate share link)
-- [ ] `DELETE /boards/:id/share-tokens/:token` (revoke)
+- [ ] `POST /boards/:uuid/share-tokens` (generate share link)
+- [ ] `DELETE /boards/:uuid/share-tokens/:token` (revoke)
 - [ ] Share token validation middleware
-- [ ] `POST /items/:id/votes`
-- [ ] `DELETE /items/:id/votes` (change vote)
-- [ ] `POST /items/:id/comments`
-- [ ] `DELETE /comments/:id`
+- [X] `POST /votes`
+- [X] `PATCH /votes/:uuid` (change vote)
+- [X] `DELETE /votes/:uuid`
+- [X] `POST /comments`
+- [X] `PATCH /comments/:uuid`
+- [X] `DELETE /comments/:uuid`
 
 ### Frontend — Collaboration
 - [ ] Share link generation UI

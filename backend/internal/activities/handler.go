@@ -84,7 +84,7 @@ func (h *Handler) DeleteActivityById(ctx *gin.Context) {
 }
 
 func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
-	group := router.Group("/accomodations")
+	group := router.Group("/activities")
 	{
 		group.POST("/", h.CreateActivity)
 		group.GET("/:uuid", h.GetActivityById)

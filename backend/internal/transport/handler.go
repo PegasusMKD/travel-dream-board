@@ -84,7 +84,7 @@ func (h *Handler) DeleteTransportById(ctx *gin.Context) {
 }
 
 func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
-	group := router.Group("/accomodations")
+	group := router.Group("/transport")
 	{
 		group.POST("/", h.CreateTransport)
 		group.GET("/:uuid", h.GetTransportById)

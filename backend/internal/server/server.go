@@ -10,11 +10,15 @@ import (
 	"time"
 
 	"github.com/PegasusMKD/travel-dream-board/internal/accomodations"
+	"github.com/PegasusMKD/travel-dream-board/internal/activities"
 	"github.com/PegasusMKD/travel-dream-board/internal/boards"
+	"github.com/PegasusMKD/travel-dream-board/internal/comments"
 	"github.com/PegasusMKD/travel-dream-board/internal/config"
 	"github.com/PegasusMKD/travel-dream-board/internal/database"
 	"github.com/PegasusMKD/travel-dream-board/internal/db"
 	"github.com/PegasusMKD/travel-dream-board/internal/middleware"
+	"github.com/PegasusMKD/travel-dream-board/internal/transport"
+	"github.com/PegasusMKD/travel-dream-board/internal/votes"
 
 	"github.com/gin-gonic/gin"
 )
@@ -109,15 +113,37 @@ func (srv *GinServer) setupRoutes(router *gin.Engine, queries *db.Queries, cfg *
 		ctx.JSON(200, gin.H{"status": "healthy"})
 	})
 
-	boardsRepository := boards.NewRepository(queries)
-	boardsService := boards.NewService(boardsRepository)
-	boardsHandler := boards.NewHandler(boardsService)
+	commentsRepository := comments.NewRepository(queries)
+	commentsService := comments.NewService(commentsRepository)
+	commentsHandler := comments.NewHandler(commentsService)
+
+	votesRepository := votes.NewRepository(queries)
+	votesService := votes.NewService(votesRepository)
+	votesHandler := votes.NewHandler(votesService)
 
 	accomodationsRepository := accomodations.NewRepository(queries)
-	accomodationsService := accomodations.NewService(accomodationsRepository)
+	accomodationsService := accomodations.NewService(accomodationsRepository, commentsService, votesService)
+	accomodationsHandler := accomodations.NewHandler(accomodationsService)
+
+	activitiesRepository := activities.NewRepository(queries)
+	activitiesService := activities.NewService(activitiesRepository, commentsService, votesService)
+	activitiesHandler := activities.NewHandler(activitiesService)
+
+	transportRepository := transport.NewRepository(queries)
+	transportService := transport.NewService(transportRepository, commentsService, votesService)
+	transportHandler := transport.NewHandler(transportService)
+
+	boardsRepository := boards.NewRepository(queries)
+	boardsService := boards.NewService(boardsRepository, accomodationsService, activitiesService, transportService)
+	boardsHandler := boards.NewHandler(boardsService)
 
 	v1Group := router.Group("/api/v1")
 	{
+		commentsHandler.RegisterRoutes(v1Group)
+		votesHandler.RegisterRoutes(v1Group)
+		accomodationsHandler.RegisterRoutes(v1Group)
+		activitiesHandler.RegisterRoutes(v1Group)
+		transportHandler.RegisterRoutes(v1Group)
 		boardsHandler.RegisterRoutes(v1Group)
 	}
 }
