@@ -1,6 +1,7 @@
 create type scrape_status as enum (
 	'processing',
-	'completed',
+	'completed_by_og',
+	'completed_by_json_ld',
 	'completed_by_ai',
 	'failed'
 );
@@ -17,5 +18,6 @@ create table scrape_audit (
 
 	title text,
 	image_url text,
-	description text
+	description text,
+	site_name text
 );

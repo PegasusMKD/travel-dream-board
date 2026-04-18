@@ -5,11 +5,12 @@ import (
 
 	"github.com/PegasusMKD/travel-dream-board/internal/comments"
 	"github.com/PegasusMKD/travel-dream-board/internal/db"
+	scrapeprocess "github.com/PegasusMKD/travel-dream-board/internal/scrape_process"
 	"github.com/PegasusMKD/travel-dream-board/internal/votes"
 )
 
 type Service interface {
-	CreateAccomodation(ctx context.Context, url string, userUuid string) (*Accomodation, error)
+	CreateAccomodation(ctx context.Context, url, boardUuid, userUuid string) (*Accomodation, error)
 	GetAccomodationById(ctx context.Context, uuid string) (*AggregatedAccomodation, error)
 	GetAccomodationsByBoardId(ctx context.Context, uuid string) ([]*Accomodation, error)
 	UpdateAccomodationById(ctx context.Context, uuid string, data *Accomodation) error
@@ -19,23 +20,35 @@ type Service interface {
 type accomodationServiceImpl struct {
 	repo Repository
 
-	commentsSvc comments.Service
-	votesSvc    votes.Service
+	commentsService comments.Service
+	votesService    votes.Service
+
+	scrapeService scrapeprocess.Service
 }
 
-func NewService(repo Repository, commentsSvc comments.Service, votesSvc votes.Service) Service {
+func NewService(repo Repository, commentsService comments.Service, votesService votes.Service, scrapeService scrapeprocess.Service) Service {
 	return &accomodationServiceImpl{
-		repo:        repo,
-		commentsSvc: commentsSvc,
-		votesSvc:    votesSvc,
+		repo:            repo,
+		commentsService: commentsService,
+		votesService:    votesService,
+		scrapeService:   scrapeService,
 	}
 }
 
-func (svc *accomodationServiceImpl) CreateAccomodation(ctx context.Context, url string, userUuid string) (*Accomodation, error) {
-	// TODO: Scrape the data
+func (svc *accomodationServiceImpl) CreateAccomodation(ctx context.Context, url, boardUuid, userUuid string) (*Accomodation, error) {
+	extractedData, err := svc.scrapeService.Scrape(ctx, url)
+	if err != nil {
+		return nil, err
+	}
+
+	//
 	data := Accomodation{
 		Url:      url,
-		UserUuid: userUuid,
+		Title:    extractedData.Title,
+		ImageUrl: &extractedData.ImageUrl,
+
+		UserUuid:  userUuid,
+		BoardUuid: boardUuid,
 	}
 
 	return svc.repo.CreateAccomodation(ctx, &data)
@@ -47,12 +60,12 @@ func (svc *accomodationServiceImpl) GetAccomodationById(ctx context.Context, uui
 		return nil, err
 	}
 
-	comms, err := svc.commentsSvc.FindAllCommentsByRelatedEntity(ctx, db.CommentedOnAccomodation, uuid)
+	comms, err := svc.commentsService.FindAllCommentsByRelatedEntity(ctx, db.CommentedOnAccomodation, uuid)
 	if err != nil {
 		return nil, err
 	}
 
-	votes, err := svc.votesSvc.FindAllVotesByRelatedEntity(ctx, db.VotedOnAccomodation, uuid)
+	votes, err := svc.votesService.FindAllVotesByRelatedEntity(ctx, db.VotedOnAccomodation, uuid)
 	if err != nil {
 		return nil, err
 	}

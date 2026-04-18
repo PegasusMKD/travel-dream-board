@@ -18,6 +18,7 @@ import (
 	"github.com/PegasusMKD/travel-dream-board/internal/database"
 	"github.com/PegasusMKD/travel-dream-board/internal/db"
 	"github.com/PegasusMKD/travel-dream-board/internal/middleware"
+	scrapeprocess "github.com/PegasusMKD/travel-dream-board/internal/scrape_process"
 	"github.com/PegasusMKD/travel-dream-board/internal/sharetokens"
 	"github.com/PegasusMKD/travel-dream-board/internal/transport"
 	"github.com/PegasusMKD/travel-dream-board/internal/votes"
@@ -141,16 +142,21 @@ func (srv *GinServer) setupRoutes(router *gin.Engine, queries *db.Queries, cfg *
 	votesService := votes.NewService(votesRepository)
 	votesHandler := votes.NewHandler(votesService)
 
+	scrapeAuditRepository := scrapeaudit.NewRepository(queries)
+	scrapeAuditService := scrapeaudit.NewService(scrapeAuditRepository)
+
+	scrapeService := scrapeprocess.NewService("TODO: Anthropic Key", scrapeAuditService)
+
 	accomodationsRepository := accomodations.NewRepository(queries)
-	accomodationsService := accomodations.NewService(accomodationsRepository, commentsService, votesService)
+	accomodationsService := accomodations.NewService(accomodationsRepository, commentsService, votesService, scrapeService)
 	accomodationsHandler := accomodations.NewHandler(accomodationsService)
 
 	activitiesRepository := activities.NewRepository(queries)
-	activitiesService := activities.NewService(activitiesRepository, commentsService, votesService)
+	activitiesService := activities.NewService(activitiesRepository, commentsService, votesService, scrapeService)
 	activitiesHandler := activities.NewHandler(activitiesService)
 
 	transportRepository := transport.NewRepository(queries)
-	transportService := transport.NewService(transportRepository, commentsService, votesService)
+	transportService := transport.NewService(transportRepository, commentsService, votesService, scrapeService)
 	transportHandler := transport.NewHandler(transportService)
 
 	boardsRepository := boards.NewRepository(queries)

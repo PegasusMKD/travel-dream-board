@@ -52,12 +52,11 @@
 ## Week 2 — Scraping + Core UI
 
 ### Scraper Service
-- [ ] Go HTTP client with proper User-Agent
-- [ ] OG tag extraction (`og:title`, `og:image`, `og:description`)
-- [ ] `application/ld+json` schema extraction
-- [ ] Claude Haiku 4.5 AI fallback
-- [ ] Graceful partial-result handling (return what we have)
-- [ ] `POST /scrape` endpoint
+- [X] Go HTTP client with proper User-Agent
+- [X] OG tag extraction (`og:title`, `og:image`, `og:description`)
+- [X] `application/ld+json` schema extraction
+- [X] Claude Haiku 4.5 AI fallback
+- [X] Graceful partial-result handling (return what we have)
 
 ### Frontend Setup
 - [ ] Vite + React 18 + TailwindCSS scaffold

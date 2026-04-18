@@ -5,11 +5,12 @@ import (
 
 	"github.com/PegasusMKD/travel-dream-board/internal/comments"
 	"github.com/PegasusMKD/travel-dream-board/internal/db"
+	scrapeprocess "github.com/PegasusMKD/travel-dream-board/internal/scrape_process"
 	"github.com/PegasusMKD/travel-dream-board/internal/votes"
 )
 
 type Service interface {
-	CreateActivity(ctx context.Context, url string, userUuid string) (*Activity, error)
+	CreateActivity(ctx context.Context, url, boardUuid, userUuid string) (*Activity, error)
 	GetActivityById(ctx context.Context, uuid string) (*AggregatedActivity, error)
 	GetActivitiesByBoardId(ctx context.Context, uuid string) ([]*Activity, error)
 	UpdateActivityById(ctx context.Context, uuid string, data *Activity) error
@@ -19,23 +20,37 @@ type Service interface {
 type accomodationServiceImpl struct {
 	repo Repository
 
-	commentsSvc comments.Service
-	votesSvc    votes.Service
+	commentsService comments.Service
+	votesService    votes.Service
+
+	scrapeService scrapeprocess.Service
 }
 
-func NewService(repo Repository, commentsSvc comments.Service, votesSvc votes.Service) Service {
+func NewService(repo Repository, commentsService comments.Service, votesService votes.Service, scrapeService scrapeprocess.Service) Service {
 	return &accomodationServiceImpl{
-		repo:        repo,
-		commentsSvc: commentsSvc,
-		votesSvc:    votesSvc,
+		repo: repo,
+
+		commentsService: commentsService,
+		votesService:    votesService,
+
+		scrapeService: scrapeService,
 	}
 }
 
-func (svc *accomodationServiceImpl) CreateActivity(ctx context.Context, url string, userUuid string) (*Activity, error) {
-	// TODO: Scrape the data
+func (svc *accomodationServiceImpl) CreateActivity(ctx context.Context, url, boardUuid, userUuid string) (*Activity, error) {
+	extractedData, err := svc.scrapeService.Scrape(ctx, url)
+	if err != nil {
+		return nil, err
+	}
+
+	//
 	data := Activity{
 		Url:      url,
-		UserUuid: userUuid,
+		Title:    extractedData.Title,
+		ImageUrl: &extractedData.ImageUrl,
+
+		UserUuid:  userUuid,
+		BoardUuid: boardUuid,
 	}
 
 	return svc.repo.CreateActivity(ctx, &data)
@@ -47,12 +62,12 @@ func (svc *accomodationServiceImpl) GetActivityById(ctx context.Context, uuid st
 		return nil, err
 	}
 
-	comms, err := svc.commentsSvc.FindAllCommentsByRelatedEntity(ctx, db.CommentedOnActivities, uuid)
+	comms, err := svc.commentsService.FindAllCommentsByRelatedEntity(ctx, db.CommentedOnActivities, uuid)
 	if err != nil {
 		return nil, err
 	}
 
-	votes, err := svc.votesSvc.FindAllVotesByRelatedEntity(ctx, db.VotedOnActivities, uuid)
+	votes, err := svc.votesService.FindAllVotesByRelatedEntity(ctx, db.VotedOnActivities, uuid)
 	if err != nil {
 		return nil, err
 	}

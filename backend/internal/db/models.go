@@ -190,10 +190,11 @@ func (ns NullCommentedOn) Value() (driver.Value, error) {
 type ScrapeStatus string
 
 const (
-	ScrapeStatusProcessing    ScrapeStatus = "processing"
-	ScrapeStatusCompleted     ScrapeStatus = "completed"
-	ScrapeStatusCompletedByAi ScrapeStatus = "completed_by_ai"
-	ScrapeStatusFailed        ScrapeStatus = "failed"
+	ScrapeStatusProcessing        ScrapeStatus = "processing"
+	ScrapeStatusCompletedByOg     ScrapeStatus = "completed_by_og"
+	ScrapeStatusCompletedByJsonLd ScrapeStatus = "completed_by_json_ld"
+	ScrapeStatusCompletedByAi     ScrapeStatus = "completed_by_ai"
+	ScrapeStatusFailed            ScrapeStatus = "failed"
 )
 
 func (e *ScrapeStatus) Scan(src interface{}) error {
@@ -392,6 +393,7 @@ type ScrapeAudit struct {
 	Title       *string
 	ImageUrl    *string
 	Description *string
+	SiteName    *string
 }
 
 type ShareToken struct {
