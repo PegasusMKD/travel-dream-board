@@ -18,6 +18,19 @@ type Transport struct {
 	Selected         bool               `json:"selected"`
 }
 
+func FromEntity(entity db.Transport) *Transport {
+	return &Transport{
+		Uuid:             entity.Uuid.String(),
+		Url:              entity.Url,
+		Title:            entity.Title,
+		ImageUrl:         entity.ImageUrl,
+		Notes:            entity.Notes,
+		Status:           entity.Status,
+		BookingReference: entity.BookingReference,
+		Selected:         entity.Selected,
+	}
+}
+
 type AggregatedTransport struct {
 	Transport
 

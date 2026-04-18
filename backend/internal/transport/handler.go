@@ -1,4 +1,4 @@
-package accomodations
+package transport
 
 import "github.com/gin-gonic/gin"
 
@@ -12,14 +12,14 @@ func NewHandler(svc Service) *Handler {
 	}
 }
 
-func (h *Handler) CreateAccomodation(ctx *gin.Context) {
+func (h *Handler) CreateTransport(ctx *gin.Context) {
 	url := ctx.Query("url")
 	if url == "" {
 		ctx.JSON(400, gin.H{"error": "Url parameter is required"})
 		return
 	}
 
-	data, err := h.svc.CreateAccomodation(ctx, url)
+	data, err := h.svc.CreateTransport(ctx, url)
 	if err != nil {
 		ctx.AbortWithError(500, err)
 		return
@@ -28,14 +28,14 @@ func (h *Handler) CreateAccomodation(ctx *gin.Context) {
 	ctx.JSON(200, data)
 }
 
-func (h *Handler) GetAccomodationById(ctx *gin.Context) {
+func (h *Handler) GetTransportById(ctx *gin.Context) {
 	id := ctx.Param("uuid")
 	if id == "" {
 		ctx.JSON(400, gin.H{"error": "Uuid parameter is required"})
 		return
 	}
 
-	data, err := h.svc.GetAccomodationById(ctx, id)
+	data, err := h.svc.GetTransportById(ctx, id)
 	if err != nil {
 		ctx.AbortWithError(500, err)
 		return
@@ -44,21 +44,21 @@ func (h *Handler) GetAccomodationById(ctx *gin.Context) {
 	ctx.JSON(200, data)
 }
 
-func (h *Handler) UpdateAccomodationById(ctx *gin.Context) {
+func (h *Handler) UpdateTransportById(ctx *gin.Context) {
 	id := ctx.Param("uuid")
 	if id == "" {
 		ctx.JSON(400, gin.H{"error": "Uuid parameter is required"})
 		return
 	}
 
-	var body Accomodation
+	var body Transport
 	if err := ctx.ShouldBindJSON(body); err != nil {
 		log.Error("Failed parsing body", "error", err)
 		ctx.AbortWithError(500, err)
 		return
 	}
 
-	err := h.svc.UpdateAccomodationById(ctx, id, &body)
+	err := h.svc.UpdateTransportById(ctx, id, &body)
 	if err != nil {
 		ctx.AbortWithError(500, err)
 		return
@@ -67,14 +67,14 @@ func (h *Handler) UpdateAccomodationById(ctx *gin.Context) {
 	ctx.Status(200)
 }
 
-func (h *Handler) DeleteAccomodationById(ctx *gin.Context) {
+func (h *Handler) DeleteTransportById(ctx *gin.Context) {
 	uuid := ctx.Param("uuid")
 	if uuid == "" {
 		ctx.JSON(400, gin.H{"error": "uuid parameter is required"})
 		return
 	}
 
-	err := h.svc.DeleteAccomodationById(ctx, uuid)
+	err := h.svc.DeleteTransportById(ctx, uuid)
 	if err != nil {
 		ctx.AbortWithError(500, err)
 		return
@@ -86,9 +86,9 @@ func (h *Handler) DeleteAccomodationById(ctx *gin.Context) {
 func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 	group := router.Group("/accomodations")
 	{
-		group.POST("/", h.CreateAccomodation)
-		group.GET("/:uuid", h.GetAccomodationById)
-		group.PATCH("/:uuid", h.UpdateAccomodationById)
-		group.DELETE("/:uuid", h.DeleteAccomodationById)
+		group.POST("/", h.CreateTransport)
+		group.GET("/:uuid", h.GetTransportById)
+		group.PATCH("/:uuid", h.UpdateTransportById)
+		group.DELETE("/:uuid", h.DeleteTransportById)
 	}
 }

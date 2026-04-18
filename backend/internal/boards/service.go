@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/PegasusMKD/travel-dream-board/internal/accomodations"
+	"github.com/PegasusMKD/travel-dream-board/internal/activities"
+	"github.com/PegasusMKD/travel-dream-board/internal/transport"
 )
 
 type Service interface {
@@ -15,13 +17,19 @@ type Service interface {
 }
 
 type serviceImpl struct {
-	repo            Repository
+	repo Repository
+
 	accomodationSvc accomodations.Service
+	activitiesSvc   activities.Service
+	transportSvc    transport.Service
 }
 
-func NewService(repo Repository) Service {
+func NewService(repo Repository, accomodationSvc accomodations.Service, activitiesSvc activities.Service, transportSvc transport.Service) Service {
 	return &serviceImpl{
-		repo: repo,
+		repo:            repo,
+		accomodationSvc: accomodationSvc,
+		activitiesSvc:   activitiesSvc,
+		transportSvc:    transportSvc,
 	}
 }
 
@@ -40,9 +48,21 @@ func (svc *serviceImpl) GetBoardById(ctx context.Context, uuid string) (*Aggrega
 		return nil, err
 	}
 
+	activs, err := svc.activitiesSvc.GetActivitiesByBoardId(ctx, uuid)
+	if err != nil {
+		return nil, err
+	}
+
+	transports, err := svc.transportSvc.GetTransportsByBoardId(ctx, uuid)
+	if err != nil {
+		return nil, err
+	}
+
 	return &AggregatedBoard{
 		Board:         *board,
 		Accomodations: accoms,
+		Activities:    activs,
+		Transport:     transports,
 	}, nil
 }
 

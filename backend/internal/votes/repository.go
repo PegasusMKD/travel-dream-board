@@ -54,7 +54,7 @@ func (repo *votesRepositoryImpl) CreateVote(ctx context.Context, data *Vote) (*V
 	return FromEntity(ent), nil
 }
 
-func (repo *votesRepositoryImpl) FindAllVotesByRelatedEntity(ctx context.Context, _type db.VoteedOn, uuid string) ([]*Vote, error) {
+func (repo *votesRepositoryImpl) FindAllVotesByRelatedEntity(ctx context.Context, _type db.VotedOn, uuid string) ([]*Vote, error) {
 	votedOnId, err := utility.UuidFromString(uuid)
 	if err != nil {
 		log.Error("Failed parsing UUID", "uuid", uuid, "error", err)

@@ -18,6 +18,19 @@ type Activity struct {
 	Selected         bool                `json:"selected"`
 }
 
+func FromEntity(entity db.Activity) *Activity {
+	return &Activity{
+		Uuid:             entity.Uuid.String(),
+		Url:              entity.Url,
+		Title:            entity.Title,
+		ImageUrl:         entity.ImageUrl,
+		Notes:            entity.Notes,
+		Status:           entity.Status,
+		BookingReference: entity.BookingReference,
+		Selected:         entity.Selected,
+	}
+}
+
 type AggregatedActivity struct {
 	Activity
 

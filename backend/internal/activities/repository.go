@@ -1,4 +1,4 @@
-package accomodations
+package activities
 
 import (
 	"context"
@@ -8,11 +8,11 @@ import (
 )
 
 type Repository interface {
-	CreateAccomodation(ctx context.Context, data *Accomodation) (*Accomodation, error)
-	GetAccomodationById(ctx context.Context, uuid string) (*Accomodation, error)
-	GetAllAccomodationsByBoardId(ctx context.Context, uuid string) ([]*Accomodation, error)
-	UpdateAccomodationById(ctx context.Context, uuid string, data *Accomodation) error
-	DeleteAccomodationById(ctx context.Context, uuid string) error
+	CreateActivity(ctx context.Context, data *Activity) (*Activity, error)
+	GetActivityById(ctx context.Context, uuid string) (*Activity, error)
+	GetAllActivitiesByBoardId(ctx context.Context, uuid string) ([]*Activity, error)
+	UpdateActivityById(ctx context.Context, uuid string, data *Activity) error
+	DeleteActivityById(ctx context.Context, uuid string) error
 }
 
 type repositoryImpl struct {
@@ -25,21 +25,21 @@ func NewRepository(queries *db.Queries) Repository {
 	}
 }
 
-func (repo *repositoryImpl) CreateAccomodation(ctx context.Context, data *Accomodation) (*Accomodation, error) {
+func (repo *repositoryImpl) CreateActivity(ctx context.Context, data *Activity) (*Activity, error) {
 	boardUuid, err := utility.UuidFromString(data.BoardUuid)
 	if err != nil {
 		log.Error("Failed parsing UUID", "uuid", data.BoardUuid, "error", err)
 		return nil, err
 	}
 
-	params := db.CreateAccomodationParams{
+	params := db.CreateActivityParams{
 		Url:       data.Url,
 		Title:     data.Title,
 		ImageUrl:  data.ImageUrl,
 		BoardUuid: boardUuid,
 	}
 
-	entity, err := repo.queries.CreateAccomodation(ctx, params)
+	entity, err := repo.queries.CreateActivity(ctx, params)
 	if err != nil {
 		log.Error("Failed creating entity", "url", data.Url, "error", err)
 		return nil, err
@@ -48,14 +48,14 @@ func (repo *repositoryImpl) CreateAccomodation(ctx context.Context, data *Accomo
 	return FromEntity(entity), nil
 }
 
-func (repo *repositoryImpl) GetAccomodationById(ctx context.Context, uuid string) (*Accomodation, error) {
+func (repo *repositoryImpl) GetActivityById(ctx context.Context, uuid string) (*Activity, error) {
 	id, err := utility.UuidFromString(uuid)
 	if err != nil {
 		log.Error("Failed parsing passed UUID", "uuid", uuid, "error", err)
 		return nil, err
 	}
 
-	ent, err := repo.queries.GetAccomodationByUuid(ctx, id)
+	ent, err := repo.queries.GetActivityByUuid(ctx, id)
 	if err != nil {
 		log.Error("Failed fetching an entity", "uuid", uuid, "error", err)
 		return nil, err
@@ -64,20 +64,20 @@ func (repo *repositoryImpl) GetAccomodationById(ctx context.Context, uuid string
 	return FromEntity(ent), nil
 }
 
-func (repo *repositoryImpl) GetAllAccomodationsByBoardId(ctx context.Context, uuid string) ([]*Accomodation, error) {
+func (repo *repositoryImpl) GetAllActivitiesByBoardId(ctx context.Context, uuid string) ([]*Activity, error) {
 	id, err := utility.UuidFromString(uuid)
 	if err != nil {
 		log.Error("Failed parsing passed UUID", "uuid", uuid, "error", err)
 		return nil, err
 	}
 
-	ent, err := repo.queries.FindAllAccomodationsByBoardUuid(ctx, id)
+	ent, err := repo.queries.FindAllActivitiesByBoardUuid(ctx, id)
 	if err != nil {
 		log.Error("Failed fetching an entity", "uuid", uuid, "error", err)
 		return nil, err
 	}
 
-	data := []*Accomodation{}
+	data := []*Activity{}
 	for _, val := range ent {
 		data = append(data, FromEntity(val))
 	}
@@ -85,14 +85,14 @@ func (repo *repositoryImpl) GetAllAccomodationsByBoardId(ctx context.Context, uu
 	return data, nil
 }
 
-func (repo *repositoryImpl) UpdateAccomodationById(ctx context.Context, uuid string, data *Accomodation) error {
+func (repo *repositoryImpl) UpdateActivityById(ctx context.Context, uuid string, data *Activity) error {
 	id, err := utility.UuidFromString(uuid)
 	if err != nil {
 		log.Error("Failed parsing passed UUID", "uuid", uuid, "error", err)
 		return err
 	}
 
-	params := db.UpdateAccomodationByUuidParams{
+	params := db.UpdateActivityByUuidParams{
 		Url:              data.Url,
 		Title:            data.Title,
 		ImageUrl:         data.ImageUrl,
@@ -103,15 +103,15 @@ func (repo *repositoryImpl) UpdateAccomodationById(ctx context.Context, uuid str
 		Uuid:             id,
 	}
 
-	return repo.queries.UpdateAccomodationByUuid(ctx, params)
+	return repo.queries.UpdateActivityByUuid(ctx, params)
 }
 
-func (repo *repositoryImpl) DeleteAccomodationById(ctx context.Context, uuid string) error {
+func (repo *repositoryImpl) DeleteActivityById(ctx context.Context, uuid string) error {
 	id, err := utility.UuidFromString(uuid)
 	if err != nil {
 		log.Error("Failed parsing UUID", "uuid", uuid, "error", err)
 		return err
 	}
 
-	return repo.queries.DeleteAccomodationByUuid(ctx, id)
+	return repo.queries.DeleteActivityByUuid(ctx, id)
 }
