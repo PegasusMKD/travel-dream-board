@@ -12,9 +12,9 @@ import (
 )
 
 const createActivity = `-- name: CreateActivity :one
-insert into activities (url, title, image_url, board_uuid)
-values ($1, $2, $3, $4)
-returning uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid
+insert into activities (url, title, image_url, board_uuid, user_uuid)
+values ($1, $2, $3, $4, $5)
+returning uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid, user_uuid
 `
 
 type CreateActivityParams struct {
@@ -22,6 +22,7 @@ type CreateActivityParams struct {
 	Title     string
 	ImageUrl  *string
 	BoardUuid pgtype.UUID
+	UserUuid  pgtype.UUID
 }
 
 func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) (Activity, error) {
@@ -30,6 +31,7 @@ func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) 
 		arg.Title,
 		arg.ImageUrl,
 		arg.BoardUuid,
+		arg.UserUuid,
 	)
 	var i Activity
 	err := row.Scan(
@@ -44,6 +46,7 @@ func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) 
 		&i.BookingReference,
 		&i.Selected,
 		&i.BoardUuid,
+		&i.UserUuid,
 	)
 	return i, err
 }
@@ -59,7 +62,7 @@ func (q *Queries) DeleteActivityByUuid(ctx context.Context, uuid pgtype.UUID) er
 }
 
 const findAllActivitiesByBoardUuid = `-- name: FindAllActivitiesByBoardUuid :many
-select uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid
+select uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid, user_uuid
 from activities
 where board_uuid = $1
 `
@@ -85,6 +88,7 @@ func (q *Queries) FindAllActivitiesByBoardUuid(ctx context.Context, boardUuid pg
 			&i.BookingReference,
 			&i.Selected,
 			&i.BoardUuid,
+			&i.UserUuid,
 		); err != nil {
 			return nil, err
 		}
@@ -97,7 +101,7 @@ func (q *Queries) FindAllActivitiesByBoardUuid(ctx context.Context, boardUuid pg
 }
 
 const getActivityByUuid = `-- name: GetActivityByUuid :one
-select uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid
+select uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid, user_uuid
 from activities
 where uuid = $1
 `
@@ -117,6 +121,7 @@ func (q *Queries) GetActivityByUuid(ctx context.Context, uuid pgtype.UUID) (Acti
 		&i.BookingReference,
 		&i.Selected,
 		&i.BoardUuid,
+		&i.UserUuid,
 	)
 	return i, err
 }

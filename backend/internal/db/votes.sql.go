@@ -18,7 +18,7 @@ returning uuid, updated_at, created_at, voted_by, rank, voted_on_, voted_on_uuid
 `
 
 type CreateVoteParams struct {
-	VotedBy     string
+	VotedBy     pgtype.UUID
 	Rank        int32
 	VotedOn     VotedOn
 	VotedOnUuid pgtype.UUID

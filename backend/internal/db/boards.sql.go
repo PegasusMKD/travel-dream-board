@@ -12,18 +12,19 @@ import (
 )
 
 const createBoard = `-- name: CreateBoard :one
-insert into boards (name, location_name)
-values ($1, $2)
-returning uuid, updated_at, created_at, name, details, location_name, starts_at, lasts_until, status, thumbnail_url
+insert into boards (name, location_name, user_uuid)
+values ($1, $2, $3)
+returning uuid, updated_at, created_at, name, details, location_name, starts_at, lasts_until, status, thumbnail_url, user_uuid
 `
 
 type CreateBoardParams struct {
 	Name         string
 	LocationName string
+	UserUuid     pgtype.UUID
 }
 
 func (q *Queries) CreateBoard(ctx context.Context, arg CreateBoardParams) (Board, error) {
-	row := q.db.QueryRow(ctx, createBoard, arg.Name, arg.LocationName)
+	row := q.db.QueryRow(ctx, createBoard, arg.Name, arg.LocationName, arg.UserUuid)
 	var i Board
 	err := row.Scan(
 		&i.Uuid,
@@ -36,6 +37,7 @@ func (q *Queries) CreateBoard(ctx context.Context, arg CreateBoardParams) (Board
 		&i.LastsUntil,
 		&i.Status,
 		&i.ThumbnailUrl,
+		&i.UserUuid,
 	)
 	return i, err
 }
@@ -51,7 +53,7 @@ func (q *Queries) DeleteBoardById(ctx context.Context, uuid pgtype.UUID) error {
 }
 
 const getAllBoards = `-- name: GetAllBoards :many
-select uuid, updated_at, created_at, name, details, location_name, starts_at, lasts_until, status, thumbnail_url
+select uuid, updated_at, created_at, name, details, location_name, starts_at, lasts_until, status, thumbnail_url, user_uuid
 from boards
 `
 
@@ -75,6 +77,7 @@ func (q *Queries) GetAllBoards(ctx context.Context) ([]Board, error) {
 			&i.LastsUntil,
 			&i.Status,
 			&i.ThumbnailUrl,
+			&i.UserUuid,
 		); err != nil {
 			return nil, err
 		}
@@ -87,7 +90,7 @@ func (q *Queries) GetAllBoards(ctx context.Context) ([]Board, error) {
 }
 
 const getBoardById = `-- name: GetBoardById :one
-select uuid, updated_at, created_at, name, details, location_name, starts_at, lasts_until, status, thumbnail_url
+select uuid, updated_at, created_at, name, details, location_name, starts_at, lasts_until, status, thumbnail_url, user_uuid
 from boards
 where uuid = $1
 `
@@ -106,6 +109,7 @@ func (q *Queries) GetBoardById(ctx context.Context, uuid pgtype.UUID) (Board, er
 		&i.LastsUntil,
 		&i.Status,
 		&i.ThumbnailUrl,
+		&i.UserUuid,
 	)
 	return i, err
 }

@@ -24,6 +24,11 @@ type Config struct {
 	LogFilePrefix  string
 
 	FrontendDir string
+
+	GoogleClientID     string
+	GoogleClientSecret string
+	GoogleRedirectURL  string
+	JWTSecret          string
 }
 
 func Load() (*Config, error) {
@@ -40,9 +45,14 @@ func Load() (*Config, error) {
 		LogLevelStdout: getEnv("LOG_LEVEL_STDOUT", "info"),
 		LogLevelFile:   getEnv("LOG_LEVEL_FILE", "debug"),
 		LogFilePath:    getEnv("LOG_FILE_PATH", "./logs"),
-		LogFilePrefix:  getEnv("LOG_FILE_PREFIX", "depgraph"),
+		LogFilePrefix:  getEnv("LOG_FILE_PREFIX", "travel-dream-board"),
 
 		FrontendDir: getEnv("FRONTEND_DIR", "./frontend/dist"),
+
+		GoogleClientID:     getEnv("GOOGLE_CLIENT_ID", ""),
+		GoogleClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),
+		GoogleRedirectURL:  getEnv("GOOGLE_REDIRECT_URL", ""),
+		JWTSecret:          getEnv("JWT_SECRET", "super-secret-default-key"),
 	}
 
 	// Validate required fields based on service
@@ -68,7 +78,7 @@ func getEnvBool(key string, defaultValue bool) bool {
 func (c *Config) validate() error {
 	// Service-specific validation
 	if c.DatabaseURL == "" {
-		return fmt.Errorf("DATABASE_URL is required for DepGraph service")
+		return fmt.Errorf("DATABASE_URL is required")
 	}
 
 	return nil

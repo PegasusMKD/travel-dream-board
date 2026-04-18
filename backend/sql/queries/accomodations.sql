@@ -1,6 +1,6 @@
 -- name: CreateAccomodation :one
-insert into accomodations (url, title, image_url, board_uuid)
-values (@url, @title, @image_url, @board_uuid)
+insert into accomodations (url, title, image_url, board_uuid, user_uuid)
+values (@url, @title, @image_url, @board_uuid, @user_uuid)
 returning *;
 
 -- name: GetAccomodationByUuid :one

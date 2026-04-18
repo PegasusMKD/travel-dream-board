@@ -16,11 +16,13 @@ type Transport struct {
 	Status           db.TransportStatus `json:"status"`
 	BookingReference *string            `json:"booking_reference"`
 	Selected         bool               `json:"selected"`
+	UserUuid         string             `json:"user_uuid"`
 }
 
 func FromEntity(entity db.Transport) *Transport {
 	return &Transport{
 		Uuid:             entity.Uuid.String(),
+		BoardUuid:        entity.BoardUuid.String(),
 		Url:              entity.Url,
 		Title:            entity.Title,
 		ImageUrl:         entity.ImageUrl,
@@ -28,6 +30,7 @@ func FromEntity(entity db.Transport) *Transport {
 		Status:           entity.Status,
 		BookingReference: entity.BookingReference,
 		Selected:         entity.Selected,
+		UserUuid:         entity.UserUuid.String(),
 	}
 }
 

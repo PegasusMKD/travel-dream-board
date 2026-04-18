@@ -11,6 +11,7 @@ import (
 
 	"github.com/PegasusMKD/travel-dream-board/internal/accomodations"
 	"github.com/PegasusMKD/travel-dream-board/internal/activities"
+	"github.com/PegasusMKD/travel-dream-board/internal/auth"
 	"github.com/PegasusMKD/travel-dream-board/internal/boards"
 	"github.com/PegasusMKD/travel-dream-board/internal/comments"
 	"github.com/PegasusMKD/travel-dream-board/internal/config"
@@ -21,6 +22,8 @@ import (
 	"github.com/PegasusMKD/travel-dream-board/internal/votes"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
 type GinServer struct {
@@ -113,6 +116,18 @@ func (srv *GinServer) setupRoutes(router *gin.Engine, queries *db.Queries, cfg *
 		ctx.JSON(200, gin.H{"status": "healthy"})
 	})
 
+	oauthConfig := &oauth2.Config{
+		ClientID:     cfg.GoogleClientID,
+		ClientSecret: cfg.GoogleClientSecret,
+		RedirectURL:  cfg.GoogleRedirectURL,
+		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"},
+		Endpoint:     google.Endpoint,
+	}
+
+	authRepo := auth.NewRepository(queries)
+	authService := auth.NewService(authRepo, oauthConfig, cfg.JWTSecret)
+	authHandler := auth.NewHandler(authService, oauthConfig)
+
 	commentsRepository := comments.NewRepository(queries)
 	commentsService := comments.NewService(commentsRepository)
 	commentsHandler := comments.NewHandler(commentsService)
@@ -139,6 +154,7 @@ func (srv *GinServer) setupRoutes(router *gin.Engine, queries *db.Queries, cfg *
 
 	v1Group := router.Group("/api/v1")
 	{
+		authHandler.RegisterRoutes(v1Group)
 		commentsHandler.RegisterRoutes(v1Group)
 		votesHandler.RegisterRoutes(v1Group)
 		accomodationsHandler.RegisterRoutes(v1Group)

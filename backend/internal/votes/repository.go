@@ -31,8 +31,14 @@ func (repo *votesRepositoryImpl) CreateVote(ctx context.Context, data *Vote) (*V
 		return nil, err
 	}
 
+	userUuid, err := utility.UuidFromString(data.UserUuid)
+	if err != nil {
+		log.Error("Failed parsing UserUuid", "uuid", data.UserUuid, "error", err)
+		return nil, err
+	}
+
 	params := db.CreateVoteParams{
-		VotedBy:     data.VotedBy,
+		VotedBy:     userUuid,
 		Rank:        data.Rank,
 		VotedOn:     data.VotedOn,
 		VotedOnUuid: votedOnId,
@@ -42,7 +48,7 @@ func (repo *votesRepositoryImpl) CreateVote(ctx context.Context, data *Vote) (*V
 	if err != nil {
 		log.Error(
 			"Failed creating entity",
-			"voted_by", data.VotedBy,
+			"voted_by", data.UserUuid,
 			"rank", data.Rank,
 			"voted_on", data.VotedOn,
 			"voted_on_uuid", data.VotedOnUuid,

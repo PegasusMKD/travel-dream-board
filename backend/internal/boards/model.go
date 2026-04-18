@@ -18,6 +18,7 @@ type Board struct {
 	LastsUntil   *time.Time      `json:"lasts_until"`
 	Status       db.BoardsStatus `json:"status"`
 	ThumbnailUrl *string         `json:"thumbnail_url"`
+	UserUuid     *string         `json:"user_uuid,omitempty"`
 }
 
 func FromEntity(ent *db.Board) *Board {
@@ -31,6 +32,12 @@ func FromEntity(ent *db.Board) *Board {
 		lasts_until = &ent.LastsUntil.Time
 	}
 
+	var userUuid *string
+	if ent.UserUuid.Valid {
+		val := ent.UserUuid.String()
+		userUuid = &val
+	}
+
 	return &Board{
 		Uuid:         ent.Uuid.String(),
 		Name:         ent.Name,
@@ -40,6 +47,7 @@ func FromEntity(ent *db.Board) *Board {
 		LastsUntil:   lasts_until,
 		Status:       ent.Status,
 		ThumbnailUrl: ent.ThumbnailUrl,
+		UserUuid:     userUuid,
 	}
 }
 

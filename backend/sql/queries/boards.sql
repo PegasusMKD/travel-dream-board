@@ -1,6 +1,6 @@
 -- name: CreateBoard :one
-insert into boards (name, location_name)
-values (@name, @location_name)
+insert into boards (name, location_name, user_uuid)
+values (@name, @location_name, @user_uuid)
 returning *;
 
 -- name: GetBoardById :one

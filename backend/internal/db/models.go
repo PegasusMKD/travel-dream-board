@@ -331,6 +331,7 @@ type Accomodation struct {
 	BookingReference *string
 	Selected         bool
 	BoardUuid        pgtype.UUID
+	UserUuid         pgtype.UUID
 }
 
 type Activity struct {
@@ -345,6 +346,7 @@ type Activity struct {
 	BookingReference *string
 	Selected         bool
 	BoardUuid        pgtype.UUID
+	UserUuid         pgtype.UUID
 }
 
 type Board struct {
@@ -358,13 +360,14 @@ type Board struct {
 	LastsUntil   pgtype.Date
 	Status       BoardsStatus
 	ThumbnailUrl *string
+	UserUuid     pgtype.UUID
 }
 
 type Comment struct {
 	Uuid            pgtype.UUID
 	UpdatedAt       pgtype.Timestamp
 	CreatedAt       pgtype.Timestamp
-	CreatedBy       string
+	CreatedBy       pgtype.UUID
 	Content         string
 	CommentedOn     CommentedOn
 	CommentedOnUuid pgtype.UUID
@@ -374,7 +377,7 @@ type Memory struct {
 	Uuid       pgtype.UUID
 	UpdatedAt  pgtype.Timestamp
 	CreatedAt  pgtype.Timestamp
-	UploadedBy string
+	UploadedBy pgtype.UUID
 	BoardUuid  pgtype.UUID
 	ImageUrl   string
 }
@@ -391,6 +394,12 @@ type ScrapeAudit struct {
 	Description *string
 }
 
+type ShareToken struct {
+	Token     string
+	BoardUuid pgtype.UUID
+	CreatedAt pgtype.Timestamp
+}
+
 type Transport struct {
 	Uuid             pgtype.UUID
 	UpdatedAt        pgtype.Timestamp
@@ -403,13 +412,23 @@ type Transport struct {
 	BookingReference *string
 	Selected         bool
 	BoardUuid        pgtype.UUID
+	UserUuid         pgtype.UUID
+}
+
+type User struct {
+	Uuid      pgtype.UUID
+	UpdatedAt pgtype.Timestamp
+	CreatedAt pgtype.Timestamp
+	Email     *string
+	Name      string
+	AvatarUrl *string
 }
 
 type Vote struct {
 	Uuid        pgtype.UUID
 	UpdatedAt   pgtype.Timestamp
 	CreatedAt   pgtype.Timestamp
-	VotedBy     string
+	VotedBy     pgtype.UUID
 	Rank        int32
 	VotedOn     VotedOn
 	VotedOnUuid pgtype.UUID

@@ -32,11 +32,18 @@ func (repo *repositoryImpl) CreateAccomodation(ctx context.Context, data *Accomo
 		return nil, err
 	}
 
+	userUuid, err := utility.UuidFromString(data.UserUuid)
+	if err != nil {
+		log.Error("Failed parsing UserUUID", "uuid", data.UserUuid, "error", err)
+		return nil, err
+	}
+
 	params := db.CreateAccomodationParams{
 		Url:       data.Url,
 		Title:     data.Title,
 		ImageUrl:  data.ImageUrl,
 		BoardUuid: boardUuid,
+		UserUuid:  userUuid,
 	}
 
 	entity, err := repo.queries.CreateAccomodation(ctx, params)

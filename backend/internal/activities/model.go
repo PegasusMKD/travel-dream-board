@@ -16,11 +16,13 @@ type Activity struct {
 	Status           db.ActivitiesStatus `json:"status"`
 	BookingReference *string             `json:"booking_reference"`
 	Selected         bool                `json:"selected"`
+	UserUuid         string              `json:"user_uuid"`
 }
 
 func FromEntity(entity db.Activity) *Activity {
 	return &Activity{
 		Uuid:             entity.Uuid.String(),
+		BoardUuid:        entity.BoardUuid.String(),
 		Url:              entity.Url,
 		Title:            entity.Title,
 		ImageUrl:         entity.ImageUrl,
@@ -28,6 +30,7 @@ func FromEntity(entity db.Activity) *Activity {
 		Status:           entity.Status,
 		BookingReference: entity.BookingReference,
 		Selected:         entity.Selected,
+		UserUuid:         entity.UserUuid.String(),
 	}
 }
 

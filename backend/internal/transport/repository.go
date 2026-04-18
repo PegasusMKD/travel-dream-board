@@ -32,11 +32,18 @@ func (repo *repositoryImpl) CreateTransport(ctx context.Context, data *Transport
 		return nil, err
 	}
 
+	userUuid, err := utility.UuidFromString(data.UserUuid)
+	if err != nil {
+		log.Error("Failed parsing UserUUID", "uuid", data.UserUuid, "error", err)
+		return nil, err
+	}
+
 	params := db.CreateTransportParams{
 		Url:       data.Url,
 		Title:     data.Title,
 		ImageUrl:  data.ImageUrl,
 		BoardUuid: boardUuid,
+		UserUuid:  userUuid,
 	}
 
 	entity, err := repo.queries.CreateTransport(ctx, params)

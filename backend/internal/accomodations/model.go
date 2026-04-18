@@ -16,6 +16,7 @@ type Accomodation struct {
 	Status           db.AccomodationsStatus `json:"status"`
 	BookingReference *string                `json:"booking_reference"`
 	Selected         bool                   `json:"selected"`
+	UserUuid         string                 `json:"user_uuid"`
 }
 
 func FromEntity(entity db.Accomodation) *Accomodation {
@@ -23,11 +24,13 @@ func FromEntity(entity db.Accomodation) *Accomodation {
 		Uuid:             entity.Uuid.String(),
 		Url:              entity.Url,
 		Title:            entity.Title,
+		BoardUuid:        entity.BoardUuid.String(),
 		ImageUrl:         entity.ImageUrl,
 		Notes:            entity.Notes,
 		Status:           entity.Status,
 		BookingReference: entity.BookingReference,
 		Selected:         entity.Selected,
+		UserUuid:         entity.UserUuid.String(),
 	}
 }
 

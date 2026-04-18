@@ -5,6 +5,7 @@ import (
 
 	"github.com/PegasusMKD/travel-dream-board/internal/db"
 	"github.com/PegasusMKD/travel-dream-board/internal/utility"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Repository interface {
@@ -13,6 +14,7 @@ type Repository interface {
 	GetAllBoards(ctx context.Context) ([]*Board, error)
 	UpdateBoardById(ctx context.Context, uuid string, data *Board) error
 	DeleteBoardById(ctx context.Context, uuid string) error
+	GetShareToken(ctx context.Context, token string) (*db.ShareToken, error)
 }
 
 type repositoryImpl struct {
@@ -26,9 +28,19 @@ func NewRepository(queries *db.Queries) Repository {
 }
 
 func (repo *repositoryImpl) CreateBoard(ctx context.Context, data *Board) (*Board, error) {
+	var userUuid pgtype.UUID
+	if data.UserUuid != nil {
+		err := userUuid.Scan(*data.UserUuid)
+		if err != nil {
+			log.Error("Failed parsing UserUuid", "uuid", *data.UserUuid, "error", err)
+			return nil, err
+		}
+	}
+
 	params := db.CreateBoardParams{
 		Name:         data.Name,
 		LocationName: data.LocationName,
+		UserUuid:     userUuid,
 	}
 
 	ent, err := repo.queries.CreateBoard(ctx, params)
@@ -100,4 +112,12 @@ func (repo *repositoryImpl) DeleteBoardById(ctx context.Context, uuid string) er
 	}
 
 	return repo.queries.DeleteBoardById(ctx, id)
+}
+
+func (repo *repositoryImpl) GetShareToken(ctx context.Context, token string) (*db.ShareToken, error) {
+	ent, err := repo.queries.GetShareToken(ctx, token)
+	if err != nil {
+		return nil, err
+	}
+	return &ent, nil
 }

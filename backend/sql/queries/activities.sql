@@ -1,6 +1,6 @@
 -- name: CreateActivity :one
-insert into activities (url, title, image_url, board_uuid)
-values (@url, @title, @image_url, @board_uuid)
+insert into activities (url, title, image_url, board_uuid, user_uuid)
+values (@url, @title, @image_url, @board_uuid, @user_uuid)
 returning *;
 
 -- name: GetActivityByUuid :one
@@ -28,5 +28,3 @@ where uuid = @uuid;
 -- name: DeleteActivityByUuid :exec
 delete from activities
 where uuid = @uuid;
-
-

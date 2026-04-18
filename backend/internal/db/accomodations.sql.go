@@ -12,9 +12,9 @@ import (
 )
 
 const createAccomodation = `-- name: CreateAccomodation :one
-insert into accomodations (url, title, image_url, board_uuid)
-values ($1, $2, $3, $4)
-returning uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid
+insert into accomodations (url, title, image_url, board_uuid, user_uuid)
+values ($1, $2, $3, $4, $5)
+returning uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid, user_uuid
 `
 
 type CreateAccomodationParams struct {
@@ -22,6 +22,7 @@ type CreateAccomodationParams struct {
 	Title     string
 	ImageUrl  *string
 	BoardUuid pgtype.UUID
+	UserUuid  pgtype.UUID
 }
 
 func (q *Queries) CreateAccomodation(ctx context.Context, arg CreateAccomodationParams) (Accomodation, error) {
@@ -30,6 +31,7 @@ func (q *Queries) CreateAccomodation(ctx context.Context, arg CreateAccomodation
 		arg.Title,
 		arg.ImageUrl,
 		arg.BoardUuid,
+		arg.UserUuid,
 	)
 	var i Accomodation
 	err := row.Scan(
@@ -44,6 +46,7 @@ func (q *Queries) CreateAccomodation(ctx context.Context, arg CreateAccomodation
 		&i.BookingReference,
 		&i.Selected,
 		&i.BoardUuid,
+		&i.UserUuid,
 	)
 	return i, err
 }
@@ -59,7 +62,7 @@ func (q *Queries) DeleteAccomodationByUuid(ctx context.Context, uuid pgtype.UUID
 }
 
 const findAllAccomodationsByBoardUuid = `-- name: FindAllAccomodationsByBoardUuid :many
-select uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid
+select uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid, user_uuid
 from accomodations
 where board_uuid = $1
 `
@@ -85,6 +88,7 @@ func (q *Queries) FindAllAccomodationsByBoardUuid(ctx context.Context, boardUuid
 			&i.BookingReference,
 			&i.Selected,
 			&i.BoardUuid,
+			&i.UserUuid,
 		); err != nil {
 			return nil, err
 		}
@@ -97,7 +101,7 @@ func (q *Queries) FindAllAccomodationsByBoardUuid(ctx context.Context, boardUuid
 }
 
 const getAccomodationByUuid = `-- name: GetAccomodationByUuid :one
-select uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid
+select uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid, user_uuid
 from accomodations
 where uuid = $1
 `
@@ -117,6 +121,7 @@ func (q *Queries) GetAccomodationByUuid(ctx context.Context, uuid pgtype.UUID) (
 		&i.BookingReference,
 		&i.Selected,
 		&i.BoardUuid,
+		&i.UserUuid,
 	)
 	return i, err
 }

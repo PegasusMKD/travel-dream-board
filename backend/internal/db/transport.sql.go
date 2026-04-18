@@ -12,9 +12,9 @@ import (
 )
 
 const createTransport = `-- name: CreateTransport :one
-insert into transport (url, title, image_url, board_uuid)
-values ($1, $2, $3, $4)
-returning uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid
+insert into transport (url, title, image_url, board_uuid, user_uuid)
+values ($1, $2, $3, $4, $5)
+returning uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid, user_uuid
 `
 
 type CreateTransportParams struct {
@@ -22,6 +22,7 @@ type CreateTransportParams struct {
 	Title     string
 	ImageUrl  *string
 	BoardUuid pgtype.UUID
+	UserUuid  pgtype.UUID
 }
 
 func (q *Queries) CreateTransport(ctx context.Context, arg CreateTransportParams) (Transport, error) {
@@ -30,6 +31,7 @@ func (q *Queries) CreateTransport(ctx context.Context, arg CreateTransportParams
 		arg.Title,
 		arg.ImageUrl,
 		arg.BoardUuid,
+		arg.UserUuid,
 	)
 	var i Transport
 	err := row.Scan(
@@ -44,6 +46,7 @@ func (q *Queries) CreateTransport(ctx context.Context, arg CreateTransportParams
 		&i.BookingReference,
 		&i.Selected,
 		&i.BoardUuid,
+		&i.UserUuid,
 	)
 	return i, err
 }
@@ -59,7 +62,7 @@ func (q *Queries) DeleteTransportByUuid(ctx context.Context, uuid pgtype.UUID) e
 }
 
 const findAllTransportByBoardUuid = `-- name: FindAllTransportByBoardUuid :many
-select uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid
+select uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid, user_uuid
 from transport
 where board_uuid = $1
 `
@@ -85,6 +88,7 @@ func (q *Queries) FindAllTransportByBoardUuid(ctx context.Context, boardUuid pgt
 			&i.BookingReference,
 			&i.Selected,
 			&i.BoardUuid,
+			&i.UserUuid,
 		); err != nil {
 			return nil, err
 		}
@@ -97,7 +101,7 @@ func (q *Queries) FindAllTransportByBoardUuid(ctx context.Context, boardUuid pgt
 }
 
 const getTransportByUuid = `-- name: GetTransportByUuid :one
-select uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid
+select uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid, user_uuid
 from transport
 where uuid = $1
 `
@@ -117,6 +121,7 @@ func (q *Queries) GetTransportByUuid(ctx context.Context, uuid pgtype.UUID) (Tra
 		&i.BookingReference,
 		&i.Selected,
 		&i.BoardUuid,
+		&i.UserUuid,
 	)
 	return i, err
 }

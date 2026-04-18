@@ -1,6 +1,6 @@
 -- name: CreateTransport :one
-insert into transport (url, title, image_url, board_uuid)
-values (@url, @title, @image_url, @board_uuid)
+insert into transport (url, title, image_url, board_uuid, user_uuid)
+values (@url, @title, @image_url, @board_uuid, @user_uuid)
 returning *;
 
 -- name: GetTransportByUuid :one
@@ -28,5 +28,3 @@ where uuid = @uuid;
 -- name: DeleteTransportByUuid :exec
 delete from transport
 where uuid = @uuid;
-
-

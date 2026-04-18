@@ -31,8 +31,14 @@ func (repo *commentsRepositoryImpl) CreateComment(ctx context.Context, data *Com
 		return nil, err
 	}
 
+	userUuid, err := utility.UuidFromString(data.UserUuid)
+	if err != nil {
+		log.Error("Failed parsing UserUuid", "uuid", data.UserUuid, "error", err)
+		return nil, err
+	}
+
 	params := db.CreateCommentParams{
-		CreatedBy:       data.CreatedBy,
+		CreatedBy:       userUuid,
 		Content:         data.Content,
 		CommentedOn:     data.CommentedOn,
 		CommentedOnUuid: commentedOnId,
@@ -42,7 +48,7 @@ func (repo *commentsRepositoryImpl) CreateComment(ctx context.Context, data *Com
 	if err != nil {
 		log.Error(
 			"Failed creating entity",
-			"created_by", data.CreatedBy,
+			"created_by", data.UserUuid,
 			"content", data.Content,
 			"commented_on", data.CommentedOn,
 			"commented_on_uuid", data.CommentedOnUuid,

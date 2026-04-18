@@ -6,7 +6,7 @@ import (
 
 type Comment struct {
 	Uuid            string         `json:"uuid"`
-	CreatedBy       string         `json:"created_by" binding:"required"`
+	UserUuid        string         `json:"user_uuid"`
 	Content         string         `json:"content" binding:"required"`
 	CommentedOn     db.CommentedOn `json:"commented_on" binding:"required"`
 	CommentedOnUuid string         `json:"commented_on_uuid" binding:"required"`
@@ -15,7 +15,7 @@ type Comment struct {
 func FromEntity(entity db.Comment) *Comment {
 	return &Comment{
 		Uuid:            entity.Uuid.String(),
-		CreatedBy:       entity.CreatedBy,
+		UserUuid:        entity.CreatedBy.String(),
 		Content:         entity.Content,
 		CommentedOn:     entity.CommentedOn,
 		CommentedOnUuid: entity.CommentedOnUuid.String(),

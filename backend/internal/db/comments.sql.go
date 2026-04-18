@@ -18,7 +18,7 @@ returning uuid, updated_at, created_at, created_by, content, commented_on_, comm
 `
 
 type CreateCommentParams struct {
-	CreatedBy       string
+	CreatedBy       pgtype.UUID
 	Content         string
 	CommentedOn     CommentedOn
 	CommentedOnUuid pgtype.UUID
