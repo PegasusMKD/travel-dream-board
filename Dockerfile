@@ -19,10 +19,10 @@ RUN apk add --no-cache git
 
 WORKDIR /app
 
-COPY go.mod go.sum ./
+COPY backend/go.mod backend/go.sum ./
 RUN go mod download
 
-COPY . .
+COPY backend/ .
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /app/bin/service ./cmd/api/main.go
 
@@ -37,7 +37,6 @@ RUN addgroup -g 1000 appuser && \
 WORKDIR /app
 
 COPY --from=builder /app/bin/service /app/service
-COPY --from=builder /app/cron.yml /app/cron.yml
 COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
 
 RUN chown -R appuser:appuser /app
