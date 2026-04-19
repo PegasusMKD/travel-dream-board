@@ -16,7 +16,7 @@ func NewHandler(svc Service) *Handler {
 
 func (h *Handler) CreateVote(ctx *gin.Context) {
 	var body Vote
-	if err := ctx.ShouldBindJSON(body); err != nil {
+	if err := ctx.ShouldBindJSON(&body); err != nil {
 		log.Error("Failed parsing body", "error", err)
 		ctx.AbortWithError(500, err)
 		return
@@ -41,7 +41,7 @@ func (h *Handler) UpdateVoteByUuid(ctx *gin.Context) {
 	var body struct {
 		Rank int32 `json:"rank"`
 	}
-	if err := ctx.ShouldBindJSON(body); err != nil {
+	if err := ctx.ShouldBindJSON(&body); err != nil {
 		log.Error("Failed parsing body", "error", err)
 		ctx.AbortWithError(500, err)
 		return

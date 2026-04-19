@@ -9,14 +9,14 @@ disable-version-string: true
 issue-845-fix: true
 
 packages:
-  depgraph:
+  github.com/PegasusMKD/travel-dream-board:
     config:
       recursive: true
       all: true
       with-expecter: true
       dir: "mocks"
       outpkg: mocks
-      mockname: "Mock{{.InterfaceName}}"
-      filename: "{{.InterfaceName}}.go"
+      mockname: "Mock{{.PackageName}}{{.InterfaceName}}"
+      filename: "{{.PackageName}}_{{.InterfaceName}}.go"
       exclude:
         - "internal/db"

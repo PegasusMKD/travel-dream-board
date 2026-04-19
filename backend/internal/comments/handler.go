@@ -16,7 +16,7 @@ func NewHandler(svc Service) *Handler {
 
 func (h *Handler) CreateComment(ctx *gin.Context) {
 	var body Comment
-	if err := ctx.ShouldBindJSON(body); err != nil {
+	if err := ctx.ShouldBindJSON(&body); err != nil {
 		log.Error("Failed parsing body", "error", err)
 		ctx.AbortWithError(500, err)
 		return
@@ -41,7 +41,7 @@ func (h *Handler) UpdateCommentByUuid(ctx *gin.Context) {
 	var body struct {
 		Content string `json:"content"`
 	}
-	if err := ctx.ShouldBindJSON(body); err != nil {
+	if err := ctx.ShouldBindJSON(&body); err != nil {
 		log.Error("Failed parsing body", "error", err)
 		ctx.AbortWithError(500, err)
 		return

@@ -94,7 +94,7 @@ test-coverage: mocks
 	@echo "Running tests with coverage..."
 	@go test -coverprofile=$(COVERAGE_FILE) ./internal/...
 	@echo "Filtering coverage report..."
-	@go run scripts/filter_coverage.go $(COVERAGE_FILE) "internal/db" "internal/testutil" "internal/logger" "internal/server"
+	@go run scripts/filter_coverage.go $(COVERAGE_FILE) "internal/db" "internal/testutil" "internal/logger" "internal/server" "mocks"
 	@go tool cover -html=$(COVERAGE_FILE)
 	@echo "Coverage report generated: $(COVERAGE_FILE)"
 else
@@ -109,7 +109,7 @@ test-coverage: mocks
 		go test -coverprofile=$(COVERAGE_FILE) ./internal/...; \
 	fi
 	@echo "Filtering coverage report..."
-	@go run scripts/filter_coverage.go $(COVERAGE_FILE) "internal/db" "internal/testutil" "internal/logger" "internal/server"
+	@go run scripts/filter_coverage.go $(COVERAGE_FILE) "internal/db" "internal/testutil" "internal/logger" "internal/server" "mocks"
 	@go tool cover -html=$(COVERAGE_FILE)
 	@echo "Coverage report generated: $(COVERAGE_FILE)"
 endif

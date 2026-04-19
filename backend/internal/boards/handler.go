@@ -78,7 +78,7 @@ func (h *Handler) UpdateBoardById(ctx *gin.Context) {
 	}
 
 	var body Board
-	if err := ctx.ShouldBindJSON(body); err != nil {
+	if err := ctx.ShouldBindJSON(&body); err != nil {
 		log.Error("Failed parsing body", "error", err)
 		ctx.AbortWithError(500, err)
 		return

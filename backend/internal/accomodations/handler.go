@@ -20,7 +20,7 @@ func (h *Handler) CreateAccomodation(ctx *gin.Context) {
 	}
 
 	boardUuid := ctx.Query("boardUuid")
-	if url == "" {
+	if boardUuid == "" {
 		ctx.JSON(400, gin.H{"error": "Board UUID parameter is required"})
 		return
 	}

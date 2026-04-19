@@ -259,7 +259,7 @@ func (s *scrapeProcessServiceImpl) fallbackToClaude(ctx context.Context, uuid st
 					commitedUpdate = true
 					out.ImageUrl = &extracted.ImageURL
 				}
-				return
+				break
 			}
 		}
 	}
