@@ -1,10 +1,22 @@
+import { useEffect, useState } from 'react'
 import { Plus, Sparkles } from 'lucide-react'
 import BoardCard from '../components/BoardCard'
-import { mockBoards } from '../data/mockData'
 import { useLang } from '../context/LanguageContext'
+import { api } from '../services/api'
+import { mapBoardSummary } from '../services/mappers'
 
 export default function Home() {
   const { t } = useLang()
+  const [boards, setBoards] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    api.boards.getAll()
+      .then((data) => setBoards((data || []).map(mapBoardSummary)))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [])
 
   return (
     <div className="pt-8">
@@ -22,22 +34,30 @@ export default function Home() {
         </p>
       </div>
 
-      {/* Board grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mockBoards.map((board) => (
-          <BoardCard key={board.id} board={board} />
-        ))}
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <div className="w-8 h-8 border-3 border-accent-200 border-t-accent-500 rounded-full animate-spin" />
+        </div>
+      ) : error ? (
+        <div className="border-2 border-dashed border-surface-200 rounded-2xl py-10 text-center">
+          <p className="text-sm text-text-muted">{error}</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {boards.map((board) => (
+            <BoardCard key={board.id} board={board} />
+          ))}
 
-        {/* Add new board */}
-        <button className="group border-2 border-dashed border-surface-200 hover:border-accent-400 rounded-2xl flex flex-col items-center justify-center min-h-[280px] transition-all duration-300 hover:bg-accent-50 cursor-pointer">
-          <div className="w-14 h-14 rounded-2xl bg-surface-100 group-hover:bg-accent-100 flex items-center justify-center transition-colors mb-3">
-            <Plus className="w-7 h-7 text-text-muted group-hover:text-accent-500 transition-colors" />
-          </div>
-          <span className="text-sm font-semibold text-text-muted group-hover:text-accent-500 transition-colors">
-            {t.newTrip}
-          </span>
-        </button>
-      </div>
+          <button className="group border-2 border-dashed border-surface-200 hover:border-accent-400 rounded-2xl flex flex-col items-center justify-center min-h-[280px] transition-all duration-300 hover:bg-accent-50 cursor-pointer">
+            <div className="w-14 h-14 rounded-2xl bg-surface-100 group-hover:bg-accent-100 flex items-center justify-center transition-colors mb-3">
+              <Plus className="w-7 h-7 text-text-muted group-hover:text-accent-500 transition-colors" />
+            </div>
+            <span className="text-sm font-semibold text-text-muted group-hover:text-accent-500 transition-colors">
+              {t.newTrip}
+            </span>
+          </button>
+        </div>
+      )}
     </div>
   )
 }

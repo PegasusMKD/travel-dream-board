@@ -80,7 +80,7 @@ func (repo *commentsRepositoryImpl) FindAllCommentsByRelatedEntity(ctx context.C
 
 	data := []*Comment{}
 	for _, val := range entities {
-		data = append(data, FromEntity(val))
+		data = append(data, FromRow(val))
 	}
 
 	return data, nil

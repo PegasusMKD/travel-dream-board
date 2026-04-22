@@ -55,10 +55,11 @@ func (q *Queries) DeleteCommentByUuid(ctx context.Context, uuid pgtype.UUID) err
 }
 
 const findAllCommentsByCommentedOnUuid = `-- name: FindAllCommentsByCommentedOnUuid :many
-select uuid, updated_at, created_at, created_by, content, commented_on_, commented_on_uuid
-from comments
-where commented_on_ = $1 
-    and commented_on_uuid = $2
+select c.uuid, c.updated_at, c.created_at, c.created_by, c.content, c.commented_on_, c.commented_on_uuid, u.name as user_name
+from comments c
+join users u on c.created_by = u.uuid
+where c.commented_on_ = $1 
+    and c.commented_on_uuid = $2
 `
 
 type FindAllCommentsByCommentedOnUuidParams struct {
@@ -66,15 +67,26 @@ type FindAllCommentsByCommentedOnUuidParams struct {
 	CommentedOnUuid pgtype.UUID
 }
 
-func (q *Queries) FindAllCommentsByCommentedOnUuid(ctx context.Context, arg FindAllCommentsByCommentedOnUuidParams) ([]Comment, error) {
+type FindAllCommentsByCommentedOnUuidRow struct {
+	Uuid            pgtype.UUID
+	UpdatedAt       pgtype.Timestamp
+	CreatedAt       pgtype.Timestamp
+	CreatedBy       pgtype.UUID
+	Content         string
+	CommentedOn     CommentedOn
+	CommentedOnUuid pgtype.UUID
+	UserName        string
+}
+
+func (q *Queries) FindAllCommentsByCommentedOnUuid(ctx context.Context, arg FindAllCommentsByCommentedOnUuidParams) ([]FindAllCommentsByCommentedOnUuidRow, error) {
 	rows, err := q.db.Query(ctx, findAllCommentsByCommentedOnUuid, arg.CommentedOn, arg.CommentedOnUuid)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Comment
+	var items []FindAllCommentsByCommentedOnUuidRow
 	for rows.Next() {
-		var i Comment
+		var i FindAllCommentsByCommentedOnUuidRow
 		if err := rows.Scan(
 			&i.Uuid,
 			&i.UpdatedAt,
@@ -83,6 +95,7 @@ func (q *Queries) FindAllCommentsByCommentedOnUuid(ctx context.Context, arg Find
 			&i.Content,
 			&i.CommentedOn,
 			&i.CommentedOnUuid,
+			&i.UserName,
 		); err != nil {
 			return nil, err
 		}

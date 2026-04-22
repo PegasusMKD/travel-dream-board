@@ -55,10 +55,11 @@ func (q *Queries) DeleteVoteByUuid(ctx context.Context, uuid pgtype.UUID) error 
 }
 
 const findAllVotesByVotedOnUuid = `-- name: FindAllVotesByVotedOnUuid :many
-select uuid, updated_at, created_at, voted_by, rank, voted_on_, voted_on_uuid
-from votes
-where voted_on_ = $1 
-    and voted_on_uuid = $2
+select v.uuid, v.updated_at, v.created_at, v.voted_by, v.rank, v.voted_on_, v.voted_on_uuid, u.name as user_name
+from votes v
+join users u on v.voted_by = u.uuid
+where v.voted_on_ = $1 
+    and v.voted_on_uuid = $2
 `
 
 type FindAllVotesByVotedOnUuidParams struct {
@@ -66,15 +67,26 @@ type FindAllVotesByVotedOnUuidParams struct {
 	VotedOnUuid pgtype.UUID
 }
 
-func (q *Queries) FindAllVotesByVotedOnUuid(ctx context.Context, arg FindAllVotesByVotedOnUuidParams) ([]Vote, error) {
+type FindAllVotesByVotedOnUuidRow struct {
+	Uuid        pgtype.UUID
+	UpdatedAt   pgtype.Timestamp
+	CreatedAt   pgtype.Timestamp
+	VotedBy     pgtype.UUID
+	Rank        int32
+	VotedOn     VotedOn
+	VotedOnUuid pgtype.UUID
+	UserName    string
+}
+
+func (q *Queries) FindAllVotesByVotedOnUuid(ctx context.Context, arg FindAllVotesByVotedOnUuidParams) ([]FindAllVotesByVotedOnUuidRow, error) {
 	rows, err := q.db.Query(ctx, findAllVotesByVotedOnUuid, arg.VotedOn, arg.VotedOnUuid)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Vote
+	var items []FindAllVotesByVotedOnUuidRow
 	for rows.Next() {
-		var i Vote
+		var i FindAllVotesByVotedOnUuidRow
 		if err := rows.Scan(
 			&i.Uuid,
 			&i.UpdatedAt,
@@ -83,6 +95,7 @@ func (q *Queries) FindAllVotesByVotedOnUuid(ctx context.Context, arg FindAllVote
 			&i.Rank,
 			&i.VotedOn,
 			&i.VotedOnUuid,
+			&i.UserName,
 		); err != nil {
 			return nil, err
 		}

@@ -80,7 +80,7 @@ func (repo *votesRepositoryImpl) FindAllVotesByRelatedEntity(ctx context.Context
 
 	data := []*Vote{}
 	for _, val := range entities {
-		data = append(data, FromEntity(val))
+		data = append(data, FromRow(val))
 	}
 
 	return data, nil

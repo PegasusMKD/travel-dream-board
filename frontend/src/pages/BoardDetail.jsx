@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -13,7 +13,6 @@ import {
   ClipboardList,
   Camera,
 } from 'lucide-react'
-import { mockBoards } from '../data/mockData'
 import { useLang } from '../context/LanguageContext'
 import ItemCard from '../components/ItemCard'
 import AddItemModal from '../components/AddItemModal'
@@ -21,6 +20,8 @@ import ShareModal from '../components/ShareModal'
 import ItemDetailSidebar from '../components/ItemDetailSidebar'
 import EditBoardModal from '../components/EditBoardModal'
 import MemoryGallery from '../components/MemoryGallery'
+import { api } from '../services/api'
+import { mapAggregatedBoard } from '../services/mappers'
 
 const sectionConfig = {
   accommodation: { key: 'accommodation', icon: Bed, emoji: '\u{1F3E8}' },
@@ -39,7 +40,9 @@ function formatDateRange(range, lang) {
 export default function BoardDetail() {
   const { id } = useParams()
   const { lang, t } = useLang()
-  const board = mockBoards.find((b) => b.id === id)
+  const [board, setBoard] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [activeTab, setActiveTab] = useState('planning')
   const [addingTo, setAddingTo] = useState(null)
   const [showShare, setShowShare] = useState(false)
@@ -47,10 +50,27 @@ export default function BoardDetail() {
   const [selectedSection, setSelectedSection] = useState(null)
   const [showEditBoard, setShowEditBoard] = useState(false)
 
-  if (!board) {
+  useEffect(() => {
+    setLoading(true)
+    setError(null)
+    api.boards.getById(id)
+      .then((data) => setBoard(mapAggregatedBoard(data)))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [id])
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-20">
+        <div className="w-8 h-8 border-3 border-accent-200 border-t-accent-500 rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (error || !board) {
     return (
       <div className="pt-20 text-center">
-        <p className="text-text-secondary">{t.boardNotFound}</p>
+        <p className="text-text-secondary">{error || t.boardNotFound}</p>
         <Link to="/" className="text-accent-500 text-sm mt-2 inline-block hover:underline">
           {t.backToList}
         </Link>

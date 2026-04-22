@@ -4,10 +4,11 @@ values (@created_by, @content, @commented_on_, @commented_on_uuid)
 returning *;
 
 -- name: FindAllCommentsByCommentedOnUuid :many
-select *
-from comments
-where commented_on_ = @commented_on_ 
-    and commented_on_uuid = @commented_on_uuid;
+select c.*, u.name as user_name
+from comments c
+join users u on c.created_by = u.uuid
+where c.commented_on_ = @commented_on_ 
+    and c.commented_on_uuid = @commented_on_uuid;
 
 -- name: UpdateCommentByUuid :exec
 update comments
