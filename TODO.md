@@ -59,18 +59,18 @@
 - [X] Graceful partial-result handling (return what we have)
 
 ### Frontend Setup
-- [ ] Vite + React 18 + TailwindCSS scaffold
+- [X] Vite + React 18 + TailwindCSS scaffold
 - [ ] Routing setup
 - [ ] Google OAuth login page
 - [ ] API client / fetch wrapper
 
 ### Frontend — Boards
-- [ ] Board list view (dashboard)
-- [ ] Create board flow
-- [ ] Board detail view (3 sections)
-- [ ] Item card component
+- [X] Board list view (dashboard)
+- [X] Create board flow
+- [X] Board detail view (3 sections)
+- [X] Item card component
 - [ ] URL paste → scrape → editable card flow
-- [ ] Manual field editing on item card
+- [X] Manual field editing on item card
 
 ---
 
@@ -112,8 +112,8 @@
 - [ ] Polish UI language strings
 
 ### Deployment
-- [ ] Backend deployed to Railway
-- [ ] Postgres provisioned on Railway
+- [X] Backend deployed to Railway
+- [X] Postgres provisioned on Railway
 - [ ] Migrations run on Railway
 - [ ] Frontend deployed (Railway static or Vercel)
 - [ ] Environment variables set in Railway dashboard
