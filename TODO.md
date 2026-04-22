@@ -114,10 +114,10 @@
 ### Deployment
 - [X] Backend deployed to Railway
 - [X] Postgres provisioned on Railway
-- [ ] Migrations run on Railway
-- [ ] Frontend deployed (Railway static or Vercel)
-- [ ] Environment variables set in Railway dashboard
-- [ ] Google OAuth redirect URIs updated for production domain
+- [X] Migrations run on Railway
+- [X] Frontend deployed (Railway static or Vercel)
+- [X] Environment variables set in Railway dashboard
+- [X] Google OAuth redirect URIs updated for production domain
 - [ ] Smoke test on production
 
 ### Final QA
