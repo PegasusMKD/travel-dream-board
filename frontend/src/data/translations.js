@@ -110,6 +110,12 @@ export const translations = {
     editBoardCoverImagePlaceholder: 'Wklej URL zdjęcia...',
     saving: 'Zapisywanie...',
 
+    // Auth
+    loginTitle: 'Zaloguj się',
+    loginSubtitle: 'Zaloguj się aby zarządzać swoimi tablicami podróży.',
+    loginWithGoogle: 'Zaloguj się przez Google',
+    logout: 'Wyloguj',
+
     // Theme
     lightMode: 'Jasny',
     darkMode: 'Ciemny',
@@ -224,6 +230,12 @@ export const translations = {
     editBoardCoverImage: 'Cover image URL',
     editBoardCoverImagePlaceholder: 'Paste image URL...',
     saving: 'Saving...',
+
+    // Auth
+    loginTitle: 'Sign in',
+    loginSubtitle: 'Sign in to manage your trip boards.',
+    loginWithGoogle: 'Sign in with Google',
+    logout: 'Log out',
 
     // Theme
     lightMode: 'Light',

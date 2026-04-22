@@ -5,7 +5,8 @@
       "Bash(find C:\\\\Programming\\\\zuzia-gift\\\\frontend\\\\src *)",
       "Bash(make mocks *)",
       "Bash(go test *)",
-      "Bash(go build *)"
+      "Bash(go build *)",
+      "Bash(npm run *)"
     ]
   }
 }

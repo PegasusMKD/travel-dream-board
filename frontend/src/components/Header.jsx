@@ -1,11 +1,17 @@
 import { Link } from 'react-router-dom'
-import { Plane, Plus, Sun, Moon, Globe } from 'lucide-react'
+import { Plane, Plus, Sun, Moon, Globe, LogOut } from 'lucide-react'
 import { useLang } from '../context/LanguageContext'
 import { useTheme } from '../context/ThemeContext'
+import { useAuth } from '../context/AuthContext'
 
 export default function Header() {
   const { lang, toggle: toggleLang, t } = useLang()
   const { theme, toggle: toggleTheme } = useTheme()
+  const { user, logout } = useAuth()
+
+  const initials = user?.name
+    ? user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+    : '?'
 
   return (
     <header className="bg-surface-0/80 backdrop-blur-md border-b border-surface-200 sticky top-0 z-50 transition-colors">
@@ -46,10 +52,28 @@ export default function Header() {
               <span className="hidden sm:inline">{t.newTrip}</span>
             </button>
 
-            {/* Avatar */}
-            <div className="w-8 h-8 rounded-full bg-accent-200 flex items-center justify-center text-accent-700 text-xs font-bold">
-              Z
-            </div>
+            {/* User avatar */}
+            {user?.avatarUrl ? (
+              <img
+                src={user.avatarUrl}
+                alt={user.name}
+                className="w-8 h-8 rounded-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-accent-200 flex items-center justify-center text-accent-700 text-xs font-bold">
+                {initials}
+              </div>
+            )}
+
+            {/* Logout */}
+            <button
+              onClick={logout}
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-text-tertiary hover:bg-surface-100 hover:text-text-primary transition-colors cursor-pointer"
+              title={t.logout}
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>
