@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -14,6 +14,7 @@ import {
   Camera,
 } from 'lucide-react'
 import { useLang } from '../context/LanguageContext'
+import { useAuth } from '../context/AuthContext'
 import ItemCard from '../components/ItemCard'
 import AddItemModal from '../components/AddItemModal'
 import ShareModal from '../components/ShareModal'
@@ -21,7 +22,7 @@ import ItemDetailSidebar from '../components/ItemDetailSidebar'
 import EditBoardModal from '../components/EditBoardModal'
 import MemoryGallery from '../components/MemoryGallery'
 import { api } from '../services/api'
-import { mapAggregatedBoard } from '../services/mappers'
+import { mapAggregatedBoard, backendVoteTarget } from '../services/mappers'
 
 const sectionConfig = {
   accommodation: { key: 'accommodation', icon: Bed, emoji: '\u{1F3E8}' },
@@ -40,24 +41,64 @@ function formatDateRange(range, lang) {
 export default function BoardDetail() {
   const { id } = useParams()
   const { lang, t } = useLang()
+  const { user } = useAuth()
   const [board, setBoard] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [activeTab, setActiveTab] = useState('planning')
   const [addingTo, setAddingTo] = useState(null)
   const [showShare, setShowShare] = useState(false)
-  const [selectedItem, setSelectedItem] = useState(null)
+  const [selectedItemId, setSelectedItemId] = useState(null)
   const [selectedSection, setSelectedSection] = useState(null)
   const [showEditBoard, setShowEditBoard] = useState(false)
 
+  const loadBoard = useCallback(async () => {
+    try {
+      const data = await api.boards.getById(id)
+      setBoard(mapAggregatedBoard(data))
+      setError(null)
+    } catch (err) {
+      setError(err.message)
+    }
+  }, [id])
+
   useEffect(() => {
     setLoading(true)
-    setError(null)
-    api.boards.getById(id)
-      .then((data) => setBoard(mapAggregatedBoard(data)))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false))
-  }, [id])
+    loadBoard().finally(() => setLoading(false))
+  }, [loadBoard])
+
+  const selectedItem = useMemo(() => {
+    if (!board || !selectedItemId || !selectedSection) return null
+    return board.sections[selectedSection]?.find((i) => i.id === selectedItemId) || null
+  }, [board, selectedItemId, selectedSection])
+
+  const closeSidebar = () => {
+    setSelectedItemId(null)
+    setSelectedSection(null)
+  }
+
+  const handleVote = async (item, direction) => {
+    if (!user) return
+    const myVote = item.votes.find((v) => v.userUuid === user.uuid)
+    const rank = direction === 'up' ? 1 : -1
+    try {
+      if (!myVote) {
+        await api.votes.create({
+          user_uuid: user.uuid,
+          rank,
+          voted_on: backendVoteTarget(selectedSectionOf(item, board)),
+          voted_on_uuid: item.id,
+        })
+      } else if (myVote.rank === rank) {
+        await api.votes.delete(myVote.id)
+      } else {
+        await api.votes.update(myVote.id, rank)
+      }
+      await loadBoard()
+    } catch (err) {
+      setError(err.message)
+    }
+  }
 
   if (loading) {
     return (
@@ -91,12 +132,18 @@ export default function BoardDetail() {
       </Link>
 
       {/* Hero */}
-      <div className="relative rounded-2xl overflow-hidden mb-6">
-        <img
-          src={board.coverImage}
-          alt={board.destination}
-          className="w-full h-56 sm:h-72 object-cover"
-        />
+      <div className="relative rounded-2xl overflow-hidden mb-6 bg-surface-100">
+        {board.coverImage ? (
+          <img
+            src={board.coverImage}
+            alt={board.destination}
+            className="w-full h-56 sm:h-72 object-cover"
+          />
+        ) : (
+          <div className="w-full h-56 sm:h-72 flex items-center justify-center">
+            <MapPin className="w-16 h-16 text-surface-300" />
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white mb-2 drop-shadow-md">
@@ -164,7 +211,6 @@ export default function BoardDetail() {
         </button>
       </div>
 
-      {/* Tab content */}
       {activeTab === 'planning' && (
         <div className="space-y-10">
           {Object.entries(sectionConfig).map(([key, config]) => {
@@ -202,9 +248,10 @@ export default function BoardDetail() {
                         item={item}
                         sectionType={key}
                         onClick={() => {
-                          setSelectedItem(item)
+                          setSelectedItemId(item.id)
                           setSelectedSection(key)
                         }}
+                        onVote={handleVote}
                       />
                     ))}
                   </div>
@@ -232,21 +279,45 @@ export default function BoardDetail() {
       )}
 
       {/* Modals */}
-      {addingTo && <AddItemModal sectionType={addingTo} onClose={() => setAddingTo(null)} />}
-      {showShare && <ShareModal boardName={board.name} onClose={() => setShowShare(false)} />}
-      {showEditBoard && <EditBoardModal board={board} onClose={() => setShowEditBoard(false)} />}
+      {addingTo && (
+        <AddItemModal
+          sectionType={addingTo}
+          boardUuid={board.id}
+          onClose={() => setAddingTo(null)}
+          onAdded={loadBoard}
+        />
+      )}
+      {showShare && (
+        <ShareModal
+          boardUuid={board.id}
+          boardName={board.name}
+          onClose={() => setShowShare(false)}
+        />
+      )}
+      {showEditBoard && (
+        <EditBoardModal
+          board={board}
+          onClose={() => setShowEditBoard(false)}
+          onSaved={loadBoard}
+        />
+      )}
 
       {/* Detail sidebar */}
       {selectedItem && (
         <ItemDetailSidebar
           item={selectedItem}
           sectionType={selectedSection}
-          onClose={() => {
-            setSelectedItem(null)
-            setSelectedSection(null)
-          }}
+          onClose={closeSidebar}
+          onRefresh={loadBoard}
         />
       )}
     </div>
   )
+}
+
+function selectedSectionOf(item, board) {
+  for (const [section, items] of Object.entries(board.sections)) {
+    if (items.some((i) => i.id === item.id)) return section
+  }
+  return 'accommodation'
 }

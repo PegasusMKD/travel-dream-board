@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Plus, Sparkles } from 'lucide-react'
 import BoardCard from '../components/BoardCard'
+import EditBoardModal from '../components/EditBoardModal'
 import { useLang } from '../context/LanguageContext'
 import { api } from '../services/api'
 import { mapBoardSummary } from '../services/mappers'
 
 export default function Home() {
   const { t } = useLang()
+  const navigate = useNavigate()
   const [boards, setBoards] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [creating, setCreating] = useState(false)
 
   useEffect(() => {
     api.boards.getAll()
@@ -17,6 +21,12 @@ export default function Home() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
   }, [])
+
+  const handleCreated = (createdRaw) => {
+    if (createdRaw?.uuid) {
+      navigate(`/board/${createdRaw.uuid}`)
+    }
+  }
 
   return (
     <div className="pt-8">
@@ -48,7 +58,10 @@ export default function Home() {
             <BoardCard key={board.id} board={board} />
           ))}
 
-          <button className="group border-2 border-dashed border-surface-200 hover:border-accent-400 rounded-2xl flex flex-col items-center justify-center min-h-[280px] transition-all duration-300 hover:bg-accent-50 cursor-pointer">
+          <button
+            onClick={() => setCreating(true)}
+            className="group border-2 border-dashed border-surface-200 hover:border-accent-400 rounded-2xl flex flex-col items-center justify-center min-h-[280px] transition-all duration-300 hover:bg-accent-50 cursor-pointer"
+          >
             <div className="w-14 h-14 rounded-2xl bg-surface-100 group-hover:bg-accent-100 flex items-center justify-center transition-colors mb-3">
               <Plus className="w-7 h-7 text-text-muted group-hover:text-accent-500 transition-colors" />
             </div>
@@ -57,6 +70,13 @@ export default function Home() {
             </span>
           </button>
         </div>
+      )}
+
+      {creating && (
+        <EditBoardModal
+          onClose={() => setCreating(false)}
+          onSaved={handleCreated}
+        />
       )}
     </div>
   )

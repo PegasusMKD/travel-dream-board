@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   X,
   ExternalLink,
@@ -14,9 +14,14 @@ import {
   XCircle,
   ImagePlus,
   Trash2,
+  Send,
+  Loader2,
 } from 'lucide-react'
 import StatusBadge from './StatusBadge'
 import { useLang } from '../context/LanguageContext'
+import { useAuth } from '../context/AuthContext'
+import { api } from '../services/api'
+import { sectionToItemApi, toBackendItemPayload, backendCommentTarget } from '../services/mappers'
 
 const sectionIcons = {
   accommodation: Bed,
@@ -26,63 +31,98 @@ const sectionIcons = {
 
 const ALL_STATUSES = ['considering', 'finalist', 'rejected', 'booked', 'completed']
 
-export default function ItemDetailSidebar({ item, sectionType, onClose }) {
-  const { lang, t } = useLang()
+export default function ItemDetailSidebar({ item, sectionType, onClose, onRefresh }) {
+  const { t } = useLang()
+  const { user } = useAuth()
   const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
+  const [commentText, setCommentText] = useState('')
+  const [postingComment, setPostingComment] = useState(false)
 
-  // Edit state — local draft
-  const [draft, setDraft] = useState({
-    title: item.title,
-    note: item.note || '',
-    url: item.url,
-    image: item.image || '',
-    status: item.status,
-    isFinal: item.isFinal,
-    bookingRef: item.bookingRef || '',
-  })
+  const [draft, setDraft] = useState(() => buildDraft(item))
+
+  useEffect(() => {
+    setDraft(buildDraft(item))
+    setEditing(false)
+  }, [item?.id])
 
   if (!item) return null
 
   const FallbackIcon = sectionIcons[sectionType] || MapPinned
   const upVotes = item.votes.filter((v) => v.value === 'up')
   const downVotes = item.votes.filter((v) => v.value === 'down')
-  const locale = lang === 'pl' ? 'pl-PL' : 'en-US'
 
   const startEditing = () => {
-    setDraft({
-      title: item.title,
-      note: item.note || '',
-      url: item.url,
-      image: item.image || '',
-      status: item.status,
-      isFinal: item.isFinal,
-      bookingRef: item.bookingRef || '',
-    })
+    setDraft(buildDraft(item))
+    setError(null)
     setEditing(true)
   }
 
-  const cancelEditing = () => setEditing(false)
-
-  const handleSave = () => {
-    // In a real app this would call an API — for now just close edit mode
+  const cancelEditing = () => {
     setEditing(false)
+    setError(null)
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    setError(null)
+    try {
+      const itemApi = sectionToItemApi(api, sectionType)
+      const payload = toBackendItemPayload({
+        id: item.id,
+        boardUuid: item.boardUuid,
+        url: draft.url,
+        title: draft.title,
+        image: draft.image,
+        note: draft.note,
+        status: draft.status,
+        isFinal: draft.isFinal,
+        bookingRef: draft.bookingRef,
+      })
+      await itemApi.update(item.id, payload)
+      await onRefresh?.()
+      setEditing(false)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleAddComment = async (e) => {
+    e.preventDefault()
+    if (!commentText.trim() || !user) return
+    setPostingComment(true)
+    setError(null)
+    try {
+      await api.comments.create({
+        user_uuid: user.uuid,
+        content: commentText.trim(),
+        commented_on: backendCommentTarget(sectionType),
+        commented_on_uuid: item.id,
+      })
+      setCommentText('')
+      await onRefresh?.()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setPostingComment(false)
+    }
   }
 
   const updateDraft = (field, value) => setDraft((prev) => ({ ...prev, [field]: value }))
 
-  // Determine which image/title to show (draft when editing, item otherwise)
   const displayImage = editing ? draft.image : item.image
   const displayTitle = editing ? draft.title : item.title
 
   return (
     <>
-      {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
         onClick={onClose}
       />
 
-      {/* Sidebar */}
       <div className="fixed top-0 right-0 h-full w-full max-w-md bg-surface-0 z-50 shadow-2xl flex flex-col animate-slide-in">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-surface-200">
@@ -100,16 +140,18 @@ export default function ItemDetailSidebar({ item, sectionType, onClose }) {
               <>
                 <button
                   onClick={cancelEditing}
-                  className="flex items-center gap-1.5 text-xs font-semibold text-text-tertiary hover:text-text-secondary bg-surface-100 hover:bg-surface-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                  disabled={saving}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-text-tertiary hover:text-text-secondary bg-surface-100 hover:bg-surface-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                 >
                   <XCircle className="w-3.5 h-3.5" />
                   {t.cancel}
                 </button>
                 <button
                   onClick={handleSave}
-                  className="flex items-center gap-1.5 text-xs font-semibold text-white bg-accent-500 hover:bg-accent-600 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                  disabled={saving}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-white bg-accent-500 hover:bg-accent-600 px-3 py-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  <Save className="w-3.5 h-3.5" />
+                  {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                   {t.save}
                 </button>
               </>
@@ -123,7 +165,6 @@ export default function ItemDetailSidebar({ item, sectionType, onClose }) {
           </div>
         </div>
 
-        {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto">
           {/* Image area */}
           <div className="relative group">
@@ -172,11 +213,16 @@ export default function ItemDetailSidebar({ item, sectionType, onClose }) {
           </div>
 
           <div className="p-6 space-y-5">
+            {error && (
+              <div className="text-xs text-red-500 bg-red-50 dark:bg-red-950/30 rounded-lg p-2.5">
+                {error}
+              </div>
+            )}
+
             {/* Final badge + Title */}
             <div>
               {editing ? (
                 <>
-                  {/* Final toggle */}
                   <button
                     onClick={() => updateDraft('isFinal', !draft.isFinal)}
                     className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-lg mb-3 cursor-pointer transition-colors ${
@@ -313,7 +359,6 @@ export default function ItemDetailSidebar({ item, sectionType, onClose }) {
               </a>
             )}
 
-            {/* Image URL (edit mode only) */}
             {editing && (
               <div>
                 <label className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-1.5 block">
@@ -329,7 +374,6 @@ export default function ItemDetailSidebar({ item, sectionType, onClose }) {
               </div>
             )}
 
-            {/* Divider between editable fields and social section */}
             <div className="border-t border-surface-200" />
 
             {/* Votes */}
@@ -341,9 +385,9 @@ export default function ItemDetailSidebar({ item, sectionType, onClose }) {
                 {upVotes.length > 0 && (
                   <div className="flex flex-wrap items-center gap-2">
                     <ThumbsUp className="w-4 h-4 text-accent-500" />
-                    {upVotes.map((v, i) => (
+                    {upVotes.map((v) => (
                       <span
-                        key={i}
+                        key={v.id}
                         className="inline-flex items-center gap-1.5 bg-accent-50 text-accent-600 text-xs font-semibold px-2.5 py-1 rounded-full"
                       >
                         <span className="w-5 h-5 rounded-full bg-accent-200 flex items-center justify-center text-[10px] font-bold text-accent-700">
@@ -357,9 +401,9 @@ export default function ItemDetailSidebar({ item, sectionType, onClose }) {
                 {downVotes.length > 0 && (
                   <div className="flex flex-wrap items-center gap-2">
                     <ThumbsDown className="w-4 h-4 text-text-muted" />
-                    {downVotes.map((v, i) => (
+                    {downVotes.map((v) => (
                       <span
-                        key={i}
+                        key={v.id}
                         className="inline-flex items-center gap-1.5 bg-surface-100 text-text-secondary text-xs font-semibold px-2.5 py-1 rounded-full"
                       >
                         <span className="w-5 h-5 rounded-full bg-surface-200 flex items-center justify-center text-[10px] font-bold text-text-tertiary">
@@ -383,22 +427,14 @@ export default function ItemDetailSidebar({ item, sectionType, onClose }) {
               </label>
               {item.comments.length > 0 ? (
                 <div className="space-y-3">
-                  {item.comments.map((c, i) => (
-                    <div key={i} className="bg-surface-50 rounded-xl p-3">
+                  {item.comments.map((c) => (
+                    <div key={c.id} className="bg-surface-50 rounded-xl p-3">
                       <div className="flex items-center gap-2 mb-1.5">
                         <span className="w-6 h-6 rounded-full bg-accent-100 flex items-center justify-center text-[10px] font-bold text-accent-600">
                           {c.displayName[0]}
                         </span>
                         <span className="text-xs font-semibold text-text-primary">
                           {c.displayName}
-                        </span>
-                        <span className="text-[11px] text-text-muted ml-auto">
-                          {new Date(c.createdAt).toLocaleDateString(locale, {
-                            day: 'numeric',
-                            month: 'short',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
                         </span>
                       </div>
                       <p className="text-sm text-text-secondary leading-relaxed pl-8">
@@ -411,13 +447,23 @@ export default function ItemDetailSidebar({ item, sectionType, onClose }) {
                 <p className="text-sm text-text-muted italic">{t.noComments}</p>
               )}
 
-              <div className="flex items-center gap-2 mt-3">
+              <form onSubmit={handleAddComment} className="flex items-center gap-2 mt-3">
                 <input
                   type="text"
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
                   placeholder={t.addComment}
-                  className="flex-1 text-sm bg-surface-50 border border-surface-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-accent-400 focus:ring-2 focus:ring-accent-100 placeholder:text-text-muted text-text-primary transition-colors"
+                  disabled={postingComment}
+                  className="flex-1 text-sm bg-surface-50 border border-surface-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-accent-400 focus:ring-2 focus:ring-accent-100 placeholder:text-text-muted text-text-primary transition-colors disabled:opacity-50"
                 />
-              </div>
+                <button
+                  type="submit"
+                  disabled={!commentText.trim() || postingComment}
+                  className="w-10 h-10 flex items-center justify-center bg-accent-500 hover:bg-accent-600 text-white rounded-xl transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {postingComment ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                </button>
+              </form>
             </div>
           </div>
         </div>
@@ -434,4 +480,16 @@ export default function ItemDetailSidebar({ item, sectionType, onClose }) {
       `}</style>
     </>
   )
+}
+
+function buildDraft(item) {
+  return {
+    title: item?.title || '',
+    note: item?.note || '',
+    url: item?.url || '',
+    image: item?.image || '',
+    status: item?.status || 'considering',
+    isFinal: !!item?.isFinal,
+    bookingRef: item?.bookingRef || '',
+  }
 }

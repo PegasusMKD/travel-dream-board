@@ -1,13 +1,44 @@
-import { useState } from 'react'
-import { X, Copy, Check, Users } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { X, Copy, Check, Users, Loader2 } from 'lucide-react'
 import { useLang } from '../context/LanguageContext'
+import { api } from '../services/api'
 
-export default function ShareModal({ boardName, onClose }) {
+export default function ShareModal({ boardUuid, boardName, onClose }) {
   const { t } = useLang()
   const [copied, setCopied] = useState(false)
-  const shareUrl = `${window.location.origin}/boards/abc123?token=demo-share-token`
+  const [token, setToken] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadOrCreate() {
+      try {
+        const existing = await api.boards.shareTokens.list(boardUuid)
+        if (cancelled) return
+        if (existing && existing.length > 0) {
+          setToken(existing[0].token)
+        } else {
+          const created = await api.boards.shareTokens.create(boardUuid)
+          if (cancelled) return
+          setToken(created.token)
+        }
+      } catch (err) {
+        if (!cancelled) setError(err.message)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    loadOrCreate()
+    return () => { cancelled = true }
+  }, [boardUuid])
+
+  const shareUrl = token
+    ? `${window.location.origin}/board/${boardUuid}?token=${token}`
+    : ''
 
   const handleCopy = () => {
+    if (!shareUrl) return
     navigator.clipboard.writeText(shareUrl)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
@@ -33,12 +64,19 @@ export default function ShareModal({ boardName, onClose }) {
           </p>
 
           <div className="flex items-center gap-2 mb-4">
-            <div className="flex-1 bg-surface-50 border border-surface-200 rounded-xl px-3 py-2.5 text-xs text-text-tertiary font-mono truncate">
-              {shareUrl}
+            <div className="flex-1 bg-surface-50 border border-surface-200 rounded-xl px-3 py-2.5 text-xs text-text-tertiary font-mono truncate min-h-[2.5rem] flex items-center">
+              {loading ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : error ? (
+                <span className="text-red-500">{error}</span>
+              ) : (
+                shareUrl
+              )}
             </div>
             <button
               onClick={handleCopy}
-              className="shrink-0 w-10 h-10 flex items-center justify-center bg-accent-50 hover:bg-accent-100 text-accent-500 rounded-xl transition-colors cursor-pointer"
+              disabled={!shareUrl}
+              className="shrink-0 w-10 h-10 flex items-center justify-center bg-accent-50 hover:bg-accent-100 text-accent-500 rounded-xl transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             </button>

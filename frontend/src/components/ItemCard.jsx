@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import StatusBadge from './StatusBadge'
 import { useLang } from '../context/LanguageContext'
+import { useAuth } from '../context/AuthContext'
 
 const sectionIcons = {
   accommodation: Bed,
@@ -17,11 +18,18 @@ const sectionIcons = {
   activities: MapPinned,
 }
 
-export default function ItemCard({ item, sectionType, onClick }) {
+export default function ItemCard({ item, sectionType, onClick, onVote }) {
   const { t } = useLang()
+  const { user } = useAuth()
   const upVotes = item.votes.filter((v) => v.value === 'up').length
   const downVotes = item.votes.filter((v) => v.value === 'down').length
+  const myVote = user ? item.votes.find((v) => v.userUuid === user.uuid) : null
   const FallbackIcon = sectionIcons[sectionType] || MapPinned
+
+  const handleVote = (e, direction) => {
+    e.stopPropagation()
+    onVote?.(item, direction)
+  }
 
   return (
     <div
@@ -86,17 +94,25 @@ export default function ItemCard({ item, sectionType, onClick }) {
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-surface-200">
           <div className="flex items-center gap-3">
             <button
-              className="flex items-center gap-1 text-xs text-text-tertiary hover:text-accent-500 transition-colors cursor-pointer"
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => handleVote(e, 'up')}
+              className={`flex items-center gap-1 text-xs transition-colors cursor-pointer ${
+                myVote?.value === 'up'
+                  ? 'text-accent-500'
+                  : 'text-text-tertiary hover:text-accent-500'
+              }`}
             >
-              <ThumbsUp className="w-3.5 h-3.5" />
+              <ThumbsUp className="w-3.5 h-3.5" fill={myVote?.value === 'up' ? 'currentColor' : 'none'} />
               <span className="font-semibold">{upVotes}</span>
             </button>
             <button
-              className="flex items-center gap-1 text-xs text-text-tertiary hover:text-text-secondary transition-colors cursor-pointer"
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => handleVote(e, 'down')}
+              className={`flex items-center gap-1 text-xs transition-colors cursor-pointer ${
+                myVote?.value === 'down'
+                  ? 'text-text-primary'
+                  : 'text-text-tertiary hover:text-text-secondary'
+              }`}
             >
-              <ThumbsDown className="w-3.5 h-3.5" />
+              <ThumbsDown className="w-3.5 h-3.5" fill={myVote?.value === 'down' ? 'currentColor' : 'none'} />
               <span className="font-semibold">{downVotes}</span>
             </button>
           </div>
@@ -114,9 +130,9 @@ export default function ItemCard({ item, sectionType, onClick }) {
           <div className="flex items-center gap-1 mt-2">
             {item.votes
               .filter((v) => v.value === 'up')
-              .map((v, i) => (
+              .map((v) => (
                 <span
-                  key={i}
+                  key={v.id}
                   className="w-6 h-6 rounded-full bg-accent-100 flex items-center justify-center text-[10px] font-bold text-accent-600"
                   title={v.displayName}
                 >

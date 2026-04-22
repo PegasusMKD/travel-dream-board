@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { X, Link as LinkIcon, Loader2 } from 'lucide-react'
 import { useLang } from '../context/LanguageContext'
+import { api } from '../services/api'
+import { sectionToItemApi } from '../services/mappers'
 
-export default function AddItemModal({ sectionType, onClose }) {
+export default function AddItemModal({ sectionType, boardUuid, onClose, onAdded }) {
   const { t } = useLang()
   const [url, setUrl] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
   const addLabels = {
     accommodation: t.addAccommodation,
@@ -13,13 +16,20 @@ export default function AddItemModal({ sectionType, onClose }) {
     activities: t.addActivity,
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
-    setTimeout(() => {
-      setLoading(false)
+    setError(null)
+
+    try {
+      const itemApi = sectionToItemApi(api, sectionType)
+      await itemApi.create(url, boardUuid)
+      onAdded?.()
       onClose()
-    }, 1500)
+    } catch (err) {
+      setError(err.message)
+      setLoading(false)
+    }
   }
 
   return (
@@ -48,12 +58,15 @@ export default function AddItemModal({ sectionType, onClose }) {
               placeholder={t.pasteLink}
               className="w-full pl-10 pr-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:border-accent-400 focus:ring-2 focus:ring-accent-100 placeholder:text-text-muted text-text-primary transition-colors"
               autoFocus
+              required
             />
           </div>
 
           <p className="text-xs text-text-tertiary mb-4 leading-relaxed">
             {t.addLinkHelp}
           </p>
+
+          {error && <p className="text-xs text-red-500 mb-3">{error}</p>}
 
           <button
             type="submit"

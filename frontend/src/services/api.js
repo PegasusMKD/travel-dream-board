@@ -6,6 +6,13 @@ export function setUnauthorizedHandler(handler) {
   onUnauthorized = handler
 }
 
+export class AuthError extends Error {
+  constructor(message) {
+    super(message)
+    this.name = 'AuthError'
+  }
+}
+
 async function request(path, options = {}) {
   const res = await fetch(`${API_BASE}${path}`, {
     credentials: 'include',
@@ -30,13 +37,22 @@ async function request(path, options = {}) {
     return null
   }
 
-  return res.json()
+  const text = await res.text()
+  if (!text) return null
+  return JSON.parse(text)
 }
 
-export class AuthError extends Error {
-  constructor(message) {
-    super(message)
-    this.name = 'AuthError'
+function itemEndpoints(base) {
+  return {
+    create: (url, boardUuid) => {
+      const qs = new URLSearchParams({ url, boardUuid })
+      return request(`/${base}/?${qs.toString()}`, { method: 'POST' })
+    },
+    update: (uuid, data) => request(`/${base}/${uuid}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+    delete: (uuid) => request(`/${base}/${uuid}`, { method: 'DELETE' }),
   }
 }
 
@@ -52,5 +68,29 @@ export const api = {
     create: (data) => request('/boards/', { method: 'POST', body: JSON.stringify(data) }),
     update: (uuid, data) => request(`/boards/${uuid}`, { method: 'PATCH', body: JSON.stringify(data) }),
     delete: (uuid) => request(`/boards/${uuid}`, { method: 'DELETE' }),
+    shareTokens: {
+      list: (boardUuid) => request(`/boards/${boardUuid}/share-tokens/`),
+      create: (boardUuid) => request(`/boards/${boardUuid}/share-tokens/`, { method: 'POST' }),
+      delete: (boardUuid, token) => request(`/boards/${boardUuid}/share-tokens/${token}`, { method: 'DELETE' }),
+    },
+  },
+  accomodations: itemEndpoints('accomodations'),
+  activities: itemEndpoints('activities'),
+  transport: itemEndpoints('transport'),
+  comments: {
+    create: (data) => request('/comments/', { method: 'POST', body: JSON.stringify(data) }),
+    update: (uuid, content) => request(`/comments/${uuid}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ content }),
+    }),
+    delete: (uuid) => request(`/comments/${uuid}`, { method: 'DELETE' }),
+  },
+  votes: {
+    create: (data) => request('/votes/', { method: 'POST', body: JSON.stringify(data) }),
+    update: (uuid, rank) => request(`/votes/${uuid}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ rank }),
+    }),
+    delete: (uuid) => request(`/votes/${uuid}`, { method: 'DELETE' }),
   },
 }

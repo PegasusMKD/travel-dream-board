@@ -1,17 +1,25 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { Plane, Plus, Sun, Moon, Globe, LogOut } from 'lucide-react'
 import { useLang } from '../context/LanguageContext'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
+import EditBoardModal from './EditBoardModal'
 
 export default function Header() {
   const { lang, toggle: toggleLang, t } = useLang()
   const { theme, toggle: toggleTheme } = useTheme()
   const { user, logout } = useAuth()
+  const navigate = useNavigate()
+  const [creating, setCreating] = useState(false)
 
   const initials = user?.name
     ? user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
     : '?'
+
+  const handleCreated = (created) => {
+    if (created?.uuid) navigate(`/board/${created.uuid}`)
+  }
 
   return (
     <header className="bg-surface-0/80 backdrop-blur-md border-b border-surface-200 sticky top-0 z-50 transition-colors">
@@ -47,7 +55,10 @@ export default function Header() {
             </button>
 
             {/* New trip button */}
-            <button className="flex items-center gap-2 bg-accent-500 hover:bg-accent-600 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm cursor-pointer">
+            <button
+              onClick={() => setCreating(true)}
+              className="flex items-center gap-2 bg-accent-500 hover:bg-accent-600 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm cursor-pointer"
+            >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">{t.newTrip}</span>
             </button>
@@ -77,6 +88,13 @@ export default function Header() {
           </div>
         </div>
       </div>
+
+      {creating && (
+        <EditBoardModal
+          onClose={() => setCreating(false)}
+          onSaved={handleCreated}
+        />
+      )}
     </header>
   )
 }

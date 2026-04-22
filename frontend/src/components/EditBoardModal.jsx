@@ -1,24 +1,47 @@
 import { useState } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import { useLang } from '../context/LanguageContext'
+import { api } from '../services/api'
+import { toBackendBoardPayload } from '../services/mappers'
 
-export default function EditBoardModal({ board, onClose }) {
+function toDateInput(value) {
+  if (!value) return ''
+  return new Date(value).toISOString().slice(0, 10)
+}
+
+export default function EditBoardModal({ board, onClose, onSaved }) {
   const { t } = useLang()
-  const [name, setName] = useState(board.name)
-  const [destination, setDestination] = useState(board.destination)
-  const [startDate, setStartDate] = useState(board.dateRange?.start || '')
-  const [endDate, setEndDate] = useState(board.dateRange?.end || '')
-  const [coverImage, setCoverImage] = useState(board.coverImage)
+  const isEdit = !!board
+  const [name, setName] = useState(board?.name || '')
+  const [destination, setDestination] = useState(board?.destination || '')
+  const [startDate, setStartDate] = useState(toDateInput(board?.dateRange?.start))
+  const [endDate, setEndDate] = useState(toDateInput(board?.dateRange?.end))
+  const [coverImage, setCoverImage] = useState(board?.coverImage || '')
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setSaving(true)
-    // TODO: connect to backend API
-    setTimeout(() => {
-      setSaving(false)
+    setError(null)
+
+    const payload = toBackendBoardPayload({ name, destination, startDate, endDate, coverImage })
+
+    try {
+      let saved
+      if (isEdit) {
+        await api.boards.update(board.id, payload)
+        saved = { ...board, name, destination, coverImage,
+          dateRange: startDate && endDate ? { start: startDate, end: endDate } : null }
+      } else {
+        saved = await api.boards.create(payload)
+      }
+      onSaved?.(saved)
       onClose()
-    }, 1500)
+    } catch (err) {
+      setError(err.message)
+      setSaving(false)
+    }
   }
 
   const inputClass =
@@ -29,7 +52,9 @@ export default function EditBoardModal({ board, onClose }) {
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-surface-0 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-surface-200">
         <div className="flex items-center justify-between px-6 pt-5 pb-3">
-          <h3 className="text-base font-bold text-text-primary">{t.editBoard}</h3>
+          <h3 className="text-base font-bold text-text-primary">
+            {isEdit ? t.editBoard : t.newTrip}
+          </h3>
           <button
             onClick={onClose}
             className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-100 transition-colors text-text-tertiary cursor-pointer"
@@ -39,7 +64,6 @@ export default function EditBoardModal({ board, onClose }) {
         </div>
 
         <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
-          {/* Name */}
           <div>
             <label className="block text-xs font-semibold text-text-secondary mb-1.5">
               {t.editBoardName}
@@ -51,10 +75,10 @@ export default function EditBoardModal({ board, onClose }) {
               placeholder={t.editBoardNamePlaceholder}
               className={inputClass}
               autoFocus
+              required
             />
           </div>
 
-          {/* Destination */}
           <div>
             <label className="block text-xs font-semibold text-text-secondary mb-1.5">
               {t.editBoardDestination}
@@ -65,10 +89,10 @@ export default function EditBoardModal({ board, onClose }) {
               onChange={(e) => setDestination(e.target.value)}
               placeholder={t.editBoardDestinationPlaceholder}
               className={inputClass}
+              required
             />
           </div>
 
-          {/* Date range */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-text-secondary mb-1.5">
@@ -94,7 +118,6 @@ export default function EditBoardModal({ board, onClose }) {
             </div>
           </div>
 
-          {/* Cover image */}
           <div>
             <label className="block text-xs font-semibold text-text-secondary mb-1.5">
               {t.editBoardCoverImage}
@@ -115,10 +138,13 @@ export default function EditBoardModal({ board, onClose }) {
             )}
           </div>
 
-          {/* Submit */}
+          {error && (
+            <p className="text-xs text-red-500">{error}</p>
+          )}
+
           <button
             type="submit"
-            disabled={!name || saving}
+            disabled={!name || !destination || saving}
             className="w-full bg-accent-500 hover:bg-accent-600 text-white py-3 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
           >
             {saving ? (

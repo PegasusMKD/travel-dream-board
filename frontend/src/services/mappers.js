@@ -1,3 +1,17 @@
+const ITEM_SECTION_TO_BACKEND_KEY = {
+  accommodation: 'accomodations',
+  transport: 'transport',
+  activities: 'activities',
+}
+
+const BACKEND_COMMENT_TARGET = {
+  accommodation: 'accomodation',
+  transport: 'transport',
+  activities: 'activities',
+}
+
+const BACKEND_VOTE_TARGET = BACKEND_COMMENT_TARGET
+
 export function mapBoardSummary(b) {
   return {
     id: b.uuid,
@@ -8,10 +22,10 @@ export function mapBoardSummary(b) {
       : null,
     coverImage: b.thumbnail_url || '',
     memories: [],
-    sections: {
-      accommodation: [],
-      transport: [],
-      activities: [],
+    counts: {
+      accommodation: b.accomodations_count || 0,
+      transport: b.transport_count || 0,
+      activities: b.activities_count || 0,
     },
   }
 }
@@ -19,7 +33,6 @@ export function mapBoardSummary(b) {
 export function mapAggregatedBoard(b) {
   return {
     ...mapBoardSummary(b),
-    memories: [],
     sections: {
       accommodation: (b.accomodations || []).map(mapItem),
       transport: (b.transport || []).map(mapItem),
@@ -28,11 +41,12 @@ export function mapAggregatedBoard(b) {
   }
 }
 
-function mapItem(item) {
+export function mapItem(item) {
   return {
     id: item.uuid,
     url: item.url,
     title: item.title,
+    boardUuid: item.board_uuid,
     image: item.image_url || null,
     note: item.notes || '',
     status: item.status,
@@ -43,19 +57,61 @@ function mapItem(item) {
   }
 }
 
-function mapVote(v) {
+export function mapVote(v) {
   return {
-    displayName: shortName(v.user_uuid),
+    id: v.uuid,
+    userUuid: v.user_uuid,
+    displayName: v.user_name || shortName(v.user_uuid),
+    rank: v.rank,
     value: v.rank > 0 ? 'up' : 'down',
   }
 }
 
-function mapComment(c) {
+export function mapComment(c) {
   return {
-    displayName: shortName(c.user_uuid),
+    id: c.uuid,
+    userUuid: c.user_uuid,
+    displayName: c.user_name || shortName(c.user_uuid),
     text: c.content,
     createdAt: null,
   }
+}
+
+export function toBackendBoardPayload(form) {
+  return {
+    name: form.name,
+    location_name: form.destination,
+    starts_at: form.startDate ? new Date(form.startDate).toISOString() : null,
+    lasts_until: form.endDate ? new Date(form.endDate).toISOString() : null,
+    thumbnail_url: form.coverImage || null,
+  }
+}
+
+export function toBackendItemPayload(item) {
+  return {
+    uuid: item.id,
+    url: item.url,
+    title: item.title,
+    board_uuid: item.boardUuid,
+    image_url: item.image || null,
+    notes: item.note || null,
+    status: item.status,
+    selected: !!item.isFinal,
+    booking_reference: item.bookingRef || null,
+  }
+}
+
+export function backendCommentTarget(sectionType) {
+  return BACKEND_COMMENT_TARGET[sectionType]
+}
+
+export function backendVoteTarget(sectionType) {
+  return BACKEND_VOTE_TARGET[sectionType]
+}
+
+export function sectionToItemApi(api, sectionType) {
+  const key = ITEM_SECTION_TO_BACKEND_KEY[sectionType]
+  return api[key]
 }
 
 function shortName(uuid) {
