@@ -46,29 +46,30 @@ func TestScrapeProcessService_Scrape_ClaudeFallback(t *testing.T) {
 
 	http.DefaultTransport = &mockRoundTripper{
 		roundTripFunc: func(req *http.Request) (*http.Response, error) {
-			if req.URL.Host == "api.anthropic.com" {
+			if req.URL.Host == "openrouter.ai" {
 				return &http.Response{
 					StatusCode: http.StatusOK,
 					Body: io.NopCloser(bytes.NewBufferString(`{
-						"id": "msg_1",
-						"type": "message",
-						"role": "assistant",
-						"content": [
-							{
-								"type": "tool_use",
-								"id": "toolu_1",
-								"name": "extract_page_details",
-								"input": {
-									"title": "Claude Title",
-									"description": "Claude Description",
-									"image_url": "http://example.com/claude.png"
-								}
-							}
-						],
-						"model": "claude-3-haiku-20240307",
-						"stop_reason": "tool_use",
-						"stop_sequence": null,
-						"usage": {"input_tokens": 10, "output_tokens": 10}
+						"id": "chatcmpl-123",
+						"object": "chat.completion",
+						"created": 1677652288,
+						"model": "anthropic/claude-3-haiku",
+						"choices": [{
+							"index": 0,
+							"message": {
+								"role": "assistant",
+								"content": null,
+								"tool_calls": [{
+									"id": "call_1",
+									"type": "function",
+									"function": {
+										"name": "extract_page_details",
+										"arguments": "{\"title\": \"Claude Title\", \"description\": \"Claude Description\", \"image_url\": \"http://example.com/claude.png\"}"
+									}
+								}]
+							},
+							"finish_reason": "tool_calls"
+						}]
 					}`)),
 					Header: http.Header{
 						"Content-Type": []string{"application/json"},

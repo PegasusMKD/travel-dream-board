@@ -146,7 +146,7 @@ func (srv *GinServer) setupRoutes(router *gin.Engine, queries *db.Queries, cfg *
 	scrapeAuditRepository := scrapeaudit.NewRepository(queries)
 	scrapeAuditService := scrapeaudit.NewService(scrapeAuditRepository)
 
-	scrapeService := scrapeprocess.NewService("TODO: Anthropic Key", scrapeAuditService)
+	scrapeService := scrapeprocess.NewService(cfg.OpenRouterAPIKey, scrapeAuditService)
 
 	accomodationsRepository := accomodations.NewRepository(queries)
 	accomodationsService := accomodations.NewService(accomodationsRepository, commentsService, votesService, scrapeService)

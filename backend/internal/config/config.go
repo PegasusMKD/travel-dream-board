@@ -29,6 +29,7 @@ type Config struct {
 	GoogleClientSecret string
 	GoogleRedirectURL  string
 	JWTSecret          string
+	OpenRouterAPIKey   string
 }
 
 func Load() (*Config, error) {
@@ -53,6 +54,7 @@ func Load() (*Config, error) {
 		GoogleClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),
 		GoogleRedirectURL:  getEnv("GOOGLE_REDIRECT_URL", ""),
 		JWTSecret:          getEnv("JWT_SECRET", "super-secret-default-key"),
+		OpenRouterAPIKey:   getEnv("OPENROUTER_API_KEY", ""),
 	}
 
 	// Validate required fields based on service

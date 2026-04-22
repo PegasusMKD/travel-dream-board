@@ -11,9 +11,8 @@ import (
 	"github.com/PegasusMKD/travel-dream-board/internal/db"
 	scrapeaudit "github.com/PegasusMKD/travel-dream-board/internal/scrape_audit"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/anthropics/anthropic-sdk-go"
-	"github.com/anthropics/anthropic-sdk-go/option"
-	"github.com/anthropics/anthropic-sdk-go/shared/constant"
+	"github.com/sashabaranov/go-openai"
+	"github.com/sashabaranov/go-openai/jsonschema"
 )
 
 const USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -26,12 +25,12 @@ type Service interface {
 type scrapeProcessServiceImpl struct {
 	client *http.Client
 
-	anthropicKey string
+	openrouterKey string
 
 	scrapeAuditService scrapeaudit.Service
 }
 
-func NewService(anthropicKey string, scrapeAuditService scrapeaudit.Service) Service {
+func NewService(openrouterKey string, scrapeAuditService scrapeaudit.Service) Service {
 	transport := &http.Transport{
 		MaxIdleConns:          10,
 		IdleConnTimeout:       30 * time.Second,
@@ -40,7 +39,7 @@ func NewService(anthropicKey string, scrapeAuditService scrapeaudit.Service) Ser
 	}
 
 	return &scrapeProcessServiceImpl{
-		anthropicKey:       anthropicKey,
+		openrouterKey:      openrouterKey,
 		scrapeAuditService: scrapeAuditService,
 		client: &http.Client{
 			Timeout:   15 * time.Second,
@@ -186,67 +185,67 @@ func (s *scrapeProcessServiceImpl) fallbackToClaude(ctx context.Context, uuid st
 		text = text[:15000]
 	}
 
-	client := anthropic.NewClient(option.WithAPIKey(s.anthropicKey))
+	config := openai.DefaultConfig(s.openrouterKey)
+	config.BaseURL = "https://openrouter.ai/api/v1"
+	client := openai.NewClientWithConfig(config)
 
-	// 2. Define the Tool using the correct Union and Schema structures
-	toolSchema := anthropic.ToolUnionParam{
-		OfTool: &anthropic.ToolParam{
-			Name:        "extract_page_details",
-			Description: anthropic.String("Extracts the main title, description, and primary image URL."),
-			InputSchema: anthropic.ToolInputSchemaParam{
-				Type: constant.Object("object"),
-				Properties: map[string]interface{}{
-					"title": map[string]string{
-						"type":        "string",
-						"description": "The name of the accommodation, activity, or main product.",
-					},
-					"description": map[string]string{
-						"type":        "string",
-						"description": "A short 1-2 sentence description.",
-					},
-					"image_url": map[string]string{
-						"type":        "string",
-						"description": "The absolute URL to the main image.",
+	params := openai.ChatCompletionRequest{
+		Model:     "anthropic/claude-3-haiku",
+		MaxTokens: 1024,
+		Messages: []openai.ChatCompletionMessage{
+			{
+				Role:    openai.ChatMessageRoleUser,
+				Content: "Extract the details from this text: " + text,
+			},
+		},
+		Tools: []openai.Tool{
+			{
+				Type: openai.ToolTypeFunction,
+				Function: &openai.FunctionDefinition{
+					Name:        "extract_page_details",
+					Description: "Extracts the main title, description, and primary image URL.",
+					Parameters: jsonschema.Definition{
+						Type: jsonschema.Object,
+						Properties: map[string]jsonschema.Definition{
+							"title": {
+								Type:        jsonschema.String,
+								Description: "The name of the accommodation, activity, or main product.",
+							},
+							"description": {
+								Type:        jsonschema.String,
+								Description: "A short 1-2 sentence description.",
+							},
+							"image_url": {
+								Type:        jsonschema.String,
+								Description: "The absolute URL to the main image.",
+							},
+						},
+						Required: []string{"title", "description", "image_url"},
 					},
 				},
-				Required: []string{"title", "description", "image_url"},
+			},
+		},
+		ToolChoice: map[string]interface{}{
+			"type": "function",
+			"function": map[string]string{
+				"name": "extract_page_details",
 			},
 		},
 	}
 
-	// 3. Force Claude to use the tool via ToolChoiceUnionParam
-	toolChoice := anthropic.ToolChoiceUnionParam{
-		OfTool: &anthropic.ToolChoiceToolParam{
-			Type: constant.Tool("tool"),
-			Name: "extract_page_details",
-		},
-	}
-
-	// 4. Send the Request
-	message, err := client.Messages.New(ctx, anthropic.MessageNewParams{
-		Model:      anthropic.ModelClaudeHaiku4_5,
-		MaxTokens:  1024,
-		Tools:      []anthropic.ToolUnionParam{toolSchema},
-		ToolChoice: toolChoice,
-		Messages: []anthropic.MessageParam{
-			anthropic.NewUserMessage(anthropic.NewTextBlock("Extract the details from this text: " + text)),
-		},
-	})
+	resp, err := client.CreateChatCompletion(ctx, params)
 	if err != nil {
-		log.Error("Failed with Haiku 4.5 fallback", "error", err)
+		log.Error("Failed with Haiku fallback", "error", err)
 		return
 	}
 
 	commitedUpdate := false
 
-	// 5. Parse the Response
-	for _, block := range message.Content {
-		if block.Type == "tool_use" {
+	if len(resp.Choices) > 0 && len(resp.Choices[0].Message.ToolCalls) > 0 {
+		toolCall := resp.Choices[0].Message.ToolCalls[0]
+		if toolCall.Function.Name == "extract_page_details" {
 			var extracted AIExtraction
-
-			inputBytes, _ := json.Marshal(block.Input)
-
-			if err := json.Unmarshal(inputBytes, &extracted); err == nil {
+			if err := json.Unmarshal([]byte(toolCall.Function.Arguments), &extracted); err == nil {
 				if (out.Title == nil || *out.Title == "") && extracted.Title != "" {
 					commitedUpdate = true
 					out.Title = &extracted.Title
@@ -259,7 +258,6 @@ func (s *scrapeProcessServiceImpl) fallbackToClaude(ctx context.Context, uuid st
 					commitedUpdate = true
 					out.ImageUrl = &extracted.ImageURL
 				}
-				break
 			}
 		}
 	}
