@@ -53,20 +53,40 @@ func (q *Queries) DeleteBoardById(ctx context.Context, uuid pgtype.UUID) error {
 }
 
 const getAllBoards = `-- name: GetAllBoards :many
-select uuid, updated_at, created_at, name, details, location_name, starts_at, lasts_until, status, thumbnail_url, user_uuid
-from boards
-where user_uuid = $1
+select b.uuid, b.updated_at, b.created_at, b.name, b.details, b.location_name, b.starts_at, b.lasts_until, b.status, b.thumbnail_url, b.user_uuid,
+       (select count(*) from accomodations a where a.board_uuid = b.uuid) as accomodations_count,
+       (select count(*) from transport t where t.board_uuid = b.uuid) as transport_count,
+       (select count(*) from activities act where act.board_uuid = b.uuid) as activities_count
+from boards b
+where b.user_uuid = $1
 `
 
-func (q *Queries) GetAllBoards(ctx context.Context, userUuid pgtype.UUID) ([]Board, error) {
+type GetAllBoardsRow struct {
+	Uuid               pgtype.UUID
+	UpdatedAt          pgtype.Timestamp
+	CreatedAt          pgtype.Timestamp
+	Name               string
+	Details            *string
+	LocationName       string
+	StartsAt           pgtype.Date
+	LastsUntil         pgtype.Date
+	Status             BoardsStatus
+	ThumbnailUrl       *string
+	UserUuid           pgtype.UUID
+	AccomodationsCount int64
+	TransportCount     int64
+	ActivitiesCount    int64
+}
+
+func (q *Queries) GetAllBoards(ctx context.Context, userUuid pgtype.UUID) ([]GetAllBoardsRow, error) {
 	rows, err := q.db.Query(ctx, getAllBoards, userUuid)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Board
+	var items []GetAllBoardsRow
 	for rows.Next() {
-		var i Board
+		var i GetAllBoardsRow
 		if err := rows.Scan(
 			&i.Uuid,
 			&i.UpdatedAt,
@@ -79,6 +99,9 @@ func (q *Queries) GetAllBoards(ctx context.Context, userUuid pgtype.UUID) ([]Boa
 			&i.Status,
 			&i.ThumbnailUrl,
 			&i.UserUuid,
+			&i.AccomodationsCount,
+			&i.TransportCount,
+			&i.ActivitiesCount,
 		); err != nil {
 			return nil, err
 		}

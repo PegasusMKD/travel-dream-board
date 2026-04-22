@@ -83,7 +83,7 @@ func (repo *repositoryImpl) GetAllBoards(ctx context.Context, userUuid string) (
 
 	data := []*Board{}
 	for _, val := range ents {
-		data = append(data, FromEntity(&val))
+		data = append(data, FromGetAllBoardsRow(&val))
 	}
 
 	return data, nil

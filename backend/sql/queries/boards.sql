@@ -9,9 +9,12 @@ from boards
 where uuid = @uuid;
 
 -- name: GetAllBoards :many
-select *
-from boards
-where user_uuid = @user_uuid;
+select b.*,
+       (select count(*) from accomodations a where a.board_uuid = b.uuid) as accomodations_count,
+       (select count(*) from transport t where t.board_uuid = b.uuid) as transport_count,
+       (select count(*) from activities act where act.board_uuid = b.uuid) as activities_count
+from boards b
+where b.user_uuid = @user_uuid;
 
 -- name: UpdateBoardById :exec
 update boards

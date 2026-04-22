@@ -58,6 +58,10 @@ func (svc *serviceImpl) GetBoardById(ctx context.Context, uuid string) (*Aggrega
 		return nil, err
 	}
 
+	board.AccomodationsCount = int64(len(accoms))
+	board.ActivitiesCount = int64(len(activs))
+	board.TransportCount = int64(len(transports))
+
 	return &AggregatedBoard{
 		Board:         *board,
 		Accomodations: accoms,
