@@ -8,12 +8,14 @@ import (
 
 	"github.com/PegasusMKD/travel-dream-board/internal/db"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"golang.org/x/oauth2"
 )
 
 type Service interface {
 	ProcessGoogleCallback(ctx context.Context, code string) (*db.User, string, error)
 	ValidateToken(tokenString string) (string, error)
+	GetCurrentUser(ctx context.Context, userUuid string) (*db.User, error)
 }
 
 type authServiceImpl struct {
@@ -104,4 +106,12 @@ func (s *authServiceImpl) ValidateToken(tokenString string) (string, error) {
 	}
 
 	return "", errors.New("invalid token")
+}
+
+func (s *authServiceImpl) GetCurrentUser(ctx context.Context, userUuid string) (*db.User, error) {
+	var uuid pgtype.UUID
+	if err := uuid.Scan(userUuid); err != nil {
+		return nil, errors.New("invalid user uuid")
+	}
+	return s.repo.GetUserById(ctx, uuid)
 }

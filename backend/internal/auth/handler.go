@@ -29,6 +29,14 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 	}
 }
 
+func (h *Handler) RegisterAuthenticatedRoutes(router *gin.RouterGroup) {
+	group := router.Group("/auth")
+	{
+		group.GET("/me", h.Me)
+		group.POST("/logout", h.Logout)
+	}
+}
+
 func generateStateOauthCookie(c *gin.Context) string {
 	var expiration = 365 * 24 * 60 * 60
 	b := make([]byte, 16)
@@ -59,7 +67,7 @@ func (h *Handler) GoogleCallback(c *gin.Context) {
 		return
 	}
 
-	user, token, err := h.service.ProcessGoogleCallback(c.Request.Context(), code)
+	_, token, err := h.service.ProcessGoogleCallback(c.Request.Context(), code)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -70,12 +78,33 @@ func (h *Handler) GoogleCallback(c *gin.Context) {
 	// For dev, secure=false might be needed if localhost without https
 	c.SetCookie("jwt_token", token, 3600*24*7, "/", "", false, true)
 
+	// Redirect back to the frontend after successful login
+	c.Redirect(http.StatusTemporaryRedirect, "/")
+}
+
+func (h *Handler) Me(c *gin.Context) {
+	userUuid, exists := c.Get("user_uuid")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	user, err := h.service.GetCurrentUser(c.Request.Context(), userUuid.(string))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user"})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Successfully logged in",
-		"user": gin.H{
-			"uuid":  user.Uuid.String(), // Note: verify user.Uuid string format
-			"name":  user.Name,
-			"email": user.Email,
-		},
+		"uuid":      user.Uuid.String(),
+		"name":      user.Name,
+		"email":     user.Email,
+		"avatarUrl": user.AvatarUrl,
 	})
+}
+
+func (h *Handler) Logout(c *gin.Context) {
+	// Clear the JWT cookie by setting it with a past expiration
+	c.SetCookie("jwt_token", "", -1, "/", "", false, true)
+	c.JSON(http.StatusOK, gin.H{"message": "Successfully logged out"})
 }

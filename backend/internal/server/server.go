@@ -164,16 +164,24 @@ func (srv *GinServer) setupRoutes(router *gin.Engine, queries *db.Queries, cfg *
 	boardsService := boards.NewService(boardsRepository, accomodationsService, activitiesService, transportService)
 	boardsHandler := boards.NewHandler(boardsService)
 
-	v1Group := router.Group("/api/v1")
+	// Public routes (no auth required)
+	v1Public := router.Group("/api/v1")
 	{
-		authHandler.RegisterRoutes(v1Group)
-		shareTokensHandler.RegisterRoutes(v1Group)
-		commentsHandler.RegisterRoutes(v1Group)
-		votesHandler.RegisterRoutes(v1Group)
-		accomodationsHandler.RegisterRoutes(v1Group)
-		activitiesHandler.RegisterRoutes(v1Group)
-		transportHandler.RegisterRoutes(v1Group)
-		boardsHandler.RegisterRoutes(v1Group)
+		authHandler.RegisterRoutes(v1Public)
+	}
+
+	// Authenticated routes (require valid JWT)
+	v1Auth := router.Group("/api/v1")
+	v1Auth.Use(middleware.RequireAuth(authService))
+	{
+		authHandler.RegisterAuthenticatedRoutes(v1Auth)
+		boardsHandler.RegisterRoutes(v1Auth)
+		shareTokensHandler.RegisterRoutes(v1Auth)
+		accomodationsHandler.RegisterRoutes(v1Auth)
+		activitiesHandler.RegisterRoutes(v1Auth)
+		transportHandler.RegisterRoutes(v1Auth)
+		commentsHandler.RegisterRoutes(v1Auth)
+		votesHandler.RegisterRoutes(v1Auth)
 	}
 }
 

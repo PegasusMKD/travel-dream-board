@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm create:*)"
+      "Bash(npm create:*)",
+      "Bash(find C:\\\\Programming\\\\zuzia-gift\\\\frontend\\\\src *)",
+      "Bash(make mocks *)",
+      "Bash(go test *)",
+      "Bash(go build *)"
     ]
   }
 }

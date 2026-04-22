@@ -71,8 +71,8 @@ func TestAuthHandler_GoogleCallback(t *testing.T) {
 
 		router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusOK, w.Code)
-		assert.Contains(t, w.Body.String(), "Successfully logged in")
+		assert.Equal(t, http.StatusTemporaryRedirect, w.Code)
+		assert.Equal(t, "/", w.Header().Get("Location"))
 		assert.Contains(t, w.Header().Get("Set-Cookie"), "jwt_token=mock-jwt-token")
 		mockSvc.AssertExpectations(t)
 	})
