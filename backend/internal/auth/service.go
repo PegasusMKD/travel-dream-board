@@ -16,6 +16,7 @@ type Service interface {
 	ProcessGoogleCallback(ctx context.Context, code string) (*db.User, string, error)
 	ValidateToken(tokenString string) (string, error)
 	GetCurrentUser(ctx context.Context, userUuid string) (*db.User, error)
+	CreateGuestUser(ctx context.Context, name string) (*db.User, error)
 }
 
 type authServiceImpl struct {
@@ -114,4 +115,8 @@ func (s *authServiceImpl) GetCurrentUser(ctx context.Context, userUuid string) (
 		return nil, errors.New("invalid user uuid")
 	}
 	return s.repo.GetUserById(ctx, uuid)
+}
+
+func (s *authServiceImpl) CreateGuestUser(ctx context.Context, name string) (*db.User, error) {
+	return s.repo.CreateGuestUser(ctx, name)
 }

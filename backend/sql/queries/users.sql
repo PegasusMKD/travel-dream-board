@@ -13,3 +13,8 @@ DO UPDATE SET
     avatar_url = EXCLUDED.avatar_url,
     updated_at = now()
 RETURNING *;
+
+-- name: CreateGuestUser :one
+INSERT INTO users (name)
+VALUES (@name)
+RETURNING *;

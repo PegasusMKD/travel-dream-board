@@ -10,6 +10,7 @@ import (
 type Repository interface {
 	UpsertUser(ctx context.Context, params db.UpsertUserParams) (*db.User, error)
 	GetUserById(ctx context.Context, uuid pgtype.UUID) (*db.User, error)
+	CreateGuestUser(ctx context.Context, name string) (*db.User, error)
 }
 
 type authRepositoryImpl struct {
@@ -32,6 +33,14 @@ func (r *authRepositoryImpl) UpsertUser(ctx context.Context, params db.UpsertUse
 
 func (r *authRepositoryImpl) GetUserById(ctx context.Context, uuid pgtype.UUID) (*db.User, error) {
 	user, err := r.queries.GetUserById(ctx, uuid)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (r *authRepositoryImpl) CreateGuestUser(ctx context.Context, name string) (*db.User, error) {
+	user, err := r.queries.CreateGuestUser(ctx, name)
 	if err != nil {
 		return nil, err
 	}

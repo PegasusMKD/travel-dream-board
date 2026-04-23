@@ -124,3 +124,16 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 		group.DELETE("/:uuid", h.DeleteAccomodationById)
 	}
 }
+
+func (h *Handler) RegisterOwnerRoutes(router *gin.RouterGroup) {
+	group := router.Group("/accomodations")
+	{
+		group.POST("/", h.CreateAccomodation)
+		group.PATCH("/:uuid", h.UpdateAccomodationById)
+		group.DELETE("/:uuid", h.DeleteAccomodationById)
+	}
+}
+
+func (h *Handler) RegisterCollabRoutes(router *gin.RouterGroup) {
+	router.GET("/accomodations/:uuid", h.GetAccomodationById)
+}

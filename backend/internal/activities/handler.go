@@ -124,3 +124,16 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 		group.DELETE("/:uuid", h.DeleteActivityById)
 	}
 }
+
+func (h *Handler) RegisterOwnerRoutes(router *gin.RouterGroup) {
+	group := router.Group("/activities")
+	{
+		group.POST("/", h.CreateActivity)
+		group.PATCH("/:uuid", h.UpdateActivityById)
+		group.DELETE("/:uuid", h.DeleteActivityById)
+	}
+}
+
+func (h *Handler) RegisterCollabRoutes(router *gin.RouterGroup) {
+	router.GET("/activities/:uuid", h.GetActivityById)
+}

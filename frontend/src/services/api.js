@@ -1,9 +1,14 @@
 const API_BASE = '/api/v1'
 
 let onUnauthorized = null
+let shareTokenProvider = null
 
 export function setUnauthorizedHandler(handler) {
   onUnauthorized = handler
+}
+
+export function setShareTokenProvider(provider) {
+  shareTokenProvider = provider
 }
 
 export class AuthError extends Error {
@@ -13,17 +18,33 @@ export class AuthError extends Error {
   }
 }
 
+export class NetworkError extends Error {
+  constructor(message) {
+    super(message)
+    this.name = 'NetworkError'
+  }
+}
+
 async function request(path, options = {}) {
   const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData
   const defaultHeaders = isFormData ? {} : { 'Content-Type': 'application/json' }
-  const res = await fetch(`${API_BASE}${path}`, {
-    credentials: 'include',
-    ...options,
-    headers: {
-      ...defaultHeaders,
-      ...options.headers,
-    },
-  })
+  const shareToken = shareTokenProvider ? shareTokenProvider() : null
+  const shareHeader = shareToken ? { 'X-Share-Token': shareToken } : {}
+
+  let res
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      credentials: 'include',
+      ...options,
+      headers: {
+        ...defaultHeaders,
+        ...shareHeader,
+        ...options.headers,
+      },
+    })
+  } catch (err) {
+    throw new NetworkError(err?.message || 'Network error')
+  }
 
   if (res.status === 401) {
     if (onUnauthorized) onUnauthorized()
@@ -70,6 +91,9 @@ export const api = {
     me: () => request('/auth/me'),
     logout: () => request('/auth/logout', { method: 'POST' }),
     googleLoginUrl: `${API_BASE}/auth/google/login`,
+  },
+  guests: {
+    create: (name) => request('/guests', { method: 'POST', body: JSON.stringify({ name }) }),
   },
   boards: {
     getAll: () => request('/boards/'),

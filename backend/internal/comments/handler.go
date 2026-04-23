@@ -80,3 +80,12 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 		group.DELETE("/:uuid", h.DeleteCommentByUuid)
 	}
 }
+
+func (h *Handler) RegisterCollabRoutes(router *gin.RouterGroup) {
+	group := router.Group("/comments")
+	{
+		group.POST("/", h.CreateComment)
+		group.PATCH("/:uuid", h.UpdateCommentByUuid)
+		group.DELETE("/:uuid", h.DeleteCommentByUuid)
+	}
+}

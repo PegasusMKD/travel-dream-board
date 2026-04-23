@@ -170,18 +170,29 @@ func (srv *GinServer) setupRoutes(router *gin.Engine, queries *db.Queries, cfg *
 		authHandler.RegisterRoutes(v1Public)
 	}
 
-	// Authenticated routes (require valid JWT)
+	// Owner-only routes (require valid JWT)
 	v1Auth := router.Group("/api/v1")
 	v1Auth.Use(middleware.RequireAuth(authService))
 	{
 		authHandler.RegisterAuthenticatedRoutes(v1Auth)
-		boardsHandler.RegisterRoutes(v1Auth)
+		boardsHandler.RegisterOwnerRoutes(v1Auth)
 		shareTokensHandler.RegisterRoutes(v1Auth)
-		accomodationsHandler.RegisterRoutes(v1Auth)
-		activitiesHandler.RegisterRoutes(v1Auth)
-		transportHandler.RegisterRoutes(v1Auth)
-		commentsHandler.RegisterRoutes(v1Auth)
-		votesHandler.RegisterRoutes(v1Auth)
+		accomodationsHandler.RegisterOwnerRoutes(v1Auth)
+		activitiesHandler.RegisterOwnerRoutes(v1Auth)
+		transportHandler.RegisterOwnerRoutes(v1Auth)
+	}
+
+	// Collaborator routes (JWT owner OR valid share token)
+	v1Collab := router.Group("/api/v1")
+	v1Collab.Use(middleware.RequireAuthOrShareToken(authService, shareTokensService))
+	{
+		authHandler.RegisterGuestRoutes(v1Collab)
+		boardsHandler.RegisterCollabRoutes(v1Collab)
+		accomodationsHandler.RegisterCollabRoutes(v1Collab)
+		activitiesHandler.RegisterCollabRoutes(v1Collab)
+		transportHandler.RegisterCollabRoutes(v1Collab)
+		commentsHandler.RegisterCollabRoutes(v1Collab)
+		votesHandler.RegisterCollabRoutes(v1Collab)
 	}
 }
 

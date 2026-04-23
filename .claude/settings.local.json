@@ -8,7 +8,9 @@
       "Bash(go build *)",
       "Bash(npm run *)",
       "Bash(grep -E \"\\\\.\\(go|ts\\)$\")",
-      "Bash(command -v sqlc)"
+      "Bash(command -v sqlc)",
+      "Bash(sqlc generate *)",
+      "Bash(echo \"EXIT=$?\")"
     ]
   }
 }

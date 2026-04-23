@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Sparkles } from 'lucide-react'
+import { Plus, Sparkles, MapPin } from 'lucide-react'
 import BoardCard from '../components/BoardCard'
 import EditBoardModal from '../components/EditBoardModal'
+import EmptyState from '../components/EmptyState'
+import ErrorState from '../components/ErrorState'
+import { BoardCardSkeleton } from '../components/Skeleton'
 import { useLang } from '../context/LanguageContext'
-import { api } from '../services/api'
+import { api, NetworkError } from '../services/api'
 import { mapBoardSummary } from '../services/mappers'
 
 export default function Home() {
@@ -13,14 +16,22 @@ export default function Home() {
   const [boards, setBoards] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [errorVariant, setErrorVariant] = useState('generic')
   const [creating, setCreating] = useState(false)
 
-  useEffect(() => {
+  const loadBoards = useCallback(() => {
+    setLoading(true)
+    setError(null)
     api.boards.getAll()
       .then((data) => setBoards((data || []).map(mapBoardSummary)))
-      .catch((err) => setError(err.message))
+      .catch((err) => {
+        setErrorVariant(err instanceof NetworkError ? 'network' : 'generic')
+        setError(err.message)
+      })
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => { loadBoards() }, [loadBoards])
 
   const handleCreated = (createdRaw) => {
     if (createdRaw?.uuid) {
@@ -45,13 +56,28 @@ export default function Home() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-20">
-          <div className="w-8 h-8 border-3 border-accent-200 border-t-accent-500 rounded-full animate-spin" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <BoardCardSkeleton />
+          <BoardCardSkeleton />
+          <BoardCardSkeleton />
         </div>
       ) : error ? (
-        <div className="border-2 border-dashed border-surface-200 rounded-2xl py-10 text-center">
-          <p className="text-sm text-text-muted">{error}</p>
-        </div>
+        <ErrorState variant={errorVariant} message={errorVariant === 'generic' ? error : null} onRetry={loadBoards} />
+      ) : boards.length === 0 ? (
+        <EmptyState
+          icon={MapPin}
+          title={t.emptyBoardsTitle}
+          description={t.emptyBoardsDesc}
+          action={(
+            <button
+              onClick={() => setCreating(true)}
+              className="inline-flex items-center gap-1.5 bg-accent-500 hover:bg-accent-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              {t.newTrip}
+            </button>
+          )}
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {boards.map((board) => (

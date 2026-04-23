@@ -137,6 +137,33 @@ export const translations = {
     // Theme
     lightMode: 'Jasny',
     darkMode: 'Ciemny',
+
+    // Guest / collaborator
+    guestNameTitle: 'Witaj na tablicy!',
+    guestNameDesc: 'Podaj swoje imię, aby Twoje głosy i komentarze były widoczne dla innych.',
+    guestNamePlaceholder: 'Twoje imię',
+    guestNameContinue: 'Dalej',
+    guestNameError: 'Nie udało się utworzyć profilu gościa',
+    guestBadge: 'Gość',
+    revokeLink: 'Unieważnij link',
+    confirmRevokeLink: 'Czy na pewno chcesz unieważnić ten link? Nikt nie będzie mógł już dołączyć do tablicy przez ten link.',
+    linkRevoked: 'Link został unieważniony',
+
+    // Status progression / finalize
+    advanceStatus: 'Zmień status',
+    markBooked: 'Oznacz jako zarezerwowane',
+    bookingRefRequiredHint: 'Dodaj numer rezerwacji, aby oznaczyć jako zarezerwowane',
+    finalizeReplaceWarning: 'Inny element jest już oznaczony jako wybrany — zostanie odznaczony.',
+    finalizeTransportLimit: 'Możesz oznaczyć maksymalnie 2 transporty jako wybrane (np. tam i z powrotem).',
+
+    // Empty / error states
+    emptyBoardsTitle: 'Brak tablic',
+    emptyBoardsDesc: 'Utwórz swoją pierwszą tablicę podróży, aby zacząć planowanie.',
+    networkErrorTitle: 'Brak połączenia',
+    networkErrorDesc: 'Sprawdź połączenie z internetem i spróbuj ponownie.',
+    scrapeErrorTitle: 'Nie udało się pobrać linku',
+    scrapeErrorDesc: 'Możesz dodać element ręcznie lub spróbować innego linku.',
+    retry: 'Spróbuj ponownie',
   },
   en: {
     appName: 'Dream Travels',
@@ -276,5 +303,32 @@ export const translations = {
     // Theme
     lightMode: 'Light',
     darkMode: 'Dark',
+
+    // Guest / collaborator
+    guestNameTitle: 'Welcome to the board!',
+    guestNameDesc: 'Pick a display name so your votes and comments are recognizable to others.',
+    guestNamePlaceholder: 'Your name',
+    guestNameContinue: 'Continue',
+    guestNameError: 'Could not create guest profile',
+    guestBadge: 'Guest',
+    revokeLink: 'Revoke link',
+    confirmRevokeLink: 'Revoke this share link? Anyone who already has it will lose access.',
+    linkRevoked: 'Link revoked',
+
+    // Status progression / finalize
+    advanceStatus: 'Change status',
+    markBooked: 'Mark as booked',
+    bookingRefRequiredHint: 'Add a booking reference to mark as booked',
+    finalizeReplaceWarning: 'Another item is already selected — it will be unselected.',
+    finalizeTransportLimit: 'You can select at most 2 transport options (e.g. outbound + return).',
+
+    // Empty / error states
+    emptyBoardsTitle: 'No boards yet',
+    emptyBoardsDesc: 'Create your first travel board to start planning.',
+    networkErrorTitle: 'Connection lost',
+    networkErrorDesc: 'Check your internet connection and try again.',
+    scrapeErrorTitle: 'Could not fetch link',
+    scrapeErrorDesc: 'You can add the item manually or try a different link.',
+    retry: 'Retry',
   },
 }

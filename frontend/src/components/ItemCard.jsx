@@ -29,6 +29,8 @@ export default function ItemCard({ item, sectionType, onClick }) {
     onClick?.()
   }
 
+  const isRejected = item.status === 'rejected'
+
   return (
     <div
       onClick={handleClick}
@@ -37,8 +39,8 @@ export default function ItemCard({ item, sectionType, onClick }) {
           ? 'border-surface-200 cursor-wait'
           : item.isFinal
             ? 'border-accent-400 ring-2 ring-accent-100 hover:shadow-md cursor-pointer'
-            : item.status === 'rejected'
-              ? 'border-surface-200 opacity-50 hover:shadow-md cursor-pointer'
+            : isRejected
+              ? 'border-surface-200 opacity-60 hover:shadow-md cursor-pointer'
               : 'border-surface-200 hover:border-accent-300 hover:shadow-md cursor-pointer'
       }`}
     >
@@ -51,7 +53,13 @@ export default function ItemCard({ item, sectionType, onClick }) {
       {/* Image */}
       <div className="relative">
         {item.image ? (
-          <img src={item.image} alt={item.title} className="w-full h-40 object-cover" />
+          <img
+            src={item.image}
+            alt={item.title}
+            className={`w-full h-40 object-cover transition-[filter] duration-200 ${
+              isRejected ? 'grayscale' : ''
+            }`}
+          />
         ) : (
           <div className="w-full h-28 bg-surface-100 flex items-center justify-center">
             <FallbackIcon className="w-10 h-10 text-surface-300" />
@@ -68,7 +76,9 @@ export default function ItemCard({ item, sectionType, onClick }) {
       {/* Content */}
       <div className="p-4">
         <div className="flex items-start justify-between gap-2 mb-2">
-          <h4 className="text-sm font-semibold text-text-primary leading-snug line-clamp-2">
+          <h4 className={`text-sm font-semibold text-text-primary leading-snug line-clamp-2 ${
+            isRejected ? 'line-through text-text-tertiary' : ''
+          }`}>
             {item.title}
           </h4>
           <a
@@ -90,7 +100,7 @@ export default function ItemCard({ item, sectionType, onClick }) {
           </p>
         )}
 
-        {item.bookingRef && (
+        {item.status === 'booked' && item.bookingRef && (
           <div className="mt-2 text-xs bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 rounded-lg p-2 font-mono">
             {t.bookingRef}: {item.bookingRef}
           </div>

@@ -37,6 +37,36 @@ func (h *Handler) RegisterAuthenticatedRoutes(router *gin.RouterGroup) {
 	}
 }
 
+func (h *Handler) RegisterGuestRoutes(router *gin.RouterGroup) {
+	router.POST("/guests", h.CreateGuest)
+}
+
+func (h *Handler) CreateGuest(c *gin.Context) {
+	var body struct {
+		Name string `json:"name" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "name is required"})
+		return
+	}
+
+	trimmed := body.Name
+	if len(trimmed) > 60 {
+		trimmed = trimmed[:60]
+	}
+
+	user, err := h.service.CreateGuestUser(c.Request.Context(), trimmed)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create guest"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"uuid": user.Uuid.String(),
+		"name": user.Name,
+	})
+}
+
 func generateStateOauthCookie(c *gin.Context) string {
 	var expiration = 365 * 24 * 60 * 60
 	b := make([]byte, 16)

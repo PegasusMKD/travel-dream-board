@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { X, Copy, Check, Users, Loader2 } from 'lucide-react'
+import { X, Copy, Check, Users, Loader2, Trash2 } from 'lucide-react'
 import { useLang } from '../context/LanguageContext'
 import { api } from '../services/api'
 
@@ -9,6 +9,8 @@ export default function ShareModal({ boardUuid, boardName, onClose }) {
   const [token, setToken] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [revoking, setRevoking] = useState(false)
+  const [revoked, setRevoked] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -44,6 +46,36 @@ export default function ShareModal({ boardUuid, boardName, onClose }) {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const handleRevoke = async () => {
+    if (!token || revoking) return
+    if (!window.confirm(t.confirmRevokeLink)) return
+    setRevoking(true)
+    setError(null)
+    try {
+      await api.boards.shareTokens.delete(boardUuid, token)
+      setToken(null)
+      setRevoked(true)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setRevoking(false)
+    }
+  }
+
+  const handleRegenerate = async () => {
+    setLoading(true)
+    setError(null)
+    setRevoked(false)
+    try {
+      const created = await api.boards.shareTokens.create(boardUuid)
+      setToken(created.token)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
@@ -63,10 +95,12 @@ export default function ShareModal({ boardUuid, boardName, onClose }) {
             {t.shareDesc} <strong>"{boardName}"</strong>.
           </p>
 
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-3">
             <div className="flex-1 bg-surface-50 border border-surface-200 rounded-xl px-3 py-2.5 text-xs text-text-tertiary font-mono truncate min-h-[2.5rem] flex items-center">
               {loading ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : revoked && !token ? (
+                <span className="italic">{t.linkRevoked}</span>
               ) : error ? (
                 <span className="text-red-500">{error}</span>
               ) : (
@@ -80,6 +114,27 @@ export default function ShareModal({ boardUuid, boardName, onClose }) {
             >
               {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             </button>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 mb-4">
+            {token && !loading && (
+              <button
+                onClick={handleRevoke}
+                disabled={revoking}
+                className="flex items-center gap-1.5 text-xs font-semibold text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {revoking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                {t.revokeLink}
+              </button>
+            )}
+            {!token && !loading && (
+              <button
+                onClick={handleRegenerate}
+                className="flex items-center gap-1.5 text-xs font-semibold text-accent-500 hover:text-accent-600 bg-accent-50 hover:bg-accent-100 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+              >
+                {t.share}
+              </button>
+            )}
           </div>
 
           <div className="bg-surface-50 rounded-xl p-4">

@@ -119,3 +119,17 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 		group.DELETE("/:uuid", h.DeleteBoardById)
 	}
 }
+
+func (h *Handler) RegisterOwnerRoutes(router *gin.RouterGroup) {
+	group := router.Group("/boards")
+	{
+		group.POST("/", h.CreateBoard)
+		group.GET("/", h.GetAllBoards)
+		group.PATCH("/:uuid", h.UpdateBoardById)
+		group.DELETE("/:uuid", h.DeleteBoardById)
+	}
+}
+
+func (h *Handler) RegisterCollabRoutes(router *gin.RouterGroup) {
+	router.GET("/boards/:uuid", h.GetBoardById)
+}

@@ -15,13 +15,17 @@ import {
 } from 'lucide-react'
 import { useLang } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
+import { useShare } from '../context/ShareContext'
 import ItemCard from '../components/ItemCard'
 import AddItemModal from '../components/AddItemModal'
 import ShareModal from '../components/ShareModal'
 import ItemDetailSidebar from '../components/ItemDetailSidebar'
 import EditBoardModal from '../components/EditBoardModal'
 import MemoryGallery from '../components/MemoryGallery'
-import { api } from '../services/api'
+import DisplayNamePrompt from '../components/DisplayNamePrompt'
+import ErrorState from '../components/ErrorState'
+import { ItemCardSkeleton } from '../components/Skeleton'
+import { api, NetworkError } from '../services/api'
 import { mapAggregatedBoard, backendVoteTarget, sectionToItemApi } from '../services/mappers'
 
 const sectionConfig = {
@@ -43,6 +47,10 @@ export default function BoardDetail() {
   const navigate = useNavigate()
   const { lang, t } = useLang()
   const { user } = useAuth()
+  const { shareToken, guestUuid, guestName, persistGuest } = useShare()
+  const isGuest = !user && !!shareToken
+  const voterUuid = user?.uuid || guestUuid
+  const needsGuestName = isGuest && (!guestUuid || !guestName)
   const [board, setBoard] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -60,7 +68,7 @@ export default function BoardDetail() {
       setBoard(mapAggregatedBoard(data))
       setError(null)
     } catch (err) {
-      setError(err.message)
+      setError(err)
     }
   }, [id])
 
@@ -101,12 +109,12 @@ export default function BoardDetail() {
   }
 
   const handleVote = async (item, rank) => {
-    if (!user) return
-    const myVote = item.votes.find((v) => v.userUuid === user.uuid)
+    if (!voterUuid) return
+    const myVote = item.votes.find((v) => v.userUuid === voterUuid)
     try {
       if (!myVote) {
         await api.votes.create({
-          user_uuid: user.uuid,
+          user_uuid: voterUuid,
           rank,
           voted_on: backendVoteTarget(selectedSectionOf(item, board)),
           voted_on_uuid: item.id,
@@ -118,37 +126,51 @@ export default function BoardDetail() {
       }
       await loadBoard()
     } catch (err) {
-      setError(err.message)
+      setError(err)
     }
   }
 
   const handleClearVote = async (item) => {
-    if (!user) return
-    const myVote = item.votes.find((v) => v.userUuid === user.uuid)
+    if (!voterUuid) return
+    const myVote = item.votes.find((v) => v.userUuid === voterUuid)
     if (!myVote) return
     try {
       await api.votes.delete(myVote.id)
       await loadBoard()
     } catch (err) {
-      setError(err.message)
+      setError(err)
     }
   }
 
   if (loading) {
     return (
-      <div className="flex justify-center py-20">
-        <div className="w-8 h-8 border-3 border-accent-200 border-t-accent-500 rounded-full animate-spin" />
+      <div className="pt-8 space-y-6">
+        <div className="w-full h-56 sm:h-72 rounded-2xl bg-surface-100 animate-pulse" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <ItemCardSkeleton />
+          <ItemCardSkeleton />
+          <ItemCardSkeleton />
+        </div>
       </div>
     )
   }
 
   if (error || !board) {
+    const variant = error instanceof NetworkError ? 'network' : 'generic'
     return (
-      <div className="pt-20 text-center">
-        <p className="text-text-secondary">{error || t.boardNotFound}</p>
-        <Link to="/" className="text-accent-500 text-sm mt-2 inline-block hover:underline">
-          {t.backToList}
-        </Link>
+      <div className="pt-12 max-w-md mx-auto">
+        <ErrorState
+          variant={variant}
+          message={variant === 'generic' ? (error?.message || error || t.boardNotFound) : null}
+          onRetry={loadBoard}
+        />
+        {!isGuest && (
+          <div className="text-center mt-4">
+            <Link to="/" className="text-accent-500 text-sm hover:underline">
+              {t.backToList}
+            </Link>
+          </div>
+        )}
       </div>
     )
   }
@@ -157,13 +179,15 @@ export default function BoardDetail() {
 
   return (
     <div className="pt-6">
-      <Link
-        to="/"
-        className="inline-flex items-center gap-1.5 text-sm text-text-tertiary hover:text-accent-500 transition-colors mb-4 no-underline"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        {t.allBoards}
-      </Link>
+      {!isGuest && (
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 text-sm text-text-tertiary hover:text-accent-500 transition-colors mb-4 no-underline"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          {t.allBoards}
+        </Link>
+      )}
 
       {/* Hero */}
       <div className="relative rounded-2xl overflow-hidden mb-6 bg-surface-100">
@@ -197,25 +221,34 @@ export default function BoardDetail() {
           </div>
         </div>
 
-        <div className="absolute top-4 right-4 flex items-center gap-2">
-          <button
-            onClick={() => setShowShare(true)}
-            className="flex items-center gap-1.5 bg-white/90 backdrop-blur-sm text-gray-800 px-3 py-2 rounded-xl text-xs font-semibold hover:bg-white transition-colors shadow-sm cursor-pointer"
-          >
-            <Share2 className="w-3.5 h-3.5" />
-            {t.share}
-          </button>
-          <button
-            onClick={() => setShowEditBoard(true)}
-            className="w-9 h-9 flex items-center justify-center bg-white/90 backdrop-blur-sm text-gray-800 rounded-xl hover:bg-white transition-colors shadow-sm cursor-pointer"
-          >
-            <Settings className="w-4 h-4" />
-          </button>
-        </div>
+        {!isGuest && (
+          <div className="absolute top-4 right-4 flex items-center gap-2">
+            <button
+              onClick={() => setShowShare(true)}
+              className="flex items-center gap-1.5 bg-white/90 backdrop-blur-sm text-gray-800 px-3 py-2 rounded-xl text-xs font-semibold hover:bg-white transition-colors shadow-sm cursor-pointer"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              {t.share}
+            </button>
+            <button
+              onClick={() => setShowEditBoard(true)}
+              className="w-9 h-9 flex items-center justify-center bg-white/90 backdrop-blur-sm text-gray-800 rounded-xl hover:bg-white transition-colors shadow-sm cursor-pointer"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+        {isGuest && (
+          <div className="absolute top-4 right-4">
+            <span className="inline-flex items-center gap-1 bg-white/90 backdrop-blur-sm text-gray-800 px-3 py-2 rounded-xl text-xs font-semibold shadow-sm">
+              {t.guestBadge}{guestName ? ` · ${guestName}` : ''}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 mb-8 border-b border-surface-200">
+      <div className="flex items-center gap-1 mb-8 border-b border-surface-200 overflow-x-auto">
         <button
           onClick={() => setActiveTab('planning')}
           className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
@@ -265,13 +298,15 @@ export default function BoardDetail() {
                       {items.length}
                     </span>
                   </div>
-                  <button
-                    onClick={() => setAddingTo(key)}
-                    className="flex items-center gap-1.5 text-xs font-semibold text-accent-500 hover:text-accent-600 bg-accent-50 hover:bg-accent-100 px-3 py-1.5 rounded-xl transition-colors cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    {t.addLink}
-                  </button>
+                  {!isGuest && (
+                    <button
+                      onClick={() => setAddingTo(key)}
+                      className="flex items-center gap-1.5 text-xs font-semibold text-accent-500 hover:text-accent-600 bg-accent-50 hover:bg-accent-100 px-3 py-1.5 rounded-xl transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      {t.addLink}
+                    </button>
+                  )}
                 </div>
 
                 {items.length > 0 ? (
@@ -292,13 +327,15 @@ export default function BoardDetail() {
                   <div className="border-2 border-dashed border-surface-200 rounded-2xl py-10 text-center">
                     <div className="text-3xl mb-2">{config.emoji}</div>
                     <p className="text-sm text-text-muted">{t.noLinks}</p>
-                    <button
-                      onClick={() => setAddingTo(key)}
-                      className="mt-3 text-xs font-semibold text-accent-500 hover:text-accent-600 bg-accent-50 hover:bg-accent-100 px-4 py-2 rounded-xl transition-colors cursor-pointer"
-                    >
-                      <Plus className="w-3.5 h-3.5 inline mr-1" />
-                      {t.addLink}
-                    </button>
+                    {!isGuest && (
+                      <button
+                        onClick={() => setAddingTo(key)}
+                        className="mt-3 text-xs font-semibold text-accent-500 hover:text-accent-600 bg-accent-50 hover:bg-accent-100 px-4 py-2 rounded-xl transition-colors cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5 inline mr-1" />
+                        {t.addLink}
+                      </button>
+                    )}
                   </div>
                 )}
               </section>
@@ -344,6 +381,16 @@ export default function BoardDetail() {
           onRefresh={loadBoard}
           onVote={handleVote}
           onClearVote={handleClearVote}
+          isGuest={isGuest}
+          voterUuid={voterUuid}
+          guestName={guestName}
+          board={board}
+        />
+      )}
+
+      {needsGuestName && (
+        <DisplayNamePrompt
+          onSubmitted={({ uuid, name }) => persistGuest(uuid, name)}
         />
       )}
     </div>

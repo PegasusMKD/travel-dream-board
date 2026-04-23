@@ -80,3 +80,12 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 		group.DELETE("/:uuid", h.DeleteVoteByUuid)
 	}
 }
+
+func (h *Handler) RegisterCollabRoutes(router *gin.RouterGroup) {
+	group := router.Group("/votes")
+	{
+		group.POST("/", h.CreateVote)
+		group.PATCH("/:uuid", h.UpdateVoteByUuid)
+		group.DELETE("/:uuid", h.DeleteVoteByUuid)
+	}
+}

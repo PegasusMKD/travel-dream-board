@@ -88,27 +88,27 @@
 - [X] `DELETE /comments/:uuid`
 
 ### Frontend — Collaboration
-- [ ] Share link generation UI
-- [ ] Collaborator view (token-gated)
+- [X] Share link generation UI
+- [X] Collaborator view (token-gated)
 - [X] Voting UI on item cards
 - [X] Comment thread on item cards
-- [ ] Display name prompt for collaborators
+- [X] Display name prompt for collaborators
 
 ### Frontend — Finalization & Status
-- [ ] Status badge + progression UI
-- [ ] Finalize item action (per section rules)
-- [ ] Booking reference field (shown when status = booked)
-- [ ] Rejected state styling
+- [X] Status badge + progression UI
+- [X] Finalize item action (per section rules)
+- [X] Booking reference field (shown when status = booked)
+- [X] Rejected state styling
 
 ---
 
 ## Week 4 — Polish + Deployment
 
 ### UI Polish
-- [ ] Empty states (no boards, no items, no votes)
-- [ ] Loading states + skeletons
-- [ ] Error states (scrape failed, network error)
-- [ ] Responsive layout (mobile-friendly)
+- [X] Empty states (no boards, no items, no votes)
+- [X] Loading states + skeletons
+- [X] Error states (scrape failed, network error)
+- [X] Responsive layout (mobile-friendly)
 - [X] Polish UI language strings
 
 ### Deployment

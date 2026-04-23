@@ -27,6 +27,7 @@ import {
   backendCommentTarget,
   mapItem,
 } from '../services/mappers'
+import { itemsToUnselectFor, finalizeLimit, nextStatus } from '../services/finalizeRules'
 
 const sectionIcons = {
   accommodation: Bed,
@@ -36,9 +37,21 @@ const sectionIcons = {
 
 const ALL_STATUSES = ['considering', 'finalist', 'rejected', 'booked', 'completed']
 
-export default function ItemDetailSidebar({ itemId, sectionType, onClose, onRefresh, onVote, onClearVote }) {
+export default function ItemDetailSidebar({
+  itemId,
+  sectionType,
+  onClose,
+  onRefresh,
+  onVote,
+  onClearVote,
+  isGuest = false,
+  voterUuid: voterUuidProp,
+  guestName,
+  board,
+}) {
   const { t } = useLang()
   const { user } = useAuth()
+  const voterUuid = voterUuidProp || user?.uuid || null
 
   const [item, setItem] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -103,6 +116,27 @@ export default function ItemDetailSidebar({ itemId, sectionType, onClose, onRefr
     setError(null)
     try {
       const itemApi = sectionToItemApi(api, sectionType)
+
+      // If marking this item as final, enforce per-section limit by
+      // unmarking conflicting items first.
+      if (draft.isFinal && !item.isFinal && board?.sections?.[sectionType]) {
+        const conflicts = itemsToUnselectFor(sectionType, board.sections[sectionType], item.id)
+        for (const conflict of conflicts) {
+          const conflictPayload = toBackendItemPayload({
+            id: conflict.id,
+            boardUuid: conflict.boardUuid,
+            url: conflict.url,
+            title: conflict.title,
+            image: conflict.image,
+            note: conflict.note,
+            status: conflict.status,
+            isFinal: false,
+            bookingRef: conflict.bookingRef,
+          })
+          await itemApi.update(conflict.id, conflictPayload)
+        }
+      }
+
       const payload = toBackendItemPayload({
         id: item.id,
         boardUuid: item.boardUuid,
@@ -125,14 +159,50 @@ export default function ItemDetailSidebar({ itemId, sectionType, onClose, onRefr
     }
   }
 
+  // Owner-only quick action: advance status by one step (considering → finalist → booked).
+  const handleAdvanceStatus = async () => {
+    if (!item || isGuest) return
+    const next = nextStatus(item.status)
+    if (!next) return
+    if (next === 'booked' && !item.bookingRef) {
+      // Booking requires a reference — open edit mode so the user can fill it in.
+      setDraft({ ...buildDraft(item), status: 'booked' })
+      setEditing(true)
+      return
+    }
+    setSaving(true)
+    setError(null)
+    try {
+      const itemApi = sectionToItemApi(api, sectionType)
+      const payload = toBackendItemPayload({
+        id: item.id,
+        boardUuid: item.boardUuid,
+        url: item.url,
+        title: item.title,
+        image: item.image,
+        note: item.note,
+        status: next,
+        isFinal: item.isFinal,
+        bookingRef: item.bookingRef,
+      })
+      await itemApi.update(item.id, payload)
+      await reloadItem()
+      await onRefresh?.()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const handleAddComment = async (e) => {
     e.preventDefault()
-    if (!commentText.trim() || !user || !item) return
+    if (!commentText.trim() || !voterUuid || !item) return
     setPostingComment(true)
     setError(null)
     try {
       await api.comments.create({
-        user_uuid: user.uuid,
+        user_uuid: voterUuid,
         content: commentText.trim(),
         commented_on: backendCommentTarget(sectionType),
         commented_on_uuid: item.id,
@@ -221,7 +291,7 @@ export default function ItemDetailSidebar({ itemId, sectionType, onClose, onRefr
         <div className="flex items-center justify-between px-6 py-4 border-b border-surface-200">
           <h2 className="text-base font-bold text-text-primary">{t.details}</h2>
           <div className="flex items-center gap-1">
-            {!loading && item && !editing && (
+            {!loading && item && !editing && !isGuest && (
               <>
                 <button
                   onClick={startEditing}
@@ -287,6 +357,8 @@ export default function ItemDetailSidebar({ itemId, sectionType, onClose, onRefr
             updateDraft={updateDraft}
             error={error}
             user={user}
+            voterUuid={voterUuid}
+            isGuest={isGuest}
             t={t}
             FallbackIcon={FallbackIcon}
             commentText={commentText}
@@ -304,6 +376,8 @@ export default function ItemDetailSidebar({ itemId, sectionType, onClose, onRefr
             onVote={onVote}
             onClearVote={onClearVote}
             reloadItem={reloadItem}
+            handleAdvanceStatus={handleAdvanceStatus}
+            saving={saving}
           />
         )}
       </div>
@@ -322,19 +396,19 @@ export default function ItemDetailSidebar({ itemId, sectionType, onClose, onRefr
 }
 
 function ItemSidebarBody({
-  item, sectionType, editing, draft, updateDraft, error, user, t, FallbackIcon,
+  item, sectionType, editing, draft, updateDraft, error, user, voterUuid, isGuest, t, FallbackIcon,
   commentText, setCommentText, postingComment, handleAddComment,
   editingCommentId, commentDraft, setCommentDraft, commentBusyId,
   startEditingComment, cancelEditingComment, handleSaveComment, handleDeleteComment,
-  onVote, onClearVote, reloadItem,
+  onVote, onClearVote, reloadItem, handleAdvanceStatus, saving,
 }) {
   const displayImage = editing ? draft.image : item.image
   const displayTitle = editing ? draft.title : item.title
-  const myVote = user ? item.votes.find((v) => v.userUuid === user.uuid) : null
+  const myVote = voterUuid ? item.votes.find((v) => v.userUuid === voterUuid) : null
   const sortedRaters = [...item.votes].sort((a, b) => b.rank - a.rank)
 
   const handleRate = async (rank) => {
-    if (!user || !onVote) return
+    if (!voterUuid || !onVote) return
     try {
       await onVote(item, rank)
       await reloadItem()
@@ -342,7 +416,7 @@ function ItemSidebarBody({
   }
 
   const handleClear = async () => {
-    if (!user || !onClearVote) return
+    if (!voterUuid || !onClearVote) return
     try {
       await onClearVote(item)
       await reloadItem()
@@ -471,12 +545,25 @@ function ItemSidebarBody({
               ))}
             </div>
           ) : (
-            <StatusBadge status={item.status} />
+            <div className="flex items-center justify-between gap-2">
+              <StatusBadge status={item.status} />
+              {!isGuest && nextStatus(item.status) && (
+                <button
+                  onClick={handleAdvanceStatus}
+                  disabled={saving}
+                  className="text-xs font-semibold text-accent-500 hover:text-accent-600 bg-accent-50 hover:bg-accent-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {nextStatus(item.status) === 'booked' && !item.bookingRef
+                    ? t.markBooked
+                    : `→ ${t[nextStatus(item.status)]}`}
+                </button>
+              )}
+            </div>
           )}
         </div>
 
-        {/* Booking ref */}
-        {editing ? (
+        {/* Booking ref — only relevant when status is booked */}
+        {editing && draft.status === 'booked' ? (
           <div>
             <label className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-1.5 block">
               {t.editBookingRef}
@@ -488,14 +575,15 @@ function ItemSidebarBody({
               placeholder={t.editBookingRefPlaceholder}
               className="w-full text-sm font-mono text-text-primary bg-surface-50 border border-surface-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-accent-400 focus:ring-2 focus:ring-accent-100 placeholder:text-text-muted transition-colors"
             />
+            {!draft.bookingRef && (
+              <p className="text-[11px] text-text-muted mt-1">{t.bookingRefRequiredHint}</p>
+            )}
           </div>
-        ) : (
-          item.bookingRef && (
-            <div className="bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 rounded-xl p-3 text-sm font-mono">
-              {t.bookingRef}: <strong>{item.bookingRef}</strong>
-            </div>
-          )
-        )}
+        ) : !editing && item.status === 'booked' && item.bookingRef ? (
+          <div className="bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 rounded-xl p-3 text-sm font-mono">
+            {t.bookingRef}: <strong>{item.bookingRef}</strong>
+          </div>
+        ) : null}
 
         {/* Notes */}
         <div>
@@ -569,7 +657,7 @@ function ItemSidebarBody({
           {item.comments.length > 0 ? (
             <div className="space-y-3">
               {item.comments.map((c) => {
-                const isOwn = user && c.userUuid === user.uuid
+                const isOwn = voterUuid && c.userUuid === voterUuid
                 const isEditingThis = editingCommentId === c.id
                 const isBusy = commentBusyId === c.id
                 return (
@@ -670,7 +758,7 @@ function ItemSidebarBody({
             {t.ratings} ({item.ratingCount ?? 0})
           </label>
 
-          {user ? (
+          {voterUuid ? (
             <div className="bg-surface-50 rounded-xl p-3 mb-3">
               <div className="flex items-center justify-between">
                 <div className="flex flex-col gap-1">

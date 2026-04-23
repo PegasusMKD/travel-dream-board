@@ -11,6 +11,26 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const createGuestUser = `-- name: CreateGuestUser :one
+INSERT INTO users (name)
+VALUES ($1)
+RETURNING uuid, updated_at, created_at, email, name, avatar_url
+`
+
+func (q *Queries) CreateGuestUser(ctx context.Context, name string) (User, error) {
+	row := q.db.QueryRow(ctx, createGuestUser, name)
+	var i User
+	err := row.Scan(
+		&i.Uuid,
+		&i.UpdatedAt,
+		&i.CreatedAt,
+		&i.Email,
+		&i.Name,
+		&i.AvatarUrl,
+	)
+	return i, err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
 SELECT uuid, updated_at, created_at, email, name, avatar_url FROM users WHERE email = $1 LIMIT 1
 `
