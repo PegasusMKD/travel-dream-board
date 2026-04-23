@@ -1,12 +1,18 @@
-# Travel Dream Board — TODO
+# Travel Dream Board — POLISHING TODO
 
 ## Polishing Features
 
-### Expand Transport & Activities - Start and End Times
-- [ ] Add fields on Transport & Activities for exact start_time and end_time (first takeoff and last arrival back)
+### Expand Transport - Departure and Arrival Times
+- [ ] Add fields on Transport for the exact departure and arrival times
 - [ ] Expand the LLM tools to be able to parse that information from an image (or as a fallback)
 - [ ] Expand the scraping logic to include those fields if possible?
+- [ ] Should be manually editable
 
+### Expand Activities - Start and End Times
+- [ ] Add fields on Activities for the exact start and end times
+- [ ] Expand the LLM tools to be able to parse that information from an image (or as a fallback)
+- [ ] Expand the scraping logic to include those fields if possible?
+- [ ] Should be manually enterable if you open the edit window
 
 ### Expand Transport - Total Journey Length
 - [ ] Add fields on Transport for total journey length
@@ -18,11 +24,13 @@
 - [ ] Add fields on Activities for exact location of the event
 - [ ] Expand the LLM tools to be able to parse that information from an image (or as a fallback)
 - [ ] Expand the scraping logic to include those fields if possible?
+- [ ] Should be manually editable if you open the edit window
 
 ### Expand All Items - Price & Description
 - [ ] Add fields to denote an extracted price from the link
 - [ ] Expand the LLM tools to be able to parse that information from an image (or as a fallback)
 - [ ] Expand the scraping logic to include those fields if possible?
+- [ ] Should be manually editable
 
 ### Implement "Memories" feature
 - [ ] Create migration, queries and a module for Memories
