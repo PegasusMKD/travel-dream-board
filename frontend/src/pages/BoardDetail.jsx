@@ -94,10 +94,9 @@ export default function BoardDetail() {
       })
   }
 
-  const handleVote = async (item, direction) => {
+  const handleVote = async (item, rank) => {
     if (!user) return
     const myVote = item.votes.find((v) => v.userUuid === user.uuid)
-    const rank = direction === 'up' ? 1 : -1
     try {
       if (!myVote) {
         await api.votes.create({
@@ -111,6 +110,18 @@ export default function BoardDetail() {
       } else {
         await api.votes.update(myVote.id, rank)
       }
+      await loadBoard()
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  const handleClearVote = async (item) => {
+    if (!user) return
+    const myVote = item.votes.find((v) => v.userUuid === user.uuid)
+    if (!myVote) return
+    try {
+      await api.votes.delete(myVote.id)
       await loadBoard()
     } catch (err) {
       setError(err.message)
@@ -268,7 +279,6 @@ export default function BoardDetail() {
                           setSelectedItemId(item.id)
                           setSelectedSection(key)
                         }}
-                        onVote={handleVote}
                       />
                     ))}
                   </div>
@@ -326,6 +336,8 @@ export default function BoardDetail() {
           sectionType={selectedSection}
           onClose={closeSidebar}
           onRefresh={loadBoard}
+          onVote={handleVote}
+          onClearVote={handleClearVote}
         />
       )}
     </div>
@@ -349,8 +361,8 @@ function buildPlaceholder(id, url) {
     status: 'considering',
     isFinal: false,
     bookingRef: null,
-    likes: 0,
-    dislikes: 0,
+    avgRating: 0,
+    ratingCount: 0,
     votes: [],
     comments: [],
     pending: true,

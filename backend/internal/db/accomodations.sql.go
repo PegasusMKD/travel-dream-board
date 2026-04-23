@@ -63,8 +63,8 @@ func (q *Queries) DeleteAccomodationByUuid(ctx context.Context, uuid pgtype.UUID
 
 const findAllAccomodationsByBoardUuid = `-- name: FindAllAccomodationsByBoardUuid :many
 select a.uuid, a.updated_at, a.created_at, a.url, a.title, a.image_url, a.notes, a.status, a.booking_reference, a.selected, a.board_uuid, a.user_uuid,
-    count(case when v.rank = 1 then 1 end)::int as likes,
-    count(case when v.rank < 1 then 1 end)::int as dislikes
+    coalesce(avg(v.rank)::float, 0)::float as avg_rating,
+    count(v.uuid)::int as rating_count
 from accomodations a
 left join votes v on v.voted_on_uuid = a.uuid and v.voted_on_ = 'accomodation'
 where a.board_uuid = $1
@@ -84,8 +84,8 @@ type FindAllAccomodationsByBoardUuidRow struct {
 	Selected         bool
 	BoardUuid        pgtype.UUID
 	UserUuid         pgtype.UUID
-	Likes            int32
-	Dislikes         int32
+	AvgRating        float64
+	RatingCount      int32
 }
 
 func (q *Queries) FindAllAccomodationsByBoardUuid(ctx context.Context, boardUuid pgtype.UUID) ([]FindAllAccomodationsByBoardUuidRow, error) {
@@ -110,8 +110,8 @@ func (q *Queries) FindAllAccomodationsByBoardUuid(ctx context.Context, boardUuid
 			&i.Selected,
 			&i.BoardUuid,
 			&i.UserUuid,
-			&i.Likes,
-			&i.Dislikes,
+			&i.AvgRating,
+			&i.RatingCount,
 		); err != nil {
 			return nil, err
 		}
@@ -125,8 +125,8 @@ func (q *Queries) FindAllAccomodationsByBoardUuid(ctx context.Context, boardUuid
 
 const getAccomodationByUuid = `-- name: GetAccomodationByUuid :one
 select a.uuid, a.updated_at, a.created_at, a.url, a.title, a.image_url, a.notes, a.status, a.booking_reference, a.selected, a.board_uuid, a.user_uuid,
-    count(case when v.rank = 1 then 1 end)::int as likes,
-    count(case when v.rank < 1 then 1 end)::int as dislikes
+    coalesce(avg(v.rank)::float, 0)::float as avg_rating,
+    count(v.uuid)::int as rating_count
 from accomodations a
 left join votes v on v.voted_on_uuid = a.uuid and v.voted_on_ = 'accomodation'
 where a.uuid = $1
@@ -146,8 +146,8 @@ type GetAccomodationByUuidRow struct {
 	Selected         bool
 	BoardUuid        pgtype.UUID
 	UserUuid         pgtype.UUID
-	Likes            int32
-	Dislikes         int32
+	AvgRating        float64
+	RatingCount      int32
 }
 
 func (q *Queries) GetAccomodationByUuid(ctx context.Context, uuid pgtype.UUID) (GetAccomodationByUuidRow, error) {
@@ -166,8 +166,8 @@ func (q *Queries) GetAccomodationByUuid(ctx context.Context, uuid pgtype.UUID) (
 		&i.Selected,
 		&i.BoardUuid,
 		&i.UserUuid,
-		&i.Likes,
-		&i.Dislikes,
+		&i.AvgRating,
+		&i.RatingCount,
 	)
 	return i, err
 }

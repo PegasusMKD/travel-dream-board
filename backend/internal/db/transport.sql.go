@@ -63,8 +63,8 @@ func (q *Queries) DeleteTransportByUuid(ctx context.Context, uuid pgtype.UUID) e
 
 const findAllTransportByBoardUuid = `-- name: FindAllTransportByBoardUuid :many
 select t.uuid, t.updated_at, t.created_at, t.url, t.title, t.image_url, t.notes, t.status, t.booking_reference, t.selected, t.board_uuid, t.user_uuid,
-    count(case when v.rank = 1 then 1 end)::int as likes,
-    count(case when v.rank < 1 then 1 end)::int as dislikes
+    coalesce(avg(v.rank)::float, 0)::float as avg_rating,
+    count(v.uuid)::int as rating_count
 from transport t
 left join votes v on v.voted_on_uuid = t.uuid and v.voted_on_ = 'transport'
 where t.board_uuid = $1
@@ -84,8 +84,8 @@ type FindAllTransportByBoardUuidRow struct {
 	Selected         bool
 	BoardUuid        pgtype.UUID
 	UserUuid         pgtype.UUID
-	Likes            int32
-	Dislikes         int32
+	AvgRating        float64
+	RatingCount      int32
 }
 
 func (q *Queries) FindAllTransportByBoardUuid(ctx context.Context, boardUuid pgtype.UUID) ([]FindAllTransportByBoardUuidRow, error) {
@@ -110,8 +110,8 @@ func (q *Queries) FindAllTransportByBoardUuid(ctx context.Context, boardUuid pgt
 			&i.Selected,
 			&i.BoardUuid,
 			&i.UserUuid,
-			&i.Likes,
-			&i.Dislikes,
+			&i.AvgRating,
+			&i.RatingCount,
 		); err != nil {
 			return nil, err
 		}
@@ -125,8 +125,8 @@ func (q *Queries) FindAllTransportByBoardUuid(ctx context.Context, boardUuid pgt
 
 const getTransportByUuid = `-- name: GetTransportByUuid :one
 select t.uuid, t.updated_at, t.created_at, t.url, t.title, t.image_url, t.notes, t.status, t.booking_reference, t.selected, t.board_uuid, t.user_uuid,
-    count(case when v.rank = 1 then 1 end)::int as likes,
-    count(case when v.rank < 1 then 1 end)::int as dislikes
+    coalesce(avg(v.rank)::float, 0)::float as avg_rating,
+    count(v.uuid)::int as rating_count
 from transport t
 left join votes v on v.voted_on_uuid = t.uuid and v.voted_on_ = 'transport'
 where t.uuid = $1
@@ -146,8 +146,8 @@ type GetTransportByUuidRow struct {
 	Selected         bool
 	BoardUuid        pgtype.UUID
 	UserUuid         pgtype.UUID
-	Likes            int32
-	Dislikes         int32
+	AvgRating        float64
+	RatingCount      int32
 }
 
 func (q *Queries) GetTransportByUuid(ctx context.Context, uuid pgtype.UUID) (GetTransportByUuidRow, error) {
@@ -166,8 +166,8 @@ func (q *Queries) GetTransportByUuid(ctx context.Context, uuid pgtype.UUID) (Get
 		&i.Selected,
 		&i.BoardUuid,
 		&i.UserUuid,
-		&i.Likes,
-		&i.Dislikes,
+		&i.AvgRating,
+		&i.RatingCount,
 	)
 	return i, err
 }

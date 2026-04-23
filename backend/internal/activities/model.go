@@ -17,8 +17,8 @@ type Activity struct {
 	BookingReference *string             `json:"booking_reference"`
 	Selected         bool                `json:"selected"`
 	UserUuid         string              `json:"user_uuid"`
-	Likes            int32               `json:"likes"`
-	Dislikes         int32               `json:"dislikes"`
+	AvgRating        float64             `json:"avg_rating"`
+	RatingCount      int32               `json:"rating_count"`
 }
 
 func FromEntity(entity db.Activity) *Activity {
@@ -48,8 +48,8 @@ func FromGetActivityRow(entity db.GetActivityByUuidRow) *Activity {
 		BookingReference: entity.BookingReference,
 		Selected:         entity.Selected,
 		UserUuid:         entity.UserUuid.String(),
-		Likes:            entity.Likes,
-		Dislikes:         entity.Dislikes,
+		AvgRating:        entity.AvgRating,
+		RatingCount:      entity.RatingCount,
 	}
 }
 
@@ -65,8 +65,8 @@ func FromFindActivitiesRow(entity db.FindAllActivitiesByBoardUuidRow) *Activity 
 		BookingReference: entity.BookingReference,
 		Selected:         entity.Selected,
 		UserUuid:         entity.UserUuid.String(),
-		Likes:            entity.Likes,
-		Dislikes:         entity.Dislikes,
+		AvgRating:        entity.AvgRating,
+		RatingCount:      entity.RatingCount,
 	}
 }
 

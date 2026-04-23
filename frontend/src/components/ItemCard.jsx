@@ -1,6 +1,5 @@
 import {
-  ThumbsUp,
-  ThumbsDown,
+  Star,
   MessageCircle,
   ExternalLink,
   Bookmark,
@@ -11,7 +10,6 @@ import {
 } from 'lucide-react'
 import StatusBadge from './StatusBadge'
 import { useLang } from '../context/LanguageContext'
-import { useAuth } from '../context/AuthContext'
 
 const sectionIcons = {
   accommodation: Bed,
@@ -19,20 +17,12 @@ const sectionIcons = {
   activities: MapPinned,
 }
 
-export default function ItemCard({ item, sectionType, onClick, onVote }) {
+export default function ItemCard({ item, sectionType, onClick }) {
   const { t } = useLang()
-  const { user } = useAuth()
-  const upVotes = item.likes ?? 0
-  const downVotes = item.dislikes ?? 0
-  const myVote = user ? item.votes.find((v) => v.userUuid === user.uuid) : null
+  const avgRating = item.avgRating ?? 0
+  const ratingCount = item.ratingCount ?? 0
   const FallbackIcon = sectionIcons[sectionType] || MapPinned
   const isPending = !!item.pending
-
-  const handleVote = (e, direction) => {
-    e.stopPropagation()
-    if (isPending) return
-    onVote?.(item, direction)
-  }
 
   const handleClick = () => {
     if (isPending) return
@@ -108,30 +98,29 @@ export default function ItemCard({ item, sectionType, onClick, onVote }) {
 
         {/* Footer */}
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-surface-200">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={(e) => handleVote(e, 'up')}
-              className={`flex items-center gap-1 text-xs transition-colors cursor-pointer ${
-                myVote?.value === 'up'
-                  ? 'text-accent-500'
-                  : 'text-text-tertiary hover:text-accent-500'
-              }`}
-            >
-              <ThumbsUp className="w-3.5 h-3.5" fill={myVote?.value === 'up' ? 'currentColor' : 'none'} />
-              <span className="font-semibold">{upVotes}</span>
-            </button>
-            <button
-              onClick={(e) => handleVote(e, 'down')}
-              className={`flex items-center gap-1 text-xs transition-colors cursor-pointer ${
-                myVote?.value === 'down'
-                  ? 'text-text-primary'
-                  : 'text-text-tertiary hover:text-text-secondary'
-              }`}
-            >
-              <ThumbsDown className="w-3.5 h-3.5" fill={myVote?.value === 'down' ? 'currentColor' : 'none'} />
-              <span className="font-semibold">{downVotes}</span>
-            </button>
-          </div>
+          {ratingCount > 0 ? (
+            <div className="flex items-center gap-1.5 text-xs">
+              <div className="flex items-center gap-0.5">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <Star
+                    key={n}
+                    className={`w-3.5 h-3.5 ${
+                      n <= Math.round(avgRating)
+                        ? 'text-amber-400'
+                        : 'text-surface-300'
+                    }`}
+                    fill={n <= Math.round(avgRating) ? 'currentColor' : 'none'}
+                  />
+                ))}
+              </div>
+              <span className="font-semibold text-text-secondary">
+                {avgRating.toFixed(1)}
+              </span>
+              <span className="text-text-tertiary">({ratingCount})</span>
+            </div>
+          ) : (
+            <span className="text-xs text-text-muted italic">{t.noRatingsYet}</span>
+          )}
 
           {item.comments.length > 0 && (
             <span className="flex items-center gap-1 text-xs text-text-tertiary">
@@ -140,23 +129,6 @@ export default function ItemCard({ item, sectionType, onClick, onVote }) {
             </span>
           )}
         </div>
-
-        {/* Vote avatars */}
-        {item.votes.length > 0 && (
-          <div className="flex items-center gap-1 mt-2">
-            {item.votes
-              .filter((v) => v.value === 'up')
-              .map((v) => (
-                <span
-                  key={v.id}
-                  className="w-6 h-6 rounded-full bg-accent-100 flex items-center justify-center text-[10px] font-bold text-accent-600"
-                  title={v.displayName}
-                >
-                  {v.displayName[0]}
-                </span>
-              ))}
-          </div>
-        )}
       </div>
     </div>
   )

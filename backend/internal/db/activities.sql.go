@@ -63,8 +63,8 @@ func (q *Queries) DeleteActivityByUuid(ctx context.Context, uuid pgtype.UUID) er
 
 const findAllActivitiesByBoardUuid = `-- name: FindAllActivitiesByBoardUuid :many
 select a.uuid, a.updated_at, a.created_at, a.url, a.title, a.image_url, a.notes, a.status, a.booking_reference, a.selected, a.board_uuid, a.user_uuid,
-    count(case when v.rank = 1 then 1 end)::int as likes,
-    count(case when v.rank < 1 then 1 end)::int as dislikes
+    coalesce(avg(v.rank)::float, 0)::float as avg_rating,
+    count(v.uuid)::int as rating_count
 from activities a
 left join votes v on v.voted_on_uuid = a.uuid and v.voted_on_ = 'activities'
 where a.board_uuid = $1
@@ -84,8 +84,8 @@ type FindAllActivitiesByBoardUuidRow struct {
 	Selected         bool
 	BoardUuid        pgtype.UUID
 	UserUuid         pgtype.UUID
-	Likes            int32
-	Dislikes         int32
+	AvgRating        float64
+	RatingCount      int32
 }
 
 func (q *Queries) FindAllActivitiesByBoardUuid(ctx context.Context, boardUuid pgtype.UUID) ([]FindAllActivitiesByBoardUuidRow, error) {
@@ -110,8 +110,8 @@ func (q *Queries) FindAllActivitiesByBoardUuid(ctx context.Context, boardUuid pg
 			&i.Selected,
 			&i.BoardUuid,
 			&i.UserUuid,
-			&i.Likes,
-			&i.Dislikes,
+			&i.AvgRating,
+			&i.RatingCount,
 		); err != nil {
 			return nil, err
 		}
@@ -125,8 +125,8 @@ func (q *Queries) FindAllActivitiesByBoardUuid(ctx context.Context, boardUuid pg
 
 const getActivityByUuid = `-- name: GetActivityByUuid :one
 select a.uuid, a.updated_at, a.created_at, a.url, a.title, a.image_url, a.notes, a.status, a.booking_reference, a.selected, a.board_uuid, a.user_uuid,
-    count(case when v.rank = 1 then 1 end)::int as likes,
-    count(case when v.rank < 1 then 1 end)::int as dislikes
+    coalesce(avg(v.rank)::float, 0)::float as avg_rating,
+    count(v.uuid)::int as rating_count
 from activities a
 left join votes v on v.voted_on_uuid = a.uuid and v.voted_on_ = 'activities'
 where a.uuid = $1
@@ -146,8 +146,8 @@ type GetActivityByUuidRow struct {
 	Selected         bool
 	BoardUuid        pgtype.UUID
 	UserUuid         pgtype.UUID
-	Likes            int32
-	Dislikes         int32
+	AvgRating        float64
+	RatingCount      int32
 }
 
 func (q *Queries) GetActivityByUuid(ctx context.Context, uuid pgtype.UUID) (GetActivityByUuidRow, error) {
@@ -166,8 +166,8 @@ func (q *Queries) GetActivityByUuid(ctx context.Context, uuid pgtype.UUID) (GetA
 		&i.Selected,
 		&i.BoardUuid,
 		&i.UserUuid,
-		&i.Likes,
-		&i.Dislikes,
+		&i.AvgRating,
+		&i.RatingCount,
 	)
 	return i, err
 }

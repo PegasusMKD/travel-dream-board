@@ -5,8 +5,8 @@ returning *;
 
 -- name: GetTransportByUuid :one
 select t.*,
-    count(case when v.rank = 1 then 1 end)::int as likes,
-    count(case when v.rank < 1 then 1 end)::int as dislikes
+    coalesce(avg(v.rank)::float, 0)::float as avg_rating,
+    count(v.uuid)::int as rating_count
 from transport t
 left join votes v on v.voted_on_uuid = t.uuid and v.voted_on_ = 'transport'
 where t.uuid = @uuid
@@ -14,8 +14,8 @@ group by t.uuid;
 
 -- name: FindAllTransportByBoardUuid :many
 select t.*,
-    count(case when v.rank = 1 then 1 end)::int as likes,
-    count(case when v.rank < 1 then 1 end)::int as dislikes
+    coalesce(avg(v.rank)::float, 0)::float as avg_rating,
+    count(v.uuid)::int as rating_count
 from transport t
 left join votes v on v.voted_on_uuid = t.uuid and v.voted_on_ = 'transport'
 where t.board_uuid = @board_uuid

@@ -5,8 +5,8 @@ returning *;
 
 -- name: GetActivityByUuid :one
 select a.*,
-    count(case when v.rank = 1 then 1 end)::int as likes,
-    count(case when v.rank < 1 then 1 end)::int as dislikes
+    coalesce(avg(v.rank)::float, 0)::float as avg_rating,
+    count(v.uuid)::int as rating_count
 from activities a
 left join votes v on v.voted_on_uuid = a.uuid and v.voted_on_ = 'activities'
 where a.uuid = @uuid
@@ -14,8 +14,8 @@ group by a.uuid;
 
 -- name: FindAllActivitiesByBoardUuid :many
 select a.*,
-    count(case when v.rank = 1 then 1 end)::int as likes,
-    count(case when v.rank < 1 then 1 end)::int as dislikes
+    coalesce(avg(v.rank)::float, 0)::float as avg_rating,
+    count(v.uuid)::int as rating_count
 from activities a
 left join votes v on v.voted_on_uuid = a.uuid and v.voted_on_ = 'activities'
 where a.board_uuid = @board_uuid

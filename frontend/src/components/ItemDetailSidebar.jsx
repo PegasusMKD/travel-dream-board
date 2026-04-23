@@ -2,8 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import {
   X,
   ExternalLink,
-  ThumbsUp,
-  ThumbsDown,
+  Star,
   Bookmark,
   BookmarkX,
   Bed,
@@ -37,7 +36,7 @@ const sectionIcons = {
 
 const ALL_STATUSES = ['considering', 'finalist', 'rejected', 'booked', 'completed']
 
-export default function ItemDetailSidebar({ itemId, sectionType, onClose, onRefresh }) {
+export default function ItemDetailSidebar({ itemId, sectionType, onClose, onRefresh, onVote, onClearVote }) {
   const { t } = useLang()
   const { user } = useAuth()
 
@@ -302,6 +301,9 @@ export default function ItemDetailSidebar({ itemId, sectionType, onClose, onRefr
             cancelEditingComment={cancelEditingComment}
             handleSaveComment={handleSaveComment}
             handleDeleteComment={handleDeleteComment}
+            onVote={onVote}
+            onClearVote={onClearVote}
+            reloadItem={reloadItem}
           />
         )}
       </div>
@@ -324,11 +326,28 @@ function ItemSidebarBody({
   commentText, setCommentText, postingComment, handleAddComment,
   editingCommentId, commentDraft, setCommentDraft, commentBusyId,
   startEditingComment, cancelEditingComment, handleSaveComment, handleDeleteComment,
+  onVote, onClearVote, reloadItem,
 }) {
-  const upVotes = item.votes.filter((v) => v.value === 'up')
-  const downVotes = item.votes.filter((v) => v.value === 'down')
   const displayImage = editing ? draft.image : item.image
   const displayTitle = editing ? draft.title : item.title
+  const myVote = user ? item.votes.find((v) => v.userUuid === user.uuid) : null
+  const sortedRaters = [...item.votes].sort((a, b) => b.rank - a.rank)
+
+  const handleRate = async (rank) => {
+    if (!user || !onVote) return
+    try {
+      await onVote(item, rank)
+      await reloadItem()
+    } catch {}
+  }
+
+  const handleClear = async () => {
+    if (!user || !onClearVote) return
+    try {
+      await onClearVote(item)
+      await reloadItem()
+    } catch {}
+  }
 
   return (
     <div className="flex-1 overflow-y-auto">
@@ -542,50 +561,6 @@ function ItemSidebarBody({
 
         <div className="border-t border-surface-200" />
 
-        {/* Votes */}
-        <div>
-          <label className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-2 block">
-            {t.votes}
-          </label>
-          <div className="space-y-2">
-            {upVotes.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2">
-                <ThumbsUp className="w-4 h-4 text-accent-500" />
-                {upVotes.map((v) => (
-                  <span
-                    key={v.id}
-                    className="inline-flex items-center gap-1.5 bg-accent-50 text-accent-600 text-xs font-semibold px-2.5 py-1 rounded-full"
-                  >
-                    <span className="w-5 h-5 rounded-full bg-accent-200 flex items-center justify-center text-[10px] font-bold text-accent-700">
-                      {v.displayName[0]}
-                    </span>
-                    {v.displayName}
-                  </span>
-                ))}
-              </div>
-            )}
-            {downVotes.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2">
-                <ThumbsDown className="w-4 h-4 text-text-muted" />
-                {downVotes.map((v) => (
-                  <span
-                    key={v.id}
-                    className="inline-flex items-center gap-1.5 bg-surface-100 text-text-secondary text-xs font-semibold px-2.5 py-1 rounded-full"
-                  >
-                    <span className="w-5 h-5 rounded-full bg-surface-200 flex items-center justify-center text-[10px] font-bold text-text-tertiary">
-                      {v.displayName[0]}
-                    </span>
-                    {v.displayName}
-                  </span>
-                ))}
-              </div>
-            )}
-            {upVotes.length === 0 && downVotes.length === 0 && (
-              <p className="text-sm text-text-muted italic">—</p>
-            )}
-          </div>
-        </div>
-
         {/* Comments */}
         <div>
           <label className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-2 block">
@@ -686,6 +661,54 @@ function ItemSidebarBody({
             </button>
           </form>
         </div>
+
+        <div className="border-t border-surface-200" />
+
+        {/* Ratings */}
+        <div>
+          <label className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-2 block">
+            {t.ratings} ({item.ratingCount ?? 0})
+          </label>
+
+          {user ? (
+            <div className="bg-surface-50 rounded-xl p-3 mb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[11px] font-semibold text-text-tertiary uppercase tracking-wider">
+                    {t.yourRating}
+                  </span>
+                  <StarPicker value={myVote?.rank ?? 0} onChange={handleRate} />
+                </div>
+                {myVote && (
+                  <button
+                    onClick={handleClear}
+                    className="text-xs font-semibold text-text-tertiary hover:text-red-500 transition-colors cursor-pointer"
+                  >
+                    {t.clearRating}
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : null}
+
+          {sortedRaters.length > 0 ? (
+            <div className="space-y-1.5">
+              {sortedRaters.map((v) => (
+                <div key={v.id} className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-accent-100 flex items-center justify-center text-[10px] font-bold text-accent-600 shrink-0">
+                    {v.displayName[0]}
+                  </span>
+                  <span className="text-xs font-semibold text-text-primary flex-1 truncate">
+                    {v.displayName}
+                  </span>
+                  <StarDisplay value={v.rank} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-text-muted italic">{t.noRatingsYet}</p>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -701,4 +724,42 @@ function buildDraft(item) {
     isFinal: !!item?.isFinal,
     bookingRef: item?.bookingRef || '',
   }
+}
+
+function StarPicker({ value, onChange }) {
+  const [hover, setHover] = useState(0)
+  const active = hover || value
+  return (
+    <div className="flex items-center gap-0.5" onMouseLeave={() => setHover(0)}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          key={n}
+          type="button"
+          onMouseEnter={() => setHover(n)}
+          onClick={() => onChange(n)}
+          className="p-0.5 cursor-pointer transition-transform hover:scale-110"
+          title={`${n} / 5`}
+        >
+          <Star
+            className={`w-5 h-5 ${n <= active ? 'text-amber-400' : 'text-surface-300'}`}
+            fill={n <= active ? 'currentColor' : 'none'}
+          />
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function StarDisplay({ value }) {
+  return (
+    <div className="flex items-center gap-0.5 shrink-0">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <Star
+          key={n}
+          className={`w-3.5 h-3.5 ${n <= value ? 'text-amber-400' : 'text-surface-300'}`}
+          fill={n <= value ? 'currentColor' : 'none'}
+        />
+      ))}
+    </div>
+  )
 }

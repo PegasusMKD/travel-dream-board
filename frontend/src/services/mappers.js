@@ -52,8 +52,8 @@ export function mapItem(item) {
     status: item.status,
     isFinal: item.selected,
     bookingRef: item.booking_reference || null,
-    likes: item.likes || 0,
-    dislikes: item.dislikes || 0,
+    avgRating: item.avg_rating || 0,
+    ratingCount: item.rating_count || 0,
     votes: (item.votes || []).map(mapVote),
     comments: (item.comments || []).map(mapComment),
   }
@@ -65,7 +65,6 @@ export function mapVote(v) {
     userUuid: v.user_uuid,
     displayName: v.user_name || shortName(v.user_uuid),
     rank: v.rank,
-    value: v.rank > 0 ? 'up' : 'down',
   }
 }
 
