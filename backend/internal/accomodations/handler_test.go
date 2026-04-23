@@ -48,7 +48,7 @@ func TestAccomodationsHandler_CreateAccomodation(t *testing.T) {
 
 		expectedAccomodation := &accomodations.Accomodation{Title: "Test Acc"}
 
-		mockSvc.On("CreateAccomodation", mock.Anything, url, boardUuid, userUuid).Return(expectedAccomodation, nil)
+		mockSvc.On("CreateAccomodation", mock.Anything, url, []byte(nil), "", boardUuid, userUuid).Return(expectedAccomodation, nil)
 
 		req, _ := http.NewRequest(http.MethodPost, "/accomodations/?url="+url+"&boardUuid="+boardUuid, nil)
 		w := httptest.NewRecorder()
@@ -101,7 +101,7 @@ func TestAccomodationsHandler_CreateAccomodation(t *testing.T) {
 
 		url := "http://example.com"
 		boardUuid := "board-1"
-		mockSvc.On("CreateAccomodation", mock.Anything, url, boardUuid, mock.Anything).Return(nil, errors.New("service error"))
+		mockSvc.On("CreateAccomodation", mock.Anything, url, []byte(nil), "", boardUuid, mock.Anything).Return(nil, errors.New("service error"))
 
 		req, _ := http.NewRequest(http.MethodPost, "/accomodations/?url="+url+"&boardUuid="+boardUuid, nil)
 		w := httptest.NewRecorder()

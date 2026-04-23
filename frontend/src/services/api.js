@@ -14,11 +14,13 @@ export class AuthError extends Error {
 }
 
 async function request(path, options = {}) {
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData
+  const defaultHeaders = isFormData ? {} : { 'Content-Type': 'application/json' }
   const res = await fetch(`${API_BASE}${path}`, {
     credentials: 'include',
     ...options,
     headers: {
-      'Content-Type': 'application/json',
+      ...defaultHeaders,
       ...options.headers,
     },
   })
@@ -45,9 +47,15 @@ async function request(path, options = {}) {
 function itemEndpoints(base) {
   return {
     get: (uuid) => request(`/${base}/${uuid}`),
-    create: (url, boardUuid) => {
-      const qs = new URLSearchParams({ url, boardUuid })
-      return request(`/${base}/?${qs.toString()}`, { method: 'POST' })
+    create: ({ url, file, boardUuid }) => {
+      const qs = new URLSearchParams({ boardUuid })
+      if (url) qs.set('url', url)
+      if (!file) {
+        return request(`/${base}/?${qs.toString()}`, { method: 'POST' })
+      }
+      const fd = new FormData()
+      fd.append('file', file, file.name)
+      return request(`/${base}/?${qs.toString()}`, { method: 'POST', body: fd })
     },
     update: (uuid, data) => request(`/${base}/${uuid}`, {
       method: 'PATCH',

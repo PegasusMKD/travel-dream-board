@@ -83,6 +83,7 @@ func NewServer() *GinServer {
 
 	srv.setupMiddleware(router)
 	srv.setupRoutes(router, queries, cfg)
+	srv.setupUploads(router, cfg.UploadsDir)
 	srv.setupFrontend(router, cfg.FrontendDir)
 
 	return srv
@@ -182,6 +183,26 @@ func (srv *GinServer) setupRoutes(router *gin.Engine, queries *db.Queries, cfg *
 		commentsHandler.RegisterRoutes(v1Auth)
 		votesHandler.RegisterRoutes(v1Auth)
 	}
+}
+
+func (srv *GinServer) setupUploads(router *gin.Engine, uploadsDir string) {
+	absDir, err := filepath.Abs(uploadsDir)
+	if err != nil {
+		log.Warn("Could not resolve uploads directory path", "dir", uploadsDir, "error", err)
+		return
+	}
+
+	if _, err := os.Stat(absDir); os.IsNotExist(err) {
+		log.Info("Uploads directory not found, creating it", "dir", absDir)
+		err = os.MkdirAll(absDir, os.ModePerm)
+		if err != nil {
+			log.Error("Could not create uploads directory", "error", err)
+			return
+		}
+	}
+
+	log.Info("Serving uploads", "dir", absDir)
+	router.Static("/uploads", absDir)
 }
 
 func (srv *GinServer) setupFrontend(router *gin.Engine, frontendDir string) {

@@ -49,7 +49,7 @@ func TestActivitiesHandler_CreateActivity(t *testing.T) {
 
 		expectedActivity := &activities.Activity{Title: "Test Act"}
 
-		mockSvc.On("CreateActivity", mock.Anything, url, boardUuid, userUuid).Return(expectedActivity, nil)
+		mockSvc.On("CreateActivity", mock.Anything, url, []byte(nil), "", boardUuid, userUuid).Return(expectedActivity, nil)
 
 		req, _ := http.NewRequest(http.MethodPost, "/activities/?url="+url+"&boardUuid="+boardUuid, nil)
 		w := httptest.NewRecorder()
@@ -106,7 +106,7 @@ func TestActivitiesHandler_CreateActivity(t *testing.T) {
 
 		url := "http://example.com"
 		boardUuid := "board-1"
-		mockSvc.On("CreateActivity", mock.Anything, url, boardUuid, mock.Anything).Return(nil, errors.New("service error"))
+		mockSvc.On("CreateActivity", mock.Anything, url, []byte(nil), "", boardUuid, mock.Anything).Return(nil, errors.New("service error"))
 
 		req, _ := http.NewRequest(http.MethodPost, "/activities/?url="+url+"&boardUuid="+boardUuid, nil)
 		w := httptest.NewRecorder()

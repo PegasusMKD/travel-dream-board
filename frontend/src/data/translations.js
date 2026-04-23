@@ -38,6 +38,12 @@ export const translations = {
     addLinkHelp: 'Link zostanie automatycznie pobrany — tytuł, zdjęcie i opis pojawią się na karcie. Wszystko możesz potem edytować.',
     addLinkBtn: 'Dodaj link',
     fetching: 'Pobieram dane...',
+    orDivider: 'lub',
+    dropImage: 'Przeciągnij zdjęcie tutaj lub kliknij, aby wybrać',
+    pasteImageHint: 'Możesz też wkleić zrzut ekranu (Ctrl+V)',
+    removeImage: 'Usuń',
+    imageTooLarge: 'Obraz jest zbyt duży (maks. 10 MB)',
+    imageWrongType: 'Plik musi być obrazem',
 
     // Share modal
     shareBoard: 'Udostępnij tablicę',
@@ -171,6 +177,12 @@ export const translations = {
     addLinkHelp: 'The link will be auto-fetched — title, image, and description will appear on the card. You can edit everything later.',
     addLinkBtn: 'Add link',
     fetching: 'Fetching data...',
+    orDivider: 'or',
+    dropImage: 'Drop an image here or click to choose',
+    pasteImageHint: 'You can also paste a screenshot (Ctrl+V)',
+    removeImage: 'Remove',
+    imageTooLarge: 'Image is too large (max 10 MB)',
+    imageWrongType: 'File must be an image',
 
     // Share modal
     shareBoard: 'Share board',

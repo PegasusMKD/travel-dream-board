@@ -1,6 +1,11 @@
 package activities
 
-import "github.com/gin-gonic/gin"
+import (
+	"path/filepath"
+
+	"github.com/PegasusMKD/travel-dream-board/internal/utility"
+	"github.com/gin-gonic/gin"
+)
 
 type Handler struct {
 	svc Service
@@ -14,8 +19,10 @@ func NewHandler(svc Service) *Handler {
 
 func (h *Handler) CreateActivity(ctx *gin.Context) {
 	url := ctx.Query("url")
-	if url == "" {
-		ctx.JSON(400, gin.H{"error": "Url parameter is required"})
+	file, _ := ctx.FormFile("file")
+
+	if url == "" && file == nil {
+		ctx.JSON(400, gin.H{"error": "url or file is required"})
 		return
 	}
 
@@ -32,7 +39,20 @@ func (h *Handler) CreateActivity(ctx *gin.Context) {
 	}
 	userUuid := userUuidRaw.(string)
 
-	data, err := h.svc.CreateActivity(ctx, url, boardUuid, userUuid)
+	var imageBytes []byte
+	var imageExt string
+	if file != nil {
+		localUrl, bytes, err := utility.SaveUpload(file, "activities")
+		if err != nil {
+			ctx.AbortWithError(500, err)
+			return
+		}
+		url = localUrl
+		imageBytes = bytes
+		imageExt = filepath.Ext(file.Filename)
+	}
+
+	data, err := h.svc.CreateActivity(ctx, url, imageBytes, imageExt, boardUuid, userUuid)
 	if err != nil {
 		ctx.AbortWithError(500, err)
 		return

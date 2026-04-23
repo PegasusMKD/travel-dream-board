@@ -2,6 +2,7 @@ package scrapeprocess
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"net/url"
@@ -20,6 +21,7 @@ const ACCEPT_LANGUAGE = "en-US,en;q=0.9"
 
 type Service interface {
 	Scrape(ctx context.Context, url string) (*scrapeaudit.ScrapeResult, error)
+	ExtractFromImage(ctx context.Context, url string, imageBytes []byte) (*AIExtraction, error)
 }
 
 type scrapeProcessServiceImpl struct {
@@ -85,12 +87,38 @@ func (svc *scrapeProcessServiceImpl) Scrape(ctx context.Context, url string) (*s
 
 	out.ActualUrl = url
 
+	isScrapingAntError := resp.StatusCode >= 400 || strings.Contains(doc.Text(), "Free subscription plan")
+
+	if isScrapingAntError {
+		// Fallback to direct HTTP get
+		directReq, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+		if err == nil {
+			directReq.Header.Set("User-Agent", USER_AGENT)
+			directReq.Header.Set("Accept-Language", ACCEPT_LANGUAGE)
+			if directResp, err := svc.client.Do(directReq); err == nil {
+				defer directResp.Body.Close()
+				if directDoc, err := goquery.NewDocumentFromReader(directResp.Body); err == nil {
+					doc = directDoc
+				}
+			}
+		}
+	}
+
 	svc.parseMetaTags(ctx, auditRecord.Uuid, doc, &out)
 
 	svc.parseJSONLD(ctx, auditRecord.Uuid, doc, &out)
 
 	if out.Title == nil || *out.Title == "" || out.ImageUrl == nil || *out.ImageUrl == "" || out.Description == nil || *out.Description == "" {
-		svc.fallbackToClaude(ctx, auditRecord.Uuid, doc, &out)
+		svc.fallbackToClaude(ctx, auditRecord.Uuid, doc, url, &out)
+	}
+
+	// Hard fallback for missing or unknown title
+	if out.Title == nil || *out.Title == "" || *out.Title == "<UNKNOWN>" || *out.Title == "UNKNOWN" {
+		fallbackTitle := strings.Title(host)
+		if fallbackTitle == "" {
+			fallbackTitle = "Unknown"
+		}
+		out.Title = &fallbackTitle
 	}
 
 	return &out, nil
@@ -169,7 +197,7 @@ func (svc *scrapeProcessServiceImpl) parseJSONLD(ctx context.Context, uuid strin
 	}
 }
 
-func (s *scrapeProcessServiceImpl) fallbackToClaude(ctx context.Context, uuid string, doc *goquery.Document, out *scrapeaudit.ScrapeResult) {
+func (s *scrapeProcessServiceImpl) fallbackToClaude(ctx context.Context, uuid string, doc *goquery.Document, actualUrl string, out *scrapeaudit.ScrapeResult) {
 	// 1. Remove noise (scripts, styles, svgs) to save tokens
 	doc.Find("script, style, svg, nav, footer").Remove()
 
@@ -190,7 +218,7 @@ func (s *scrapeProcessServiceImpl) fallbackToClaude(ctx context.Context, uuid st
 		Messages: []openai.ChatCompletionMessage{
 			{
 				Role:    openai.ChatMessageRoleUser,
-				Content: "Extract the details from this text: " + text,
+				Content: "Extract the details from this text. The text is from the URL: " + actualUrl + ". If the text looks like an error message (like 'Free subscription plan' or bot protection), ignore the text and infer the brand name (e.g., 'Google Flights', 'Austrian Airlines') from the URL. Never output <UNKNOWN>. " + text,
 			},
 		},
 		Tools: []openai.Tool{
@@ -270,4 +298,113 @@ func getHostFromURL(URL string) string {
 	host := parsedURL.Hostname()
 	host = strings.TrimPrefix(host, "www.")
 	return host
+}
+
+func (s *scrapeProcessServiceImpl) ExtractFromImage(ctx context.Context, urlStr string, imageBytes []byte) (*AIExtraction, error) {
+	host := getHostFromURL(urlStr)
+	if host == "" {
+		host = "uploaded_image"
+	}
+	auditRecord, err := s.scrapeAuditService.CreateScrapeAudit(ctx, urlStr, host)
+
+	out := scrapeaudit.ScrapeResult{
+		InitialUrl: urlStr,
+		ActualUrl:  urlStr,
+	}
+
+	config := openai.DefaultConfig(s.openrouterKey)
+	config.BaseURL = "https://openrouter.ai/api/v1"
+	client := openai.NewClientWithConfig(config)
+
+	b64Image := base64.StdEncoding.EncodeToString(imageBytes)
+	dataUrl := "data:image/jpeg;base64," + b64Image
+
+	params := s.imageExtractionClaudeConfig(dataUrl)
+
+	resp, err := client.CreateChatCompletion(ctx, params)
+	if err != nil {
+		log.Error("Failed with Haiku image extraction", "error", err)
+		if auditRecord != nil {
+			s.scrapeAuditService.UpdateScrapeAuditByUuid(ctx, auditRecord.Uuid, db.ScrapeStatusFailed, &out)
+		}
+		return nil, err
+	}
+
+	if len(resp.Choices) > 0 && len(resp.Choices[0].Message.ToolCalls) > 0 {
+		toolCall := resp.Choices[0].Message.ToolCalls[0]
+		if toolCall.Function.Name == "extract_page_details" {
+			var extracted AIExtraction
+			if err := json.Unmarshal([]byte(toolCall.Function.Arguments), &extracted); err == nil {
+				if auditRecord != nil {
+					out.Title = &extracted.Title
+					out.Description = &extracted.Description
+					out.ImageUrl = &extracted.ImageURL
+					s.scrapeAuditService.UpdateScrapeAuditByUuid(ctx, auditRecord.Uuid, db.ScrapeStatusCompletedByImageExtraction, &out)
+				}
+				return &extracted, nil
+			}
+		}
+	}
+
+	if auditRecord != nil {
+		s.scrapeAuditService.UpdateScrapeAuditByUuid(ctx, auditRecord.Uuid, db.ScrapeStatusFailed, &out)
+	}
+	return nil, nil
+}
+
+func (s *scrapeProcessServiceImpl) imageExtractionClaudeConfig(dataUrl string) openai.ChatCompletionRequest {
+	return openai.ChatCompletionRequest{
+		Model:     "anthropic/claude-3-haiku",
+		MaxTokens: 1024,
+		Messages: []openai.ChatCompletionMessage{
+			{
+				Role: openai.ChatMessageRoleUser,
+				MultiContent: []openai.ChatMessagePart{
+					{
+						Type: openai.ChatMessagePartTypeText,
+						Text: "Extract the details from this image.",
+					},
+					{
+						Type: openai.ChatMessagePartTypeImageURL,
+						ImageURL: &openai.ChatMessageImageURL{
+							URL: dataUrl,
+						},
+					},
+				},
+			},
+		},
+		Tools: []openai.Tool{
+			{
+				Type: openai.ToolTypeFunction,
+				Function: &openai.FunctionDefinition{
+					Name:        "extract_page_details",
+					Description: "Extracts the main title, description, and primary image URL.",
+					Parameters: jsonschema.Definition{
+						Type: jsonschema.Object,
+						Properties: map[string]jsonschema.Definition{
+							"title": {
+								Type:        jsonschema.String,
+								Description: "The name of the accommodation, activity, or main product.",
+							},
+							"description": {
+								Type:        jsonschema.String,
+								Description: "A short 1-2 sentence description.",
+							},
+							"image_url": {
+								Type:        jsonschema.String,
+								Description: "The absolute URL to the main image.",
+							},
+						},
+						Required: []string{"title", "description", "image_url"},
+					},
+				},
+			},
+		},
+		ToolChoice: map[string]interface{}{
+			"type": "function",
+			"function": map[string]string{
+				"name": "extract_page_details",
+			},
+		},
+	}
 }

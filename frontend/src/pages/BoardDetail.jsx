@@ -74,19 +74,25 @@ export default function BoardDetail() {
     setSelectedSection(null)
   }
 
-  const handleAddItem = (sectionType, url) => {
+  const handleAddItem = (sectionType, { url, file }) => {
     const tempId = `pending-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-    const placeholder = buildPlaceholder(tempId, url)
+    const previewUrl = file ? URL.createObjectURL(file) : null
+    const placeholder = buildPlaceholder(tempId, {
+      url,
+      title: url || file?.name || '',
+      image: previewUrl,
+    })
     setPending((prev) => ({
       ...prev,
       [sectionType]: [...prev[sectionType], placeholder],
     }))
 
     const itemApi = sectionToItemApi(api, sectionType)
-    itemApi.create(url, id)
+    itemApi.create({ url, file, boardUuid: id })
       .then(() => loadBoard())
       .catch((err) => setError(err.message))
       .finally(() => {
+        if (previewUrl) URL.revokeObjectURL(previewUrl)
         setPending((prev) => ({
           ...prev,
           [sectionType]: prev[sectionType].filter((p) => p.id !== tempId),
@@ -310,7 +316,7 @@ export default function BoardDetail() {
         <AddItemModal
           sectionType={addingTo}
           onClose={() => setAddingTo(null)}
-          onSubmit={(url) => handleAddItem(addingTo, url)}
+          onSubmit={(payload) => handleAddItem(addingTo, payload)}
         />
       )}
       {showShare && (
@@ -351,12 +357,12 @@ function selectedSectionOf(item, board) {
   return 'accommodation'
 }
 
-function buildPlaceholder(id, url) {
+function buildPlaceholder(id, { url, title, image }) {
   return {
     id,
-    url,
-    title: url,
-    image: null,
+    url: url || '',
+    title: title || url || '',
+    image: image || null,
     note: '',
     status: 'considering',
     isFinal: false,

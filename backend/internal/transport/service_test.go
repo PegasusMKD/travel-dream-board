@@ -9,7 +9,8 @@ import (
 	mock_comments "github.com/PegasusMKD/travel-dream-board/internal/comments/mocks"
 	"github.com/PegasusMKD/travel-dream-board/internal/db"
 	"github.com/PegasusMKD/travel-dream-board/internal/scrape_audit"
-	mock_scrape_process "github.com/PegasusMKD/travel-dream-board/internal/scrape_process/mocks"
+	"github.com/PegasusMKD/travel-dream-board/mocks"
+
 	"github.com/PegasusMKD/travel-dream-board/internal/transport"
 	mock_transport "github.com/PegasusMKD/travel-dream-board/internal/transport/mocks"
 	"github.com/PegasusMKD/travel-dream-board/internal/votes"
@@ -28,7 +29,7 @@ func TestTransportService_CreateTransport(t *testing.T) {
 		mockRepo := new(mock_transport.Repository)
 		mockComments := new(mock_comments.Service)
 		mockVotes := new(mock_votes.Service)
-		mockScrape := new(mock_scrape_process.Service)
+		mockScrape := new(mocks.MockscrapeprocessService)
 
 		svc := transport.NewService(mockRepo, mockComments, mockVotes, mockScrape)
 
@@ -45,7 +46,7 @@ func TestTransportService_CreateTransport(t *testing.T) {
 		createdTransport := &transport.Transport{Uuid: "trans-1", Title: title}
 		mockRepo.On("CreateTransport", ctx, expectedTransport).Return(createdTransport, nil)
 
-		result, err := svc.CreateTransport(ctx, url, boardUuid, userUuid)
+		result, err := svc.CreateTransport(ctx, url, []byte(nil), "", boardUuid, userUuid)
 		assert.NoError(t, err)
 		assert.Equal(t, createdTransport, result)
 	})
@@ -54,13 +55,13 @@ func TestTransportService_CreateTransport(t *testing.T) {
 		mockRepo := new(mock_transport.Repository)
 		mockComments := new(mock_comments.Service)
 		mockVotes := new(mock_votes.Service)
-		mockScrape := new(mock_scrape_process.Service)
+		mockScrape := new(mocks.MockscrapeprocessService)
 
 		svc := transport.NewService(mockRepo, mockComments, mockVotes, mockScrape)
 
 		mockScrape.On("Scrape", ctx, url).Return(nil, errors.New("scrape error"))
 
-		result, err := svc.CreateTransport(ctx, url, boardUuid, userUuid)
+		result, err := svc.CreateTransport(ctx, url, []byte(nil), "", boardUuid, userUuid)
 		assert.Error(t, err)
 		assert.Nil(t, result)
 	})
@@ -74,7 +75,7 @@ func TestTransportService_GetTransportById(t *testing.T) {
 		mockRepo := new(mock_transport.Repository)
 		mockComments := new(mock_comments.Service)
 		mockVotes := new(mock_votes.Service)
-		mockScrape := new(mock_scrape_process.Service)
+		mockScrape := new(mocks.MockscrapeprocessService)
 
 		svc := transport.NewService(mockRepo, mockComments, mockVotes, mockScrape)
 
@@ -98,7 +99,7 @@ func TestTransportService_GetTransportById(t *testing.T) {
 		mockRepo := new(mock_transport.Repository)
 		mockComments := new(mock_comments.Service)
 		mockVotes := new(mock_votes.Service)
-		mockScrape := new(mock_scrape_process.Service)
+		mockScrape := new(mocks.MockscrapeprocessService)
 
 		svc := transport.NewService(mockRepo, mockComments, mockVotes, mockScrape)
 

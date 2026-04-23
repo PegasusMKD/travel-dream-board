@@ -49,7 +49,7 @@ func TestTransportHandler_CreateTransport(t *testing.T) {
 
 		expectedTransport := &transport.Transport{Title: "Test Transport"}
 
-		mockSvc.On("CreateTransport", mock.Anything, url, boardUuid, userUuid).Return(expectedTransport, nil)
+		mockSvc.On("CreateTransport", mock.Anything, url, []byte(nil), "", boardUuid, userUuid).Return(expectedTransport, nil)
 
 		req, _ := http.NewRequest(http.MethodPost, "/transport/?url="+url+"&boardUuid="+boardUuid, nil)
 		w := httptest.NewRecorder()
@@ -101,7 +101,7 @@ func TestTransportHandler_CreateTransport(t *testing.T) {
 
 		url := "http://example.com"
 		boardUuid := "board-1"
-		mockSvc.On("CreateTransport", mock.Anything, url, boardUuid, mock.Anything).Return(nil, errors.New("service error"))
+		mockSvc.On("CreateTransport", mock.Anything, url, []byte(nil), "", boardUuid, mock.Anything).Return(nil, errors.New("service error"))
 
 		req, _ := http.NewRequest(http.MethodPost, "/transport/?url="+url+"&boardUuid="+boardUuid, nil)
 		w := httptest.NewRecorder()

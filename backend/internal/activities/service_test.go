@@ -11,7 +11,8 @@ import (
 	mock_comments "github.com/PegasusMKD/travel-dream-board/internal/comments/mocks"
 	"github.com/PegasusMKD/travel-dream-board/internal/db"
 	"github.com/PegasusMKD/travel-dream-board/internal/scrape_audit"
-	mock_scrape_process "github.com/PegasusMKD/travel-dream-board/internal/scrape_process/mocks"
+	"github.com/PegasusMKD/travel-dream-board/mocks"
+
 	"github.com/PegasusMKD/travel-dream-board/internal/votes"
 	mock_votes "github.com/PegasusMKD/travel-dream-board/internal/votes/mocks"
 	"github.com/stretchr/testify/assert"
@@ -28,7 +29,7 @@ func TestActivitiesService_CreateActivity(t *testing.T) {
 		mockRepo := new(mock_activities.Repository)
 		mockComments := new(mock_comments.Service)
 		mockVotes := new(mock_votes.Service)
-		mockScrape := new(mock_scrape_process.Service)
+		mockScrape := new(mocks.MockscrapeprocessService)
 
 		svc := activities.NewService(mockRepo, mockComments, mockVotes, mockScrape)
 
@@ -45,7 +46,7 @@ func TestActivitiesService_CreateActivity(t *testing.T) {
 		createdActivity := &activities.Activity{Uuid: "act-1", Title: title}
 		mockRepo.On("CreateActivity", ctx, expectedActivity).Return(createdActivity, nil)
 
-		result, err := svc.CreateActivity(ctx, url, boardUuid, userUuid)
+		result, err := svc.CreateActivity(ctx, url, []byte(nil), "", boardUuid, userUuid)
 		assert.NoError(t, err)
 		assert.Equal(t, createdActivity, result)
 	})
@@ -54,13 +55,13 @@ func TestActivitiesService_CreateActivity(t *testing.T) {
 		mockRepo := new(mock_activities.Repository)
 		mockComments := new(mock_comments.Service)
 		mockVotes := new(mock_votes.Service)
-		mockScrape := new(mock_scrape_process.Service)
+		mockScrape := new(mocks.MockscrapeprocessService)
 
 		svc := activities.NewService(mockRepo, mockComments, mockVotes, mockScrape)
 
 		mockScrape.On("Scrape", ctx, url).Return(nil, errors.New("scrape error"))
 
-		result, err := svc.CreateActivity(ctx, url, boardUuid, userUuid)
+		result, err := svc.CreateActivity(ctx, url, []byte(nil), "", boardUuid, userUuid)
 		assert.Error(t, err)
 		assert.Nil(t, result)
 	})
@@ -74,7 +75,7 @@ func TestActivitiesService_GetActivityById(t *testing.T) {
 		mockRepo := new(mock_activities.Repository)
 		mockComments := new(mock_comments.Service)
 		mockVotes := new(mock_votes.Service)
-		mockScrape := new(mock_scrape_process.Service)
+		mockScrape := new(mocks.MockscrapeprocessService)
 
 		svc := activities.NewService(mockRepo, mockComments, mockVotes, mockScrape)
 
@@ -98,7 +99,7 @@ func TestActivitiesService_GetActivityById(t *testing.T) {
 		mockRepo := new(mock_activities.Repository)
 		mockComments := new(mock_comments.Service)
 		mockVotes := new(mock_votes.Service)
-		mockScrape := new(mock_scrape_process.Service)
+		mockScrape := new(mocks.MockscrapeprocessService)
 
 		svc := activities.NewService(mockRepo, mockComments, mockVotes, mockScrape)
 

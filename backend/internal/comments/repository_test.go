@@ -24,7 +24,7 @@ func TestCommentsRepository(t *testing.T) {
 		Name:  "Test Comment User",
 	})
 	require.NoError(t, err)
-	
+
 	userUuidStrBytes, _ := user.Uuid.Value()
 	userUuidStr := userUuidStrBytes.(string)
 
@@ -54,7 +54,7 @@ func TestCommentsRepository(t *testing.T) {
 			CommentedOnUuid: acc.Uuid,
 			UserUuid:        userUuidStr,
 		}
-		
+
 		createdComment, err := repo.CreateComment(ctx, commentData)
 		require.NoError(t, err)
 		require.NotNil(t, createdComment)
@@ -100,7 +100,7 @@ func TestCommentsRepository(t *testing.T) {
 		allComments, err := repo.FindAllCommentsByRelatedEntity(ctx, db.CommentedOnAccomodation, acc.Uuid)
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(allComments), 1)
-		
+
 		var found bool
 		for _, c := range allComments {
 			if c.Content == "Another comment" {
@@ -131,7 +131,7 @@ func TestCommentsRepository(t *testing.T) {
 
 		updatedComments, err := repo.FindAllCommentsByRelatedEntity(ctx, db.CommentedOnAccomodation, acc.Uuid)
 		require.NoError(t, err)
-		
+
 		var found bool
 		for _, c := range updatedComments {
 			if c.Uuid == createdComment.Uuid && c.Content == "Updated content" {

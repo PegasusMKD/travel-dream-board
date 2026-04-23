@@ -23,7 +23,7 @@ func TestShareTokensRepository(t *testing.T) {
 		Name:  "Test Share User",
 	})
 	require.NoError(t, err)
-	
+
 	userUuidStrBytes, _ := user.Uuid.Value()
 	userUuidStr := userUuidStrBytes.(string)
 
@@ -38,7 +38,7 @@ func TestShareTokensRepository(t *testing.T) {
 
 	t.Run("CreateShareToken", func(t *testing.T) {
 		tokenStr := "some-random-token-xyz"
-		
+
 		createdToken, err := repo.CreateShareToken(ctx, tokenStr, board.Uuid)
 		require.NoError(t, err)
 		require.NotNil(t, createdToken)
@@ -70,7 +70,7 @@ func TestShareTokensRepository(t *testing.T) {
 		allTokens, err := repo.GetShareTokensForBoard(ctx, board.Uuid)
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(allTokens), 1)
-		
+
 		var found bool
 		for _, tok := range allTokens {
 			if tok.Token == tokenStr {

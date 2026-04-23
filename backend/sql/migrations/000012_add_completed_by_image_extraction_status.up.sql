@@ -1,0 +1,1 @@
+ALTER TYPE scrape_status ADD VALUE 'completed_by_image_extraction';

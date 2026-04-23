@@ -11,7 +11,7 @@ func TestLoad(t *testing.T) {
 	os.Setenv("DATABASE_URL", "postgres://test")
 	os.Setenv("DATABASE_MAX_CONNS", "50")
 	os.Setenv("DATABASE_CONN_MAX_LIFETIME", "10m")
-	
+
 	cfg, err := Load()
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)

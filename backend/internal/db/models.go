@@ -190,11 +190,12 @@ func (ns NullCommentedOn) Value() (driver.Value, error) {
 type ScrapeStatus string
 
 const (
-	ScrapeStatusProcessing        ScrapeStatus = "processing"
-	ScrapeStatusCompletedByOg     ScrapeStatus = "completed_by_og"
-	ScrapeStatusCompletedByJsonLd ScrapeStatus = "completed_by_json_ld"
-	ScrapeStatusCompletedByAi     ScrapeStatus = "completed_by_ai"
-	ScrapeStatusFailed            ScrapeStatus = "failed"
+	ScrapeStatusProcessing                 ScrapeStatus = "processing"
+	ScrapeStatusCompletedByOg              ScrapeStatus = "completed_by_og"
+	ScrapeStatusCompletedByJsonLd          ScrapeStatus = "completed_by_json_ld"
+	ScrapeStatusCompletedByAi              ScrapeStatus = "completed_by_ai"
+	ScrapeStatusFailed                     ScrapeStatus = "failed"
+	ScrapeStatusCompletedByImageExtraction ScrapeStatus = "completed_by_image_extraction"
 )
 
 func (e *ScrapeStatus) Scan(src interface{}) error {

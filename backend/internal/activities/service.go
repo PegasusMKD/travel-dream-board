@@ -10,7 +10,7 @@ import (
 )
 
 type Service interface {
-	CreateActivity(ctx context.Context, url, boardUuid, userUuid string) (*Activity, error)
+	CreateActivity(ctx context.Context, url string, imageBytes []byte, imageExt string, boardUuid, userUuid string) (*Activity, error)
 	GetActivityById(ctx context.Context, uuid string) (*AggregatedActivity, error)
 	GetActivitiesByBoardId(ctx context.Context, uuid string) ([]*Activity, error)
 	UpdateActivityById(ctx context.Context, uuid string, data *Activity) error
@@ -37,20 +37,35 @@ func NewService(repo Repository, commentsService comments.Service, votesService 
 	}
 }
 
-func (svc *accomodationServiceImpl) CreateActivity(ctx context.Context, url, boardUuid, userUuid string) (*Activity, error) {
-	extractedData, err := svc.scrapeService.Scrape(ctx, url)
-	if err != nil {
-		return nil, err
-	}
-
-	//
+func (svc *accomodationServiceImpl) CreateActivity(ctx context.Context, url string, imageBytes []byte, imageExt string, boardUuid, userUuid string) (*Activity, error) {
 	data := Activity{
-		Url:      url,
-		Title:    *extractedData.Title,
-		ImageUrl: extractedData.ImageUrl,
-
 		UserUuid:  userUuid,
 		BoardUuid: boardUuid,
+	}
+
+	if len(imageBytes) > 0 {
+		extractedData, err := svc.scrapeService.ExtractFromImage(ctx, url, imageBytes)
+		if err != nil {
+			return nil, err
+		}
+
+		if extractedData != nil {
+			data.Title = extractedData.Title
+			data.Url = url
+			data.ImageUrl = &url
+		} else {
+			data.Title = "Uploaded Image"
+			data.Url = url
+			data.ImageUrl = &url
+		}
+	} else {
+		extractedData, err := svc.scrapeService.Scrape(ctx, url)
+		if err != nil {
+			return nil, err
+		}
+		data.Url = url
+		data.Title = *extractedData.Title
+		data.ImageUrl = extractedData.ImageUrl
 	}
 
 	return svc.repo.CreateActivity(ctx, &data)

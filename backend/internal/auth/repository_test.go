@@ -18,13 +18,13 @@ func TestAuthRepository(t *testing.T) {
 	t.Run("UpsertUser - Create new", func(t *testing.T) {
 		email := "authuser1@example.com"
 		avatar := "http://example.com/avatar.jpg"
-		
+
 		user, err := repo.UpsertUser(ctx, db.UpsertUserParams{
 			Email:     &email,
 			Name:      "New User",
 			AvatarUrl: &avatar,
 		})
-		
+
 		require.NoError(t, err)
 		require.NotNil(t, user)
 		require.NotEmpty(t, user.Uuid)
@@ -36,7 +36,7 @@ func TestAuthRepository(t *testing.T) {
 	t.Run("UpsertUser - Update existing", func(t *testing.T) {
 		email := "authuser2@example.com"
 		avatar1 := "http://example.com/avatar1.jpg"
-		
+
 		// Create first
 		user1, err := repo.UpsertUser(ctx, db.UpsertUserParams{
 			Email:     &email,
@@ -53,13 +53,13 @@ func TestAuthRepository(t *testing.T) {
 			AvatarUrl: &avatar2,
 		})
 		require.NoError(t, err)
-		
+
 		// Ensure it's the same user but updated
 		require.Equal(t, user1.Uuid, user2.Uuid)
 		require.Equal(t, "Updated User", user2.Name)
 		require.Equal(t, avatar2, *user2.AvatarUrl)
 	})
-	
+
 	// Add an error test case for UpsertUser (if we can, probably nil email or missing required constraints)
 	t.Run("UpsertUser - Error (nil email)", func(t *testing.T) {
 		_, err := repo.UpsertUser(ctx, db.UpsertUserParams{

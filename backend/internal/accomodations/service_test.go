@@ -11,7 +11,8 @@ import (
 	mock_comments "github.com/PegasusMKD/travel-dream-board/internal/comments/mocks"
 	"github.com/PegasusMKD/travel-dream-board/internal/db"
 	"github.com/PegasusMKD/travel-dream-board/internal/scrape_audit"
-	mock_scrape_process "github.com/PegasusMKD/travel-dream-board/internal/scrape_process/mocks"
+	"github.com/PegasusMKD/travel-dream-board/mocks"
+
 	"github.com/PegasusMKD/travel-dream-board/internal/votes"
 	mock_votes "github.com/PegasusMKD/travel-dream-board/internal/votes/mocks"
 	"github.com/stretchr/testify/assert"
@@ -28,7 +29,7 @@ func TestAccomodationsService_CreateAccomodation(t *testing.T) {
 		mockRepo := new(mock_accomodations.Repository)
 		mockComments := new(mock_comments.Service)
 		mockVotes := new(mock_votes.Service)
-		mockScrape := new(mock_scrape_process.Service)
+		mockScrape := new(mocks.MockscrapeprocessService)
 
 		svc := accomodations.NewService(mockRepo, mockComments, mockVotes, mockScrape)
 
@@ -45,7 +46,7 @@ func TestAccomodationsService_CreateAccomodation(t *testing.T) {
 		createdAccomodation := &accomodations.Accomodation{Uuid: "acc-1", Title: title}
 		mockRepo.On("CreateAccomodation", ctx, expectedAccomodation).Return(createdAccomodation, nil)
 
-		result, err := svc.CreateAccomodation(ctx, url, boardUuid, userUuid)
+		result, err := svc.CreateAccomodation(ctx, url, []byte(nil), "", boardUuid, userUuid)
 		assert.NoError(t, err)
 		assert.Equal(t, createdAccomodation, result)
 	})
@@ -54,13 +55,13 @@ func TestAccomodationsService_CreateAccomodation(t *testing.T) {
 		mockRepo := new(mock_accomodations.Repository)
 		mockComments := new(mock_comments.Service)
 		mockVotes := new(mock_votes.Service)
-		mockScrape := new(mock_scrape_process.Service)
+		mockScrape := new(mocks.MockscrapeprocessService)
 
 		svc := accomodations.NewService(mockRepo, mockComments, mockVotes, mockScrape)
 
 		mockScrape.On("Scrape", ctx, url).Return(nil, errors.New("scrape error"))
 
-		result, err := svc.CreateAccomodation(ctx, url, boardUuid, userUuid)
+		result, err := svc.CreateAccomodation(ctx, url, []byte(nil), "", boardUuid, userUuid)
 		assert.Error(t, err)
 		assert.Nil(t, result)
 	})
@@ -74,7 +75,7 @@ func TestAccomodationsService_GetAccomodationById(t *testing.T) {
 		mockRepo := new(mock_accomodations.Repository)
 		mockComments := new(mock_comments.Service)
 		mockVotes := new(mock_votes.Service)
-		mockScrape := new(mock_scrape_process.Service)
+		mockScrape := new(mocks.MockscrapeprocessService)
 
 		svc := accomodations.NewService(mockRepo, mockComments, mockVotes, mockScrape)
 
@@ -98,7 +99,7 @@ func TestAccomodationsService_GetAccomodationById(t *testing.T) {
 		mockRepo := new(mock_accomodations.Repository)
 		mockComments := new(mock_comments.Service)
 		mockVotes := new(mock_votes.Service)
-		mockScrape := new(mock_scrape_process.Service)
+		mockScrape := new(mocks.MockscrapeprocessService)
 
 		svc := accomodations.NewService(mockRepo, mockComments, mockVotes, mockScrape)
 

@@ -24,6 +24,7 @@ type Config struct {
 	LogFilePrefix  string
 
 	FrontendDir string
+	UploadsDir  string
 
 	GoogleClientID     string
 	GoogleClientSecret string
@@ -50,6 +51,7 @@ func Load() (*Config, error) {
 		LogFilePrefix:  getEnv("LOG_FILE_PREFIX", "travel-dream-board"),
 
 		FrontendDir: getEnv("FRONTEND_DIR", "./frontend/dist"),
+		UploadsDir:  getEnv("UPLOADS_DIR", "./uploads"),
 
 		GoogleClientID:     getEnv("GOOGLE_CLIENT_ID", ""),
 		GoogleClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),

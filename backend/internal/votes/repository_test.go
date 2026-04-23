@@ -17,16 +17,28 @@ func TestVotesRepository(t *testing.T) {
 	repo := votes.NewRepository(env.Queries)
 	ctx := context.Background()
 
-	// 1. Create a user
+	// 1. Create a base user
 	email := "voteuser@example.com"
 	user, err := env.Queries.UpsertUser(ctx, db.UpsertUserParams{
 		Email: &email,
 		Name:  "Test Vote User",
 	})
 	require.NoError(t, err)
-	
+
 	userUuidStrBytes, _ := user.Uuid.Value()
 	userUuidStr := userUuidStrBytes.(string)
+
+	// Helper to create unique users for tests to avoid unique constraint violations
+	createNewUser := func(idx string) string {
+		newEmail := "voteuser_" + idx + "@example.com"
+		u, err := env.Queries.UpsertUser(ctx, db.UpsertUserParams{
+			Email: &newEmail,
+			Name:  "Test Vote User " + idx,
+		})
+		require.NoError(t, err)
+		uStrBytes, _ := u.Uuid.Value()
+		return uStrBytes.(string)
+	}
 
 	// 2. Create a board
 	boardRepo := boards.NewRepository(env.Queries)
@@ -54,7 +66,7 @@ func TestVotesRepository(t *testing.T) {
 			VotedOnUuid: acc.Uuid,
 			UserUuid:    userUuidStr,
 		}
-		
+
 		createdVote, err := repo.CreateVote(ctx, voteData)
 		require.NoError(t, err)
 		require.NotNil(t, createdVote)
@@ -88,11 +100,12 @@ func TestVotesRepository(t *testing.T) {
 	})
 
 	t.Run("FindAllVotesByRelatedEntity", func(t *testing.T) {
+		newUserUuid := createNewUser("findall")
 		voteData := &votes.Vote{
 			Rank:        2,
 			VotedOn:     db.VotedOnAccomodation,
 			VotedOnUuid: acc.Uuid,
-			UserUuid:    userUuidStr,
+			UserUuid:    newUserUuid,
 		}
 		_, err := repo.CreateVote(ctx, voteData)
 		require.NoError(t, err)
@@ -100,7 +113,7 @@ func TestVotesRepository(t *testing.T) {
 		allVotes, err := repo.FindAllVotesByRelatedEntity(ctx, db.VotedOnAccomodation, acc.Uuid)
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(allVotes), 1)
-		
+
 		var found bool
 		for _, v := range allVotes {
 			if v.Rank == 2 {
@@ -117,11 +130,12 @@ func TestVotesRepository(t *testing.T) {
 	})
 
 	t.Run("UpdateVoteByUuid", func(t *testing.T) {
+		newUserUuid := createNewUser("update")
 		voteData := &votes.Vote{
 			Rank:        3,
 			VotedOn:     db.VotedOnAccomodation,
 			VotedOnUuid: acc.Uuid,
-			UserUuid:    userUuidStr,
+			UserUuid:    newUserUuid,
 		}
 		createdVote, err := repo.CreateVote(ctx, voteData)
 		require.NoError(t, err)
@@ -131,7 +145,7 @@ func TestVotesRepository(t *testing.T) {
 
 		updatedVotes, err := repo.FindAllVotesByRelatedEntity(ctx, db.VotedOnAccomodation, acc.Uuid)
 		require.NoError(t, err)
-		
+
 		var found bool
 		for _, v := range updatedVotes {
 			if v.Uuid == createdVote.Uuid && v.Rank == 5 {
@@ -148,11 +162,12 @@ func TestVotesRepository(t *testing.T) {
 	})
 
 	t.Run("DeleteVoteByUuid", func(t *testing.T) {
+		newUserUuid := createNewUser("delete")
 		voteData := &votes.Vote{
 			Rank:        4,
 			VotedOn:     db.VotedOnAccomodation,
 			VotedOnUuid: acc.Uuid,
-			UserUuid:    userUuidStr,
+			UserUuid:    newUserUuid,
 		}
 		createdVote, err := repo.CreateVote(ctx, voteData)
 		require.NoError(t, err)

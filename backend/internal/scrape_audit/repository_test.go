@@ -18,7 +18,7 @@ func TestScrapeAuditRepository(t *testing.T) {
 	t.Run("CreateScrapeAudit", func(t *testing.T) {
 		urlStr := "https://example.com/article"
 		hostStr := "example.com"
-		
+
 		createdAudit, err := repo.CreateScrapeAudit(ctx, urlStr, hostStr)
 		require.NoError(t, err)
 		require.NotNil(t, createdAudit)
@@ -31,7 +31,7 @@ func TestScrapeAuditRepository(t *testing.T) {
 	t.Run("UpdateScrapeAuditByUuid", func(t *testing.T) {
 		urlStr := "https://example.com/update"
 		hostStr := "example.com"
-		
+
 		createdAudit, err := repo.CreateScrapeAudit(ctx, urlStr, hostStr)
 		require.NoError(t, err)
 
@@ -49,7 +49,7 @@ func TestScrapeAuditRepository(t *testing.T) {
 
 		err = repo.UpdateScrapeAuditByUuid(ctx, createdAudit.Uuid, db.ScrapeStatusCompletedByOg, resultData)
 		require.NoError(t, err)
-		
+
 		// To verify update we might need a Get method which isn't there.
 		// If we can't get it, the fact it doesn't error is enough for repository interface test coverage.
 	})
