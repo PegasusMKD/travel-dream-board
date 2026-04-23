@@ -3,9 +3,9 @@ package scrapeprocess_test
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/PegasusMKD/travel-dream-board/internal/db"
@@ -34,11 +34,6 @@ func TestScrapeProcessService_Scrape_ClaudeFallback(t *testing.T) {
 	</body>
 	</html>
 	`
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(htmlContent))
-	}))
-	defer server.Close()
 
 	// Mock http.DefaultTransport
 	originalTransport := http.DefaultTransport
@@ -46,6 +41,13 @@ func TestScrapeProcessService_Scrape_ClaudeFallback(t *testing.T) {
 
 	http.DefaultTransport = &mockRoundTripper{
 		roundTripFunc: func(req *http.Request) (*http.Response, error) {
+			if req.URL.Host == "api.scrapingant.com" {
+				return &http.Response{
+					StatusCode: http.StatusOK,
+					Body:       io.NopCloser(bytes.NewBufferString(htmlContent)),
+					Request:    req,
+				}, nil
+			}
 			if req.URL.Host == "openrouter.ai" {
 				return &http.Response{
 					StatusCode: http.StatusOK,
@@ -82,14 +84,15 @@ func TestScrapeProcessService_Scrape_ClaudeFallback(t *testing.T) {
 
 	ctx := context.Background()
 	mockAudit := new(mocks.MockscrapeauditService)
-	svc := scrapeprocess.NewService("dummy-key", mockAudit)
+	svc := scrapeprocess.NewService("dummy-key", "dummy-ant-key", mockAudit)
 
 	auditRecord := &scrapeaudit.ScrapeAudit{Uuid: "audit-3"}
+	fakeURL := "https://booking.com/some-hotel"
 
-	mockAudit.On("CreateScrapeAudit", ctx, server.URL, mock.AnythingOfType("string")).Return(auditRecord, nil)
+	mockAudit.On("CreateScrapeAudit", ctx, fakeURL, mock.AnythingOfType("string")).Return(auditRecord, nil)
 	mockAudit.On("UpdateScrapeAuditByUuid", ctx, auditRecord.Uuid, db.ScrapeStatusCompletedByAi, mock.AnythingOfType("*scrapeaudit.ScrapeResult")).Return(nil)
 
-	result, err := svc.Scrape(ctx, server.URL)
+	result, err := svc.Scrape(ctx, fakeURL)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -101,7 +104,6 @@ func TestScrapeProcessService_Scrape_ClaudeFallback(t *testing.T) {
 }
 
 func TestScrapeProcessService_Scrape_SuccessWithMeta(t *testing.T) {
-	// Create a test HTTP server
 	htmlContent := `
 	<!DOCTYPE html>
 	<html>
@@ -117,25 +119,37 @@ func TestScrapeProcessService_Scrape_SuccessWithMeta(t *testing.T) {
 	</body>
 	</html>
 	`
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(htmlContent))
-	}))
-	defer server.Close()
+
+	originalTransport := http.DefaultTransport
+	defer func() { http.DefaultTransport = originalTransport }()
+
+	http.DefaultTransport = &mockRoundTripper{
+		roundTripFunc: func(req *http.Request) (*http.Response, error) {
+			if req.URL.Host == "api.scrapingant.com" {
+				return &http.Response{
+					StatusCode: http.StatusOK,
+					Body:       io.NopCloser(bytes.NewBufferString(htmlContent)),
+					Request:    req,
+				}, nil
+			}
+			return originalTransport.RoundTrip(req)
+		},
+	}
 
 	ctx := context.Background()
 	mockAudit := new(mocks.MockscrapeauditService)
-	svc := scrapeprocess.NewService("dummy-key", mockAudit)
+	svc := scrapeprocess.NewService("dummy-key", "dummy-ant-key", mockAudit)
 
 	auditRecord := &scrapeaudit.ScrapeAudit{Uuid: "audit-1"}
+	fakeURL := "https://booking.com/some-hotel"
 
 	// Expected calls
-	mockAudit.On("CreateScrapeAudit", ctx, server.URL, mock.AnythingOfType("string")).Return(auditRecord, nil)
+	mockAudit.On("CreateScrapeAudit", ctx, fakeURL, mock.AnythingOfType("string")).Return(auditRecord, nil)
 
 	// Expect an update to happen (since we parse metas)
 	mockAudit.On("UpdateScrapeAuditByUuid", ctx, auditRecord.Uuid, db.ScrapeStatusCompletedByOg, mock.AnythingOfType("*scrapeaudit.ScrapeResult")).Return(nil)
 
-	result, err := svc.Scrape(ctx, server.URL)
+	result, err := svc.Scrape(ctx, fakeURL)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -143,7 +157,7 @@ func TestScrapeProcessService_Scrape_SuccessWithMeta(t *testing.T) {
 	assert.Equal(t, "OG Description", *result.Description)
 	assert.Equal(t, "http://example.com/image.png", *result.ImageUrl)
 	assert.Equal(t, "OG Site", *result.SiteName)
-	assert.Equal(t, server.URL, result.InitialUrl)
+	assert.Equal(t, fakeURL, result.InitialUrl)
 
 	mockAudit.AssertExpectations(t)
 }
@@ -168,23 +182,35 @@ func TestScrapeProcessService_Scrape_SuccessWithJSONLD(t *testing.T) {
 	</body>
 	</html>
 	`
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(htmlContent))
-	}))
-	defer server.Close()
+
+	originalTransport := http.DefaultTransport
+	defer func() { http.DefaultTransport = originalTransport }()
+
+	http.DefaultTransport = &mockRoundTripper{
+		roundTripFunc: func(req *http.Request) (*http.Response, error) {
+			if req.URL.Host == "api.scrapingant.com" {
+				return &http.Response{
+					StatusCode: http.StatusOK,
+					Body:       io.NopCloser(bytes.NewBufferString(htmlContent)),
+					Request:    req,
+				}, nil
+			}
+			return originalTransport.RoundTrip(req)
+		},
+	}
 
 	ctx := context.Background()
 	mockAudit := new(mocks.MockscrapeauditService)
-	svc := scrapeprocess.NewService("dummy-key", mockAudit)
+	svc := scrapeprocess.NewService("dummy-key", "dummy-ant-key", mockAudit)
 
 	auditRecord := &scrapeaudit.ScrapeAudit{Uuid: "audit-2"}
+	fakeURL := "https://booking.com/some-hotel"
 
-	mockAudit.On("CreateScrapeAudit", ctx, server.URL, mock.AnythingOfType("string")).Return(auditRecord, nil)
+	mockAudit.On("CreateScrapeAudit", ctx, fakeURL, mock.AnythingOfType("string")).Return(auditRecord, nil)
 	// Expect it to update with JsonLd (for jsonld properties)
 	mockAudit.On("UpdateScrapeAuditByUuid", ctx, auditRecord.Uuid, db.ScrapeStatusCompletedByJsonLd, mock.AnythingOfType("*scrapeaudit.ScrapeResult")).Return(nil)
 
-	result, err := svc.Scrape(ctx, server.URL)
+	result, err := svc.Scrape(ctx, fakeURL)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -196,9 +222,21 @@ func TestScrapeProcessService_Scrape_SuccessWithJSONLD(t *testing.T) {
 }
 
 func TestScrapeProcessService_Scrape_NetworkError(t *testing.T) {
+	originalTransport := http.DefaultTransport
+	defer func() { http.DefaultTransport = originalTransport }()
+
+	http.DefaultTransport = &mockRoundTripper{
+		roundTripFunc: func(req *http.Request) (*http.Response, error) {
+			if req.URL.Host == "api.scrapingant.com" {
+				return nil, errors.New("network timeout")
+			}
+			return originalTransport.RoundTrip(req)
+		},
+	}
+
 	ctx := context.Background()
 	mockAudit := new(mocks.MockscrapeauditService)
-	svc := scrapeprocess.NewService("dummy-key", mockAudit)
+	svc := scrapeprocess.NewService("dummy-key", "dummy-ant-key", mockAudit)
 
 	auditRecord := &scrapeaudit.ScrapeAudit{Uuid: "audit-1"}
 	url := "http://invalid-url.invalid-tld"

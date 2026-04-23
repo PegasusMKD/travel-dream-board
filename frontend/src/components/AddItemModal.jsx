@@ -1,14 +1,10 @@
 import { useState } from 'react'
-import { X, Link as LinkIcon, Loader2 } from 'lucide-react'
+import { X, Link as LinkIcon } from 'lucide-react'
 import { useLang } from '../context/LanguageContext'
-import { api } from '../services/api'
-import { sectionToItemApi } from '../services/mappers'
 
-export default function AddItemModal({ sectionType, boardUuid, onClose, onAdded }) {
+export default function AddItemModal({ sectionType, onClose, onSubmit }) {
   const { t } = useLang()
   const [url, setUrl] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
 
   const addLabels = {
     accommodation: t.addAccommodation,
@@ -16,20 +12,12 @@ export default function AddItemModal({ sectionType, boardUuid, onClose, onAdded 
     activities: t.addActivity,
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
-    setLoading(true)
-    setError(null)
-
-    try {
-      const itemApi = sectionToItemApi(api, sectionType)
-      await itemApi.create(url, boardUuid)
-      onAdded?.()
-      onClose()
-    } catch (err) {
-      setError(err.message)
-      setLoading(false)
-    }
+    const trimmed = url.trim()
+    if (!trimmed) return
+    onSubmit(trimmed)
+    onClose()
   }
 
   return (
@@ -66,21 +54,12 @@ export default function AddItemModal({ sectionType, boardUuid, onClose, onAdded 
             {t.addLinkHelp}
           </p>
 
-          {error && <p className="text-xs text-red-500 mb-3">{error}</p>}
-
           <button
             type="submit"
-            disabled={!url || loading}
+            disabled={!url.trim()}
             className="w-full bg-accent-500 hover:bg-accent-600 text-white py-3 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
           >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                {t.fetching}
-              </>
-            ) : (
-              t.addLinkBtn
-            )}
+            {t.addLinkBtn}
           </button>
         </form>
       </div>

@@ -62,20 +62,41 @@ func (q *Queries) DeleteActivityByUuid(ctx context.Context, uuid pgtype.UUID) er
 }
 
 const findAllActivitiesByBoardUuid = `-- name: FindAllActivitiesByBoardUuid :many
-select uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid, user_uuid
-from activities
-where board_uuid = $1
+select a.uuid, a.updated_at, a.created_at, a.url, a.title, a.image_url, a.notes, a.status, a.booking_reference, a.selected, a.board_uuid, a.user_uuid,
+    count(case when v.rank = 1 then 1 end)::int as likes,
+    count(case when v.rank < 1 then 1 end)::int as dislikes
+from activities a
+left join votes v on v.voted_on_uuid = a.uuid and v.voted_on_ = 'activities'
+where a.board_uuid = $1
+group by a.uuid
 `
 
-func (q *Queries) FindAllActivitiesByBoardUuid(ctx context.Context, boardUuid pgtype.UUID) ([]Activity, error) {
+type FindAllActivitiesByBoardUuidRow struct {
+	Uuid             pgtype.UUID
+	UpdatedAt        pgtype.Timestamp
+	CreatedAt        pgtype.Timestamp
+	Url              string
+	Title            string
+	ImageUrl         *string
+	Notes            *string
+	Status           ActivitiesStatus
+	BookingReference *string
+	Selected         bool
+	BoardUuid        pgtype.UUID
+	UserUuid         pgtype.UUID
+	Likes            int32
+	Dislikes         int32
+}
+
+func (q *Queries) FindAllActivitiesByBoardUuid(ctx context.Context, boardUuid pgtype.UUID) ([]FindAllActivitiesByBoardUuidRow, error) {
 	rows, err := q.db.Query(ctx, findAllActivitiesByBoardUuid, boardUuid)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Activity
+	var items []FindAllActivitiesByBoardUuidRow
 	for rows.Next() {
-		var i Activity
+		var i FindAllActivitiesByBoardUuidRow
 		if err := rows.Scan(
 			&i.Uuid,
 			&i.UpdatedAt,
@@ -89,6 +110,8 @@ func (q *Queries) FindAllActivitiesByBoardUuid(ctx context.Context, boardUuid pg
 			&i.Selected,
 			&i.BoardUuid,
 			&i.UserUuid,
+			&i.Likes,
+			&i.Dislikes,
 		); err != nil {
 			return nil, err
 		}
@@ -101,14 +124,35 @@ func (q *Queries) FindAllActivitiesByBoardUuid(ctx context.Context, boardUuid pg
 }
 
 const getActivityByUuid = `-- name: GetActivityByUuid :one
-select uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid, user_uuid
-from activities
-where uuid = $1
+select a.uuid, a.updated_at, a.created_at, a.url, a.title, a.image_url, a.notes, a.status, a.booking_reference, a.selected, a.board_uuid, a.user_uuid,
+    count(case when v.rank = 1 then 1 end)::int as likes,
+    count(case when v.rank < 1 then 1 end)::int as dislikes
+from activities a
+left join votes v on v.voted_on_uuid = a.uuid and v.voted_on_ = 'activities'
+where a.uuid = $1
+group by a.uuid
 `
 
-func (q *Queries) GetActivityByUuid(ctx context.Context, uuid pgtype.UUID) (Activity, error) {
+type GetActivityByUuidRow struct {
+	Uuid             pgtype.UUID
+	UpdatedAt        pgtype.Timestamp
+	CreatedAt        pgtype.Timestamp
+	Url              string
+	Title            string
+	ImageUrl         *string
+	Notes            *string
+	Status           ActivitiesStatus
+	BookingReference *string
+	Selected         bool
+	BoardUuid        pgtype.UUID
+	UserUuid         pgtype.UUID
+	Likes            int32
+	Dislikes         int32
+}
+
+func (q *Queries) GetActivityByUuid(ctx context.Context, uuid pgtype.UUID) (GetActivityByUuidRow, error) {
 	row := q.db.QueryRow(ctx, getActivityByUuid, uuid)
-	var i Activity
+	var i GetActivityByUuidRow
 	err := row.Scan(
 		&i.Uuid,
 		&i.UpdatedAt,
@@ -122,6 +166,8 @@ func (q *Queries) GetActivityByUuid(ctx context.Context, uuid pgtype.UUID) (Acti
 		&i.Selected,
 		&i.BoardUuid,
 		&i.UserUuid,
+		&i.Likes,
+		&i.Dislikes,
 	)
 	return i, err
 }

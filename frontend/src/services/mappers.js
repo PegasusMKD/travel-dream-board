@@ -52,6 +52,8 @@ export function mapItem(item) {
     status: item.status,
     isFinal: item.selected,
     bookingRef: item.booking_reference || null,
+    likes: item.likes || 0,
+    dislikes: item.dislikes || 0,
     votes: (item.votes || []).map(mapVote),
     comments: (item.comments || []).map(mapComment),
   }

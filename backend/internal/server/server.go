@@ -110,7 +110,6 @@ func setupSqlc(cfg *config.Config) (*db.Queries, error) {
 }
 
 func (srv *GinServer) setupMiddleware(router *gin.Engine) {
-	router.Use(gin.Logger())
 	router.Use(middleware.ErrorHandler())
 }
 
@@ -146,7 +145,7 @@ func (srv *GinServer) setupRoutes(router *gin.Engine, queries *db.Queries, cfg *
 	scrapeAuditRepository := scrapeaudit.NewRepository(queries)
 	scrapeAuditService := scrapeaudit.NewService(scrapeAuditRepository)
 
-	scrapeService := scrapeprocess.NewService(cfg.OpenRouterAPIKey, scrapeAuditService)
+	scrapeService := scrapeprocess.NewService(cfg.OpenRouterAPIKey, cfg.ScrapingAntAPIKey, scrapeAuditService)
 
 	accomodationsRepository := accomodations.NewRepository(queries)
 	accomodationsService := accomodations.NewService(accomodationsRepository, commentsService, votesService, scrapeService)

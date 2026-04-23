@@ -62,20 +62,41 @@ func (q *Queries) DeleteAccomodationByUuid(ctx context.Context, uuid pgtype.UUID
 }
 
 const findAllAccomodationsByBoardUuid = `-- name: FindAllAccomodationsByBoardUuid :many
-select uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid, user_uuid
-from accomodations
-where board_uuid = $1
+select a.uuid, a.updated_at, a.created_at, a.url, a.title, a.image_url, a.notes, a.status, a.booking_reference, a.selected, a.board_uuid, a.user_uuid,
+    count(case when v.rank = 1 then 1 end)::int as likes,
+    count(case when v.rank < 1 then 1 end)::int as dislikes
+from accomodations a
+left join votes v on v.voted_on_uuid = a.uuid and v.voted_on_ = 'accomodation'
+where a.board_uuid = $1
+group by a.uuid
 `
 
-func (q *Queries) FindAllAccomodationsByBoardUuid(ctx context.Context, boardUuid pgtype.UUID) ([]Accomodation, error) {
+type FindAllAccomodationsByBoardUuidRow struct {
+	Uuid             pgtype.UUID
+	UpdatedAt        pgtype.Timestamp
+	CreatedAt        pgtype.Timestamp
+	Url              string
+	Title            string
+	ImageUrl         *string
+	Notes            *string
+	Status           AccomodationsStatus
+	BookingReference *string
+	Selected         bool
+	BoardUuid        pgtype.UUID
+	UserUuid         pgtype.UUID
+	Likes            int32
+	Dislikes         int32
+}
+
+func (q *Queries) FindAllAccomodationsByBoardUuid(ctx context.Context, boardUuid pgtype.UUID) ([]FindAllAccomodationsByBoardUuidRow, error) {
 	rows, err := q.db.Query(ctx, findAllAccomodationsByBoardUuid, boardUuid)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Accomodation
+	var items []FindAllAccomodationsByBoardUuidRow
 	for rows.Next() {
-		var i Accomodation
+		var i FindAllAccomodationsByBoardUuidRow
 		if err := rows.Scan(
 			&i.Uuid,
 			&i.UpdatedAt,
@@ -89,6 +110,8 @@ func (q *Queries) FindAllAccomodationsByBoardUuid(ctx context.Context, boardUuid
 			&i.Selected,
 			&i.BoardUuid,
 			&i.UserUuid,
+			&i.Likes,
+			&i.Dislikes,
 		); err != nil {
 			return nil, err
 		}
@@ -101,14 +124,35 @@ func (q *Queries) FindAllAccomodationsByBoardUuid(ctx context.Context, boardUuid
 }
 
 const getAccomodationByUuid = `-- name: GetAccomodationByUuid :one
-select uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid, user_uuid
-from accomodations
-where uuid = $1
+select a.uuid, a.updated_at, a.created_at, a.url, a.title, a.image_url, a.notes, a.status, a.booking_reference, a.selected, a.board_uuid, a.user_uuid,
+    count(case when v.rank = 1 then 1 end)::int as likes,
+    count(case when v.rank < 1 then 1 end)::int as dislikes
+from accomodations a
+left join votes v on v.voted_on_uuid = a.uuid and v.voted_on_ = 'accomodation'
+where a.uuid = $1
+group by a.uuid
 `
 
-func (q *Queries) GetAccomodationByUuid(ctx context.Context, uuid pgtype.UUID) (Accomodation, error) {
+type GetAccomodationByUuidRow struct {
+	Uuid             pgtype.UUID
+	UpdatedAt        pgtype.Timestamp
+	CreatedAt        pgtype.Timestamp
+	Url              string
+	Title            string
+	ImageUrl         *string
+	Notes            *string
+	Status           AccomodationsStatus
+	BookingReference *string
+	Selected         bool
+	BoardUuid        pgtype.UUID
+	UserUuid         pgtype.UUID
+	Likes            int32
+	Dislikes         int32
+}
+
+func (q *Queries) GetAccomodationByUuid(ctx context.Context, uuid pgtype.UUID) (GetAccomodationByUuidRow, error) {
 	row := q.db.QueryRow(ctx, getAccomodationByUuid, uuid)
-	var i Accomodation
+	var i GetAccomodationByUuidRow
 	err := row.Scan(
 		&i.Uuid,
 		&i.UpdatedAt,
@@ -122,6 +166,8 @@ func (q *Queries) GetAccomodationByUuid(ctx context.Context, uuid pgtype.UUID) (
 		&i.Selected,
 		&i.BoardUuid,
 		&i.UserUuid,
+		&i.Likes,
+		&i.Dislikes,
 	)
 	return i, err
 }

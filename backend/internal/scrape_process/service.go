@@ -25,32 +25,20 @@ type Service interface {
 type scrapeProcessServiceImpl struct {
 	client *http.Client
 
-	openrouterKey string
+	openrouterKey  string
+	scrapingAntKey string
 
 	scrapeAuditService scrapeaudit.Service
 }
 
-func NewService(openrouterKey string, scrapeAuditService scrapeaudit.Service) Service {
-	transport := &http.Transport{
-		MaxIdleConns:          10,
-		IdleConnTimeout:       30 * time.Second,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ResponseHeaderTimeout: 10 * time.Second,
-	}
-
+func NewService(openrouterKey string, scrapingAntKey string, scrapeAuditService scrapeaudit.Service) Service {
 	return &scrapeProcessServiceImpl{
 		openrouterKey:      openrouterKey,
+		scrapingAntKey:     scrapingAntKey,
 		scrapeAuditService: scrapeAuditService,
 		client: &http.Client{
-			Timeout:   15 * time.Second,
-			Transport: transport,
-			// Optional: Custom redirect policy
-			// CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			// 	 if len(via) >= 5 {
-			// 		 return errors.New("stopped after 5 redirects")
-			// 	 }
-			// 	 return nil
-			// },
+			Timeout:   60 * time.Second,
+			Transport: http.DefaultTransport,
 		},
 	}
 }
@@ -63,12 +51,19 @@ func (svc *scrapeProcessServiceImpl) Scrape(ctx context.Context, url string) (*s
 	host := getHostFromURL(url)
 	auditRecord, err := svc.scrapeAuditService.CreateScrapeAudit(ctx, url, host)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	reqUrl := "https://api.scrapingant.com/v2/general"
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqUrl, nil)
 	if err != nil {
 		log.Error("Failed creating request for scraping", "url", url, "error", err)
 		svc.scrapeAuditService.UpdateScrapeAuditByUuid(ctx, auditRecord.Uuid, db.ScrapeStatusFailed, &out)
 		return nil, err
 	}
+
+	q := req.URL.Query()
+	q.Add("url", url)
+	q.Add("x-api-key", svc.scrapingAntKey)
+	q.Add("browser", "true")
+	req.URL.RawQuery = q.Encode()
 
 	req.Header.Set("User-Agent", USER_AGENT)
 	req.Header.Set("Accept-Language", ACCEPT_LANGUAGE)
@@ -88,7 +83,7 @@ func (svc *scrapeProcessServiceImpl) Scrape(ctx context.Context, url string) (*s
 		return nil, err
 	}
 
-	out.ActualUrl = resp.Request.URL.String()
+	out.ActualUrl = url
 
 	svc.parseMetaTags(ctx, auditRecord.Uuid, doc, &out)
 

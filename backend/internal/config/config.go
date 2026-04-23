@@ -30,6 +30,7 @@ type Config struct {
 	GoogleRedirectURL  string
 	JWTSecret          string
 	OpenRouterAPIKey   string
+	ScrapingAntAPIKey  string
 }
 
 func Load() (*Config, error) {
@@ -55,6 +56,7 @@ func Load() (*Config, error) {
 		GoogleRedirectURL:  getEnv("GOOGLE_REDIRECT_URL", ""),
 		JWTSecret:          getEnv("JWT_SECRET", "super-secret-default-key"),
 		OpenRouterAPIKey:   getEnv("OPENROUTER_API_KEY", ""),
+		ScrapingAntAPIKey:  getEnv("SCRAPINGANT_API_KEY", ""),
 	}
 
 	// Validate required fields based on service

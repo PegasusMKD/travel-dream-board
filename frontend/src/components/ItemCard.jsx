@@ -7,6 +7,7 @@ import {
   Bed,
   Plane,
   MapPinned,
+  Loader2,
 } from 'lucide-react'
 import StatusBadge from './StatusBadge'
 import { useLang } from '../context/LanguageContext'
@@ -21,27 +22,42 @@ const sectionIcons = {
 export default function ItemCard({ item, sectionType, onClick, onVote }) {
   const { t } = useLang()
   const { user } = useAuth()
-  const upVotes = item.votes.filter((v) => v.value === 'up').length
-  const downVotes = item.votes.filter((v) => v.value === 'down').length
+  const upVotes = item.likes ?? 0
+  const downVotes = item.dislikes ?? 0
   const myVote = user ? item.votes.find((v) => v.userUuid === user.uuid) : null
   const FallbackIcon = sectionIcons[sectionType] || MapPinned
+  const isPending = !!item.pending
 
   const handleVote = (e, direction) => {
     e.stopPropagation()
+    if (isPending) return
     onVote?.(item, direction)
+  }
+
+  const handleClick = () => {
+    if (isPending) return
+    onClick?.()
   }
 
   return (
     <div
-      onClick={onClick}
-      className={`bg-surface-0 rounded-2xl overflow-hidden shadow-sm border transition-all duration-200 hover:shadow-md cursor-pointer ${
-        item.isFinal
-          ? 'border-accent-400 ring-2 ring-accent-100'
-          : item.status === 'rejected'
-            ? 'border-surface-200 opacity-50'
-            : 'border-surface-200 hover:border-accent-300'
+      onClick={handleClick}
+      className={`relative bg-surface-0 rounded-2xl overflow-hidden shadow-sm border transition-all duration-200 ${
+        isPending
+          ? 'border-surface-200 cursor-wait'
+          : item.isFinal
+            ? 'border-accent-400 ring-2 ring-accent-100 hover:shadow-md cursor-pointer'
+            : item.status === 'rejected'
+              ? 'border-surface-200 opacity-50 hover:shadow-md cursor-pointer'
+              : 'border-surface-200 hover:border-accent-300 hover:shadow-md cursor-pointer'
       }`}
     >
+      {isPending && (
+        <div className="absolute inset-0 bg-surface-0/60 backdrop-blur-[1px] z-10 flex flex-col items-center justify-center gap-2">
+          <Loader2 className="w-6 h-6 text-accent-500 animate-spin" />
+          <span className="text-xs font-semibold text-text-secondary">{t.fetching}</span>
+        </div>
+      )}
       {/* Image */}
       <div className="relative">
         {item.image ? (

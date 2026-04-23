@@ -68,7 +68,7 @@ func (repo *repositoryImpl) GetActivityById(ctx context.Context, uuid string) (*
 		return nil, err
 	}
 
-	return FromEntity(ent), nil
+	return FromGetActivityRow(ent), nil
 }
 
 func (repo *repositoryImpl) GetAllActivitiesByBoardId(ctx context.Context, uuid string) ([]*Activity, error) {
@@ -86,7 +86,7 @@ func (repo *repositoryImpl) GetAllActivitiesByBoardId(ctx context.Context, uuid 
 
 	data := []*Activity{}
 	for _, val := range ent {
-		data = append(data, FromEntity(val))
+		data = append(data, FromFindActivitiesRow(val))
 	}
 
 	return data, nil

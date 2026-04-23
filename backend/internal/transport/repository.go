@@ -68,7 +68,7 @@ func (repo *repositoryImpl) GetTransportById(ctx context.Context, uuid string) (
 		return nil, err
 	}
 
-	return FromEntity(ent), nil
+	return FromGetTransportRow(ent), nil
 }
 
 func (repo *repositoryImpl) GetAllTransportsByBoardId(ctx context.Context, uuid string) ([]*Transport, error) {
@@ -86,7 +86,7 @@ func (repo *repositoryImpl) GetAllTransportsByBoardId(ctx context.Context, uuid 
 
 	data := []*Transport{}
 	for _, val := range ent {
-		data = append(data, FromEntity(val))
+		data = append(data, FromFindTransportRow(val))
 	}
 
 	return data, nil

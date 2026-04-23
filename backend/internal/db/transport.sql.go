@@ -62,20 +62,41 @@ func (q *Queries) DeleteTransportByUuid(ctx context.Context, uuid pgtype.UUID) e
 }
 
 const findAllTransportByBoardUuid = `-- name: FindAllTransportByBoardUuid :many
-select uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid, user_uuid
-from transport
-where board_uuid = $1
+select t.uuid, t.updated_at, t.created_at, t.url, t.title, t.image_url, t.notes, t.status, t.booking_reference, t.selected, t.board_uuid, t.user_uuid,
+    count(case when v.rank = 1 then 1 end)::int as likes,
+    count(case when v.rank < 1 then 1 end)::int as dislikes
+from transport t
+left join votes v on v.voted_on_uuid = t.uuid and v.voted_on_ = 'transport'
+where t.board_uuid = $1
+group by t.uuid
 `
 
-func (q *Queries) FindAllTransportByBoardUuid(ctx context.Context, boardUuid pgtype.UUID) ([]Transport, error) {
+type FindAllTransportByBoardUuidRow struct {
+	Uuid             pgtype.UUID
+	UpdatedAt        pgtype.Timestamp
+	CreatedAt        pgtype.Timestamp
+	Url              string
+	Title            string
+	ImageUrl         *string
+	Notes            *string
+	Status           TransportStatus
+	BookingReference *string
+	Selected         bool
+	BoardUuid        pgtype.UUID
+	UserUuid         pgtype.UUID
+	Likes            int32
+	Dislikes         int32
+}
+
+func (q *Queries) FindAllTransportByBoardUuid(ctx context.Context, boardUuid pgtype.UUID) ([]FindAllTransportByBoardUuidRow, error) {
 	rows, err := q.db.Query(ctx, findAllTransportByBoardUuid, boardUuid)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Transport
+	var items []FindAllTransportByBoardUuidRow
 	for rows.Next() {
-		var i Transport
+		var i FindAllTransportByBoardUuidRow
 		if err := rows.Scan(
 			&i.Uuid,
 			&i.UpdatedAt,
@@ -89,6 +110,8 @@ func (q *Queries) FindAllTransportByBoardUuid(ctx context.Context, boardUuid pgt
 			&i.Selected,
 			&i.BoardUuid,
 			&i.UserUuid,
+			&i.Likes,
+			&i.Dislikes,
 		); err != nil {
 			return nil, err
 		}
@@ -101,14 +124,35 @@ func (q *Queries) FindAllTransportByBoardUuid(ctx context.Context, boardUuid pgt
 }
 
 const getTransportByUuid = `-- name: GetTransportByUuid :one
-select uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid, user_uuid
-from transport
-where uuid = $1
+select t.uuid, t.updated_at, t.created_at, t.url, t.title, t.image_url, t.notes, t.status, t.booking_reference, t.selected, t.board_uuid, t.user_uuid,
+    count(case when v.rank = 1 then 1 end)::int as likes,
+    count(case when v.rank < 1 then 1 end)::int as dislikes
+from transport t
+left join votes v on v.voted_on_uuid = t.uuid and v.voted_on_ = 'transport'
+where t.uuid = $1
+group by t.uuid
 `
 
-func (q *Queries) GetTransportByUuid(ctx context.Context, uuid pgtype.UUID) (Transport, error) {
+type GetTransportByUuidRow struct {
+	Uuid             pgtype.UUID
+	UpdatedAt        pgtype.Timestamp
+	CreatedAt        pgtype.Timestamp
+	Url              string
+	Title            string
+	ImageUrl         *string
+	Notes            *string
+	Status           TransportStatus
+	BookingReference *string
+	Selected         bool
+	BoardUuid        pgtype.UUID
+	UserUuid         pgtype.UUID
+	Likes            int32
+	Dislikes         int32
+}
+
+func (q *Queries) GetTransportByUuid(ctx context.Context, uuid pgtype.UUID) (GetTransportByUuidRow, error) {
 	row := q.db.QueryRow(ctx, getTransportByUuid, uuid)
-	var i Transport
+	var i GetTransportByUuidRow
 	err := row.Scan(
 		&i.Uuid,
 		&i.UpdatedAt,
@@ -122,6 +166,8 @@ func (q *Queries) GetTransportByUuid(ctx context.Context, uuid pgtype.UUID) (Tra
 		&i.Selected,
 		&i.BoardUuid,
 		&i.UserUuid,
+		&i.Likes,
+		&i.Dislikes,
 	)
 	return i, err
 }

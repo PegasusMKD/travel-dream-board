@@ -19,6 +19,8 @@ type Accomodation struct {
 	BookingReference *string                `json:"booking_reference"`
 	Selected         bool                   `json:"selected"`
 	UserUuid         string                 `json:"user_uuid"`
+	Likes            int32                  `json:"likes"`
+	Dislikes         int32                  `json:"dislikes"`
 }
 
 func FromEntity(entity db.Accomodation) *Accomodation {
@@ -33,6 +35,40 @@ func FromEntity(entity db.Accomodation) *Accomodation {
 		BookingReference: entity.BookingReference,
 		Selected:         entity.Selected,
 		UserUuid:         entity.UserUuid.String(),
+	}
+}
+
+func FromGetAccomodationRow(entity db.GetAccomodationByUuidRow) *Accomodation {
+	return &Accomodation{
+		Uuid:             entity.Uuid.String(),
+		Url:              entity.Url,
+		Title:            entity.Title,
+		BoardUuid:        entity.BoardUuid.String(),
+		ImageUrl:         entity.ImageUrl,
+		Notes:            entity.Notes,
+		Status:           entity.Status,
+		BookingReference: entity.BookingReference,
+		Selected:         entity.Selected,
+		UserUuid:         entity.UserUuid.String(),
+		Likes:            entity.Likes,
+		Dislikes:         entity.Dislikes,
+	}
+}
+
+func FromFindAccomodationsRow(entity db.FindAllAccomodationsByBoardUuidRow) *Accomodation {
+	return &Accomodation{
+		Uuid:             entity.Uuid.String(),
+		Url:              entity.Url,
+		Title:            entity.Title,
+		BoardUuid:        entity.BoardUuid.String(),
+		ImageUrl:         entity.ImageUrl,
+		Notes:            entity.Notes,
+		Status:           entity.Status,
+		BookingReference: entity.BookingReference,
+		Selected:         entity.Selected,
+		UserUuid:         entity.UserUuid.String(),
+		Likes:            entity.Likes,
+		Dislikes:         entity.Dislikes,
 	}
 }
 

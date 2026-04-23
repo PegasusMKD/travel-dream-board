@@ -17,6 +17,8 @@ type Activity struct {
 	BookingReference *string             `json:"booking_reference"`
 	Selected         bool                `json:"selected"`
 	UserUuid         string              `json:"user_uuid"`
+	Likes            int32               `json:"likes"`
+	Dislikes         int32               `json:"dislikes"`
 }
 
 func FromEntity(entity db.Activity) *Activity {
@@ -31,6 +33,40 @@ func FromEntity(entity db.Activity) *Activity {
 		BookingReference: entity.BookingReference,
 		Selected:         entity.Selected,
 		UserUuid:         entity.UserUuid.String(),
+	}
+}
+
+func FromGetActivityRow(entity db.GetActivityByUuidRow) *Activity {
+	return &Activity{
+		Uuid:             entity.Uuid.String(),
+		BoardUuid:        entity.BoardUuid.String(),
+		Url:              entity.Url,
+		Title:            entity.Title,
+		ImageUrl:         entity.ImageUrl,
+		Notes:            entity.Notes,
+		Status:           entity.Status,
+		BookingReference: entity.BookingReference,
+		Selected:         entity.Selected,
+		UserUuid:         entity.UserUuid.String(),
+		Likes:            entity.Likes,
+		Dislikes:         entity.Dislikes,
+	}
+}
+
+func FromFindActivitiesRow(entity db.FindAllActivitiesByBoardUuidRow) *Activity {
+	return &Activity{
+		Uuid:             entity.Uuid.String(),
+		BoardUuid:        entity.BoardUuid.String(),
+		Url:              entity.Url,
+		Title:            entity.Title,
+		ImageUrl:         entity.ImageUrl,
+		Notes:            entity.Notes,
+		Status:           entity.Status,
+		BookingReference: entity.BookingReference,
+		Selected:         entity.Selected,
+		UserUuid:         entity.UserUuid.String(),
+		Likes:            entity.Likes,
+		Dislikes:         entity.Dislikes,
 	}
 }
 

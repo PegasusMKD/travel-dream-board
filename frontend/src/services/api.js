@@ -44,6 +44,7 @@ async function request(path, options = {}) {
 
 function itemEndpoints(base) {
   return {
+    get: (uuid) => request(`/${base}/${uuid}`),
     create: (url, boardUuid) => {
       const qs = new URLSearchParams({ url, boardUuid })
       return request(`/${base}/?${qs.toString()}`, { method: 'POST' })

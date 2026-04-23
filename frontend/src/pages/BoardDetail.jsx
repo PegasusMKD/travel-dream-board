@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useCallback, useEffect, useState } from 'react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
   Calendar,
@@ -22,7 +22,7 @@ import ItemDetailSidebar from '../components/ItemDetailSidebar'
 import EditBoardModal from '../components/EditBoardModal'
 import MemoryGallery from '../components/MemoryGallery'
 import { api } from '../services/api'
-import { mapAggregatedBoard, backendVoteTarget } from '../services/mappers'
+import { mapAggregatedBoard, backendVoteTarget, sectionToItemApi } from '../services/mappers'
 
 const sectionConfig = {
   accommodation: { key: 'accommodation', icon: Bed, emoji: '\u{1F3E8}' },
@@ -40,6 +40,7 @@ function formatDateRange(range, lang) {
 
 export default function BoardDetail() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const { lang, t } = useLang()
   const { user } = useAuth()
   const [board, setBoard] = useState(null)
@@ -51,6 +52,7 @@ export default function BoardDetail() {
   const [selectedItemId, setSelectedItemId] = useState(null)
   const [selectedSection, setSelectedSection] = useState(null)
   const [showEditBoard, setShowEditBoard] = useState(false)
+  const [pending, setPending] = useState({ accommodation: [], transport: [], activities: [] })
 
   const loadBoard = useCallback(async () => {
     try {
@@ -67,14 +69,29 @@ export default function BoardDetail() {
     loadBoard().finally(() => setLoading(false))
   }, [loadBoard])
 
-  const selectedItem = useMemo(() => {
-    if (!board || !selectedItemId || !selectedSection) return null
-    return board.sections[selectedSection]?.find((i) => i.id === selectedItemId) || null
-  }, [board, selectedItemId, selectedSection])
-
   const closeSidebar = () => {
     setSelectedItemId(null)
     setSelectedSection(null)
+  }
+
+  const handleAddItem = (sectionType, url) => {
+    const tempId = `pending-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+    const placeholder = buildPlaceholder(tempId, url)
+    setPending((prev) => ({
+      ...prev,
+      [sectionType]: [...prev[sectionType], placeholder],
+    }))
+
+    const itemApi = sectionToItemApi(api, sectionType)
+    itemApi.create(url, id)
+      .then(() => loadBoard())
+      .catch((err) => setError(err.message))
+      .finally(() => {
+        setPending((prev) => ({
+          ...prev,
+          [sectionType]: prev[sectionType].filter((p) => p.id !== tempId),
+        }))
+      })
   }
 
   const handleVote = async (item, direction) => {
@@ -214,7 +231,7 @@ export default function BoardDetail() {
       {activeTab === 'planning' && (
         <div className="space-y-10">
           {Object.entries(sectionConfig).map(([key, config]) => {
-            const items = board.sections[key] || []
+            const items = [...(board.sections[key] || []), ...(pending[key] || [])]
             const Icon = config.icon
 
             return (
@@ -282,9 +299,8 @@ export default function BoardDetail() {
       {addingTo && (
         <AddItemModal
           sectionType={addingTo}
-          boardUuid={board.id}
           onClose={() => setAddingTo(null)}
-          onAdded={loadBoard}
+          onSubmit={(url) => handleAddItem(addingTo, url)}
         />
       )}
       {showShare && (
@@ -299,13 +315,14 @@ export default function BoardDetail() {
           board={board}
           onClose={() => setShowEditBoard(false)}
           onSaved={loadBoard}
+          onDeleted={() => navigate('/')}
         />
       )}
 
       {/* Detail sidebar */}
-      {selectedItem && (
+      {selectedItemId && selectedSection && (
         <ItemDetailSidebar
-          item={selectedItem}
+          itemId={selectedItemId}
           sectionType={selectedSection}
           onClose={closeSidebar}
           onRefresh={loadBoard}
@@ -320,4 +337,22 @@ function selectedSectionOf(item, board) {
     if (items.some((i) => i.id === item.id)) return section
   }
   return 'accommodation'
+}
+
+function buildPlaceholder(id, url) {
+  return {
+    id,
+    url,
+    title: url,
+    image: null,
+    note: '',
+    status: 'considering',
+    isFinal: false,
+    bookingRef: null,
+    likes: 0,
+    dislikes: 0,
+    votes: [],
+    comments: [],
+    pending: true,
+  }
 }

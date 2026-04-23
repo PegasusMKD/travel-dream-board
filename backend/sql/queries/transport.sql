@@ -4,14 +4,22 @@ values (@url, @title, @image_url, @board_uuid, @user_uuid)
 returning *;
 
 -- name: GetTransportByUuid :one
-select *
-from transport
-where uuid = @uuid;
+select t.*,
+    count(case when v.rank = 1 then 1 end)::int as likes,
+    count(case when v.rank < 1 then 1 end)::int as dislikes
+from transport t
+left join votes v on v.voted_on_uuid = t.uuid and v.voted_on_ = 'transport'
+where t.uuid = @uuid
+group by t.uuid;
 
 -- name: FindAllTransportByBoardUuid :many
-select *
-from transport
-where board_uuid = @board_uuid;
+select t.*,
+    count(case when v.rank = 1 then 1 end)::int as likes,
+    count(case when v.rank < 1 then 1 end)::int as dislikes
+from transport t
+left join votes v on v.voted_on_uuid = t.uuid and v.voted_on_ = 'transport'
+where t.board_uuid = @board_uuid
+group by t.uuid;
 
 -- name: UpdateTransportByUuid :exec
 update transport

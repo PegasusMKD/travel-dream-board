@@ -68,7 +68,7 @@ func (repo *repositoryImpl) GetAccomodationById(ctx context.Context, uuid string
 		return nil, err
 	}
 
-	return FromEntity(ent), nil
+	return FromGetAccomodationRow(ent), nil
 }
 
 func (repo *repositoryImpl) GetAllAccomodationsByBoardId(ctx context.Context, uuid string) ([]*Accomodation, error) {
@@ -86,7 +86,7 @@ func (repo *repositoryImpl) GetAllAccomodationsByBoardId(ctx context.Context, uu
 
 	data := []*Accomodation{}
 	for _, val := range ent {
-		data = append(data, FromEntity(val))
+		data = append(data, FromFindAccomodationsRow(val))
 	}
 
 	return data, nil

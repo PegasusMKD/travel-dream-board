@@ -116,6 +116,15 @@ export const translations = {
     loginWithGoogle: 'Zaloguj się przez Google',
     logout: 'Wyloguj',
 
+    // Delete
+    delete: 'Usuń',
+    deleteBoard: 'Usuń tablicę',
+    deleteItem: 'Usuń pozycję',
+    confirmDeleteBoard: 'Czy na pewno chcesz usunąć tę tablicę? Tej operacji nie można cofnąć.',
+    confirmDeleteItem: 'Czy na pewno chcesz usunąć tę pozycję?',
+    confirmDeleteComment: 'Czy na pewno chcesz usunąć ten komentarz?',
+    deleting: 'Usuwanie...',
+
     // Theme
     lightMode: 'Jasny',
     darkMode: 'Ciemny',
@@ -236,6 +245,15 @@ export const translations = {
     loginSubtitle: 'Sign in to manage your trip boards.',
     loginWithGoogle: 'Sign in with Google',
     logout: 'Log out',
+
+    // Delete
+    delete: 'Delete',
+    deleteBoard: 'Delete board',
+    deleteItem: 'Delete item',
+    confirmDeleteBoard: 'Are you sure you want to delete this board? This cannot be undone.',
+    confirmDeleteItem: 'Are you sure you want to delete this item?',
+    confirmDeleteComment: 'Are you sure you want to delete this comment?',
+    deleting: 'Deleting...',
 
     // Theme
     lightMode: 'Light',

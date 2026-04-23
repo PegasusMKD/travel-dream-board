@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Loader2 } from 'lucide-react'
+import { X, Loader2, Trash2 } from 'lucide-react'
 import { useLang } from '../context/LanguageContext'
 import { api } from '../services/api'
 import { toBackendBoardPayload } from '../services/mappers'
@@ -9,7 +9,7 @@ function toDateInput(value) {
   return new Date(value).toISOString().slice(0, 10)
 }
 
-export default function EditBoardModal({ board, onClose, onSaved }) {
+export default function EditBoardModal({ board, onClose, onSaved, onDeleted }) {
   const { t } = useLang()
   const isEdit = !!board
   const [name, setName] = useState(board?.name || '')
@@ -18,6 +18,7 @@ export default function EditBoardModal({ board, onClose, onSaved }) {
   const [endDate, setEndDate] = useState(toDateInput(board?.dateRange?.end))
   const [coverImage, setCoverImage] = useState(board?.coverImage || '')
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState(null)
 
   const handleSubmit = async (e) => {
@@ -43,6 +44,23 @@ export default function EditBoardModal({ board, onClose, onSaved }) {
       setSaving(false)
     }
   }
+
+  const handleDelete = async () => {
+    if (!isEdit) return
+    if (!window.confirm(t.confirmDeleteBoard)) return
+    setDeleting(true)
+    setError(null)
+    try {
+      await api.boards.delete(board.id)
+      onDeleted?.()
+      onClose()
+    } catch (err) {
+      setError(err.message)
+      setDeleting(false)
+    }
+  }
+
+  const busy = saving || deleting
 
   const inputClass =
     'w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:border-accent-400 focus:ring-2 focus:ring-accent-100 placeholder:text-text-muted text-text-primary transition-colors'
@@ -144,7 +162,7 @@ export default function EditBoardModal({ board, onClose, onSaved }) {
 
           <button
             type="submit"
-            disabled={!name || !destination || saving}
+            disabled={!name || !destination || busy}
             className="w-full bg-accent-500 hover:bg-accent-600 text-white py-3 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
           >
             {saving ? (
@@ -156,6 +174,27 @@ export default function EditBoardModal({ board, onClose, onSaved }) {
               t.save
             )}
           </button>
+
+          {isEdit && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={busy}
+              className="w-full mt-1 bg-transparent hover:bg-red-50 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {t.deleting}
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" />
+                  {t.deleteBoard}
+                </>
+              )}
+            </button>
+          )}
         </form>
       </div>
     </div>

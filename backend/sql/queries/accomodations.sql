@@ -4,14 +4,22 @@ values (@url, @title, @image_url, @board_uuid, @user_uuid)
 returning *;
 
 -- name: GetAccomodationByUuid :one
-select *
-from accomodations
-where uuid = @uuid;
+select a.*,
+    count(case when v.rank = 1 then 1 end)::int as likes,
+    count(case when v.rank < 1 then 1 end)::int as dislikes
+from accomodations a
+left join votes v on v.voted_on_uuid = a.uuid and v.voted_on_ = 'accomodation'
+where a.uuid = @uuid
+group by a.uuid;
 
 -- name: FindAllAccomodationsByBoardUuid :many
-select *
-from accomodations
-where board_uuid = @board_uuid;
+select a.*,
+    count(case when v.rank = 1 then 1 end)::int as likes,
+    count(case when v.rank < 1 then 1 end)::int as dislikes
+from accomodations a
+left join votes v on v.voted_on_uuid = a.uuid and v.voted_on_ = 'accomodation'
+where a.board_uuid = @board_uuid
+group by a.uuid;
 
 -- name: UpdateAccomodationByUuid :exec
 update accomodations

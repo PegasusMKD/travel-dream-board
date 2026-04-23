@@ -17,6 +17,8 @@ type Transport struct {
 	BookingReference *string            `json:"booking_reference"`
 	Selected         bool               `json:"selected"`
 	UserUuid         string             `json:"user_uuid"`
+	Likes            int32              `json:"likes"`
+	Dislikes         int32              `json:"dislikes"`
 }
 
 func FromEntity(entity db.Transport) *Transport {
@@ -31,6 +33,40 @@ func FromEntity(entity db.Transport) *Transport {
 		BookingReference: entity.BookingReference,
 		Selected:         entity.Selected,
 		UserUuid:         entity.UserUuid.String(),
+	}
+}
+
+func FromGetTransportRow(entity db.GetTransportByUuidRow) *Transport {
+	return &Transport{
+		Uuid:             entity.Uuid.String(),
+		BoardUuid:        entity.BoardUuid.String(),
+		Url:              entity.Url,
+		Title:            entity.Title,
+		ImageUrl:         entity.ImageUrl,
+		Notes:            entity.Notes,
+		Status:           entity.Status,
+		BookingReference: entity.BookingReference,
+		Selected:         entity.Selected,
+		UserUuid:         entity.UserUuid.String(),
+		Likes:            entity.Likes,
+		Dislikes:         entity.Dislikes,
+	}
+}
+
+func FromFindTransportRow(entity db.FindAllTransportByBoardUuidRow) *Transport {
+	return &Transport{
+		Uuid:             entity.Uuid.String(),
+		BoardUuid:        entity.BoardUuid.String(),
+		Url:              entity.Url,
+		Title:            entity.Title,
+		ImageUrl:         entity.ImageUrl,
+		Notes:            entity.Notes,
+		Status:           entity.Status,
+		BookingReference: entity.BookingReference,
+		Selected:         entity.Selected,
+		UserUuid:         entity.UserUuid.String(),
+		Likes:            entity.Likes,
+		Dislikes:         entity.Dislikes,
 	}
 }
 

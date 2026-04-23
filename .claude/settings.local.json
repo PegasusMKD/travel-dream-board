@@ -6,7 +6,8 @@
       "Bash(make mocks *)",
       "Bash(go test *)",
       "Bash(go build *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(grep -E \"\\\\.\\(go|ts\\)$\")"
     ]
   }
 }
