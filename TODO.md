@@ -60,16 +60,16 @@
 
 ### Frontend Setup
 - [X] Vite + React 18 + TailwindCSS scaffold
-- [ ] Routing setup
-- [ ] Google OAuth login page
-- [ ] API client / fetch wrapper
+- [X] Routing setup
+- [X] Google OAuth login page
+- [X] API client / fetch wrapper
 
 ### Frontend — Boards
 - [X] Board list view (dashboard)
 - [X] Create board flow
 - [X] Board detail view (3 sections)
 - [X] Item card component
-- [ ] URL paste → scrape → editable card flow
+- [X] URL paste → scrape → editable card flow
 - [X] Manual field editing on item card
 
 ---
@@ -90,8 +90,8 @@
 ### Frontend — Collaboration
 - [ ] Share link generation UI
 - [ ] Collaborator view (token-gated)
-- [ ] Voting UI on item cards
-- [ ] Comment thread on item cards
+- [X] Voting UI on item cards
+- [X] Comment thread on item cards
 - [ ] Display name prompt for collaborators
 
 ### Frontend — Finalization & Status
@@ -109,7 +109,7 @@
 - [ ] Loading states + skeletons
 - [ ] Error states (scrape failed, network error)
 - [ ] Responsive layout (mobile-friendly)
-- [ ] Polish UI language strings
+- [X] Polish UI language strings
 
 ### Deployment
 - [X] Backend deployed to Railway
@@ -123,4 +123,4 @@
 ### Final QA
 - [ ] Happy path: create board → add items → share → friend votes → finalize → book
 - [ ] Edge cases: scrape failure, revoked share link, duplicate votes
-- [ ] Cross-browser check
+- [X] Cross-browser check
