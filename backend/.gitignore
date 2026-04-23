@@ -67,3 +67,6 @@ coverage*
 /api
 /server
 /depgraph
+
+# Volumes
+./uploads
