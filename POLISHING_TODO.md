@@ -31,6 +31,9 @@
 - [ ] Expand the LLM tools to be able to parse that information from an image (or as a fallback)
 - [ ] Expand the scraping logic to include those fields if possible?
 - [ ] Should be manually editable
+- [ ] The "price" field should support at least 3 currencies, PLN (zloty), EUR (euro), MKD (Macedonian Denar)
+- [ ] It should also make it clear what currency it is displaying the information in
+- [ ] Potentially also add a "currency" column?
 
 ### Implement "Memories" feature
 - [ ] Create migration, queries and a module for Memories
