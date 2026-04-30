@@ -25,7 +25,9 @@ insert into transport (
     inbound_departing_location,
     inbound_arriving_location,
     inbound_departing_at,
-    inbound_arriving_at
+    inbound_arriving_at,
+    outbound_duration_minutes,
+    inbound_duration_minutes
 )
 values (
     $1,
@@ -40,9 +42,11 @@ values (
     $10,
     $11,
     $12,
-    $13
+    $13,
+    $14,
+    $15
 )
-returning uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid, user_uuid, outbound_departing_location, outbound_arriving_location, outbound_departing_at, outbound_arriving_at, inbound_departing_location, inbound_arriving_location, inbound_departing_at, inbound_arriving_at
+returning uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid, user_uuid, outbound_departing_location, outbound_arriving_location, outbound_departing_at, outbound_arriving_at, inbound_departing_location, inbound_arriving_location, inbound_departing_at, inbound_arriving_at, outbound_duration_minutes, inbound_duration_minutes
 `
 
 type CreateTransportParams struct {
@@ -59,6 +63,8 @@ type CreateTransportParams struct {
 	InboundArrivingLocation   *string
 	InboundDepartingAt        pgtype.Timestamptz
 	InboundArrivingAt         pgtype.Timestamptz
+	OutboundDurationMinutes   *int32
+	InboundDurationMinutes    *int32
 }
 
 func (q *Queries) CreateTransport(ctx context.Context, arg CreateTransportParams) (Transport, error) {
@@ -76,6 +82,8 @@ func (q *Queries) CreateTransport(ctx context.Context, arg CreateTransportParams
 		arg.InboundArrivingLocation,
 		arg.InboundDepartingAt,
 		arg.InboundArrivingAt,
+		arg.OutboundDurationMinutes,
+		arg.InboundDurationMinutes,
 	)
 	var i Transport
 	err := row.Scan(
@@ -99,6 +107,8 @@ func (q *Queries) CreateTransport(ctx context.Context, arg CreateTransportParams
 		&i.InboundArrivingLocation,
 		&i.InboundDepartingAt,
 		&i.InboundArrivingAt,
+		&i.OutboundDurationMinutes,
+		&i.InboundDurationMinutes,
 	)
 	return i, err
 }
@@ -114,7 +124,7 @@ func (q *Queries) DeleteTransportByUuid(ctx context.Context, uuid pgtype.UUID) e
 }
 
 const findAllTransportByBoardUuid = `-- name: FindAllTransportByBoardUuid :many
-select t.uuid, t.updated_at, t.created_at, t.url, t.title, t.image_url, t.notes, t.status, t.booking_reference, t.selected, t.board_uuid, t.user_uuid, t.outbound_departing_location, t.outbound_arriving_location, t.outbound_departing_at, t.outbound_arriving_at, t.inbound_departing_location, t.inbound_arriving_location, t.inbound_departing_at, t.inbound_arriving_at,
+select t.uuid, t.updated_at, t.created_at, t.url, t.title, t.image_url, t.notes, t.status, t.booking_reference, t.selected, t.board_uuid, t.user_uuid, t.outbound_departing_location, t.outbound_arriving_location, t.outbound_departing_at, t.outbound_arriving_at, t.inbound_departing_location, t.inbound_arriving_location, t.inbound_departing_at, t.inbound_arriving_at, t.outbound_duration_minutes, t.inbound_duration_minutes,
     coalesce(avg(v.rank)::float, 0)::float as avg_rating,
     count(v.uuid)::int as rating_count
 from transport t
@@ -144,6 +154,8 @@ type FindAllTransportByBoardUuidRow struct {
 	InboundArrivingLocation   *string
 	InboundDepartingAt        pgtype.Timestamptz
 	InboundArrivingAt         pgtype.Timestamptz
+	OutboundDurationMinutes   *int32
+	InboundDurationMinutes    *int32
 	AvgRating                 float64
 	RatingCount               int32
 }
@@ -178,6 +190,8 @@ func (q *Queries) FindAllTransportByBoardUuid(ctx context.Context, boardUuid pgt
 			&i.InboundArrivingLocation,
 			&i.InboundDepartingAt,
 			&i.InboundArrivingAt,
+			&i.OutboundDurationMinutes,
+			&i.InboundDurationMinutes,
 			&i.AvgRating,
 			&i.RatingCount,
 		); err != nil {
@@ -192,7 +206,7 @@ func (q *Queries) FindAllTransportByBoardUuid(ctx context.Context, boardUuid pgt
 }
 
 const getTransportByUuid = `-- name: GetTransportByUuid :one
-select t.uuid, t.updated_at, t.created_at, t.url, t.title, t.image_url, t.notes, t.status, t.booking_reference, t.selected, t.board_uuid, t.user_uuid, t.outbound_departing_location, t.outbound_arriving_location, t.outbound_departing_at, t.outbound_arriving_at, t.inbound_departing_location, t.inbound_arriving_location, t.inbound_departing_at, t.inbound_arriving_at,
+select t.uuid, t.updated_at, t.created_at, t.url, t.title, t.image_url, t.notes, t.status, t.booking_reference, t.selected, t.board_uuid, t.user_uuid, t.outbound_departing_location, t.outbound_arriving_location, t.outbound_departing_at, t.outbound_arriving_at, t.inbound_departing_location, t.inbound_arriving_location, t.inbound_departing_at, t.inbound_arriving_at, t.outbound_duration_minutes, t.inbound_duration_minutes,
     coalesce(avg(v.rank)::float, 0)::float as avg_rating,
     count(v.uuid)::int as rating_count
 from transport t
@@ -222,6 +236,8 @@ type GetTransportByUuidRow struct {
 	InboundArrivingLocation   *string
 	InboundDepartingAt        pgtype.Timestamptz
 	InboundArrivingAt         pgtype.Timestamptz
+	OutboundDurationMinutes   *int32
+	InboundDurationMinutes    *int32
 	AvgRating                 float64
 	RatingCount               int32
 }
@@ -250,6 +266,8 @@ func (q *Queries) GetTransportByUuid(ctx context.Context, uuid pgtype.UUID) (Get
 		&i.InboundArrivingLocation,
 		&i.InboundDepartingAt,
 		&i.InboundArrivingAt,
+		&i.OutboundDurationMinutes,
+		&i.InboundDurationMinutes,
 		&i.AvgRating,
 		&i.RatingCount,
 	)
@@ -272,8 +290,10 @@ set url = $1,
     inbound_departing_location = $12,
     inbound_arriving_location = $13,
     inbound_departing_at = $14,
-    inbound_arriving_at = $15
-where uuid = $16
+    inbound_arriving_at = $15,
+    outbound_duration_minutes = $16,
+    inbound_duration_minutes = $17
+where uuid = $18
 `
 
 type UpdateTransportByUuidParams struct {
@@ -292,6 +312,8 @@ type UpdateTransportByUuidParams struct {
 	InboundArrivingLocation   *string
 	InboundDepartingAt        pgtype.Timestamptz
 	InboundArrivingAt         pgtype.Timestamptz
+	OutboundDurationMinutes   *int32
+	InboundDurationMinutes    *int32
 	Uuid                      pgtype.UUID
 }
 
@@ -312,6 +334,8 @@ func (q *Queries) UpdateTransportByUuid(ctx context.Context, arg UpdateTransport
 		arg.InboundArrivingLocation,
 		arg.InboundDepartingAt,
 		arg.InboundArrivingAt,
+		arg.OutboundDurationMinutes,
+		arg.InboundDurationMinutes,
 		arg.Uuid,
 	)
 	return err

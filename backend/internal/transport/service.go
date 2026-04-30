@@ -2,11 +2,11 @@ package transport
 
 import (
 	"context"
-	"time"
 
 	"github.com/PegasusMKD/travel-dream-board/internal/comments"
 	"github.com/PegasusMKD/travel-dream-board/internal/db"
 	scrapeprocess "github.com/PegasusMKD/travel-dream-board/internal/scrape_process"
+	"github.com/PegasusMKD/travel-dream-board/internal/utility"
 	"github.com/PegasusMKD/travel-dream-board/internal/votes"
 )
 
@@ -57,12 +57,15 @@ func (svc *accomodationServiceImpl) CreateTransport(ctx context.Context, url str
 
 			data.OutboundDepartingLocation = extractedData.OutboundDepartingLocation
 			data.OutboundArrivingLocation = extractedData.OutboundArrivingLocation
-			data.OutboundDepartingAt = parseLegTimeStr(extractedData.OutboundDepartingAt)
-			data.OutboundArrivingAt = parseLegTimeStr(extractedData.OutboundArrivingAt)
+			data.OutboundDepartingAt = utility.ParseWallClockTime(extractedData.OutboundDepartingAt)
+			data.OutboundArrivingAt = utility.ParseWallClockTime(extractedData.OutboundArrivingAt)
 			data.InboundDepartingLocation = extractedData.InboundDepartingLocation
 			data.InboundArrivingLocation = extractedData.InboundArrivingLocation
-			data.InboundDepartingAt = parseLegTimeStr(extractedData.InboundDepartingAt)
-			data.InboundArrivingAt = parseLegTimeStr(extractedData.InboundArrivingAt)
+			data.InboundDepartingAt = utility.ParseWallClockTime(extractedData.InboundDepartingAt)
+			data.InboundArrivingAt = utility.ParseWallClockTime(extractedData.InboundArrivingAt)
+
+			data.OutboundDurationMinutes = utility.ParseDurationMinutes(extractedData.OutboundDurationMinutes)
+			data.InboundDurationMinutes = utility.ParseDurationMinutes(extractedData.InboundDurationMinutes)
 		} else {
 			data.Title = "Uploaded Image"
 			data.Url = url
@@ -85,25 +88,12 @@ func (svc *accomodationServiceImpl) CreateTransport(ctx context.Context, url str
 		data.InboundArrivingLocation = extractedData.InboundArrivingLocation
 		data.InboundDepartingAt = extractedData.InboundDepartingAt
 		data.InboundArrivingAt = extractedData.InboundArrivingAt
+
+		data.OutboundDurationMinutes = extractedData.OutboundDurationMinutes
+		data.InboundDurationMinutes = extractedData.InboundDurationMinutes
 	}
 
 	return svc.repo.CreateTransport(ctx, &data)
-}
-
-func parseLegTimeStr(s *string) *time.Time {
-	if s == nil || *s == "" {
-		return nil
-	}
-	layouts := []string{time.RFC3339, time.RFC3339Nano, "2006-01-02T15:04:05", "2006-01-02 15:04:05Z07:00", "2006-01-02 15:04:05"}
-	for _, layout := range layouts {
-		if t, err := time.Parse(layout, *s); err == nil {
-			// Wall-clock: keep Y/M/D H:M:S components, re-anchor as UTC so the
-			// value survives timezone conversions unchanged (14:30 stays 14:30).
-			wall := time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), 0, time.UTC)
-			return &wall
-		}
-	}
-	return nil
 }
 
 func (svc *accomodationServiceImpl) GetTransportById(ctx context.Context, uuid string) (*AggregatedTransport, error) {

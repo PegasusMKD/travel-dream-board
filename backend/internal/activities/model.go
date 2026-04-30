@@ -1,8 +1,11 @@
 package activities
 
 import (
+	"time"
+
 	"github.com/PegasusMKD/travel-dream-board/internal/comments"
 	"github.com/PegasusMKD/travel-dream-board/internal/db"
+	"github.com/PegasusMKD/travel-dream-board/internal/utility"
 	"github.com/PegasusMKD/travel-dream-board/internal/votes"
 )
 
@@ -19,6 +22,9 @@ type Activity struct {
 	UserUuid         string              `json:"user_uuid"`
 	AvgRating        float64             `json:"avg_rating"`
 	RatingCount      int32               `json:"rating_count"`
+
+	StartAt *time.Time `json:"start_at"`
+	EndAt   *time.Time `json:"end_at"`
 }
 
 func FromEntity(entity db.Activity) *Activity {
@@ -33,6 +39,8 @@ func FromEntity(entity db.Activity) *Activity {
 		BookingReference: entity.BookingReference,
 		Selected:         entity.Selected,
 		UserUuid:         entity.UserUuid.String(),
+		StartAt:          utility.TimePtrFromTimestamptz(entity.StartAt),
+		EndAt:            utility.TimePtrFromTimestamptz(entity.EndAt),
 	}
 }
 
@@ -50,6 +58,8 @@ func FromGetActivityRow(entity db.GetActivityByUuidRow) *Activity {
 		UserUuid:         entity.UserUuid.String(),
 		AvgRating:        entity.AvgRating,
 		RatingCount:      entity.RatingCount,
+		StartAt:          utility.TimePtrFromTimestamptz(entity.StartAt),
+		EndAt:            utility.TimePtrFromTimestamptz(entity.EndAt),
 	}
 }
 
@@ -67,6 +77,8 @@ func FromFindActivitiesRow(entity db.FindAllActivitiesByBoardUuidRow) *Activity 
 		UserUuid:         entity.UserUuid.String(),
 		AvgRating:        entity.AvgRating,
 		RatingCount:      entity.RatingCount,
+		StartAt:          utility.TimePtrFromTimestamptz(entity.StartAt),
+		EndAt:            utility.TimePtrFromTimestamptz(entity.EndAt),
 	}
 }
 

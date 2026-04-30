@@ -44,6 +44,8 @@ func (repo *repositoryImpl) CreateActivity(ctx context.Context, data *Activity) 
 		ImageUrl:  data.ImageUrl,
 		BoardUuid: boardUuid,
 		UserUuid:  userUuid,
+		StartAt:   utility.TimestamptzFromTime(data.StartAt),
+		EndAt:     utility.TimestamptzFromTime(data.EndAt),
 	}
 
 	entity, err := repo.queries.CreateActivity(ctx, params)
@@ -108,6 +110,8 @@ func (repo *repositoryImpl) UpdateActivityById(ctx context.Context, uuid string,
 		BookingReference: data.BookingReference,
 		Selected:         data.Selected,
 		Uuid:             id,
+		StartAt:          utility.TimestamptzFromTime(data.StartAt),
+		EndAt:            utility.TimestamptzFromTime(data.EndAt),
 	}
 
 	return repo.queries.UpdateActivityByUuid(ctx, params)

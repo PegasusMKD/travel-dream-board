@@ -8,16 +8,16 @@
 - [x] Expand the scraping logic to include those fields if possible? — OG/JSON-LD don't carry leg data in practice, so values come from Claude (text or image). `ScrapeResult` carries parsed `*time.Time` through to the transport service.
 - [x] Should be manually editable — `ItemDetailSidebar` gets an Outbound + Return panel (4 inputs each: From, To, Departure, Arrival) when `sectionType === 'transport'`, plus a compact read-only summary with route arrow + formatted date/time.
 
-### Expand Activities - Start and End Times
-- [ ] Add fields on Activities for the exact start and end times
-- [ ] Expand the LLM tools to be able to parse that information from an image (or as a fallback)
-- [ ] Expand the scraping logic to include those fields if possible?
-- [ ] Should be manually enterable if you open the edit window
+### Expand Activities - Start and End Times ✅
+- [x] Add fields on Activities for the exact start and end times — `start_at` / `end_at` timestamptz columns added in migration `000014_add_activity_times`. Plumbed through the Activity model, repository, and service via the shared `utility.TimestamptzFromTime` / `utility.TimePtrFromTimestamptz` helpers.
+- [x] Expand the LLM tools to be able to parse that information from an image (or as a fallback) — `extractionSchema()` extended with `start_at` / `end_at` properties; both `fallbackToClaude` (text) and `ExtractFromImage` prompts now hint at activities/events.
+- [x] Expand the scraping logic to include those fields if possible? — OG/JSON-LD don't carry event times in practice, so values come from Claude. `ScrapeResult` carries parsed `*time.Time` through to the activity service. Wall-clock parser promoted to `utility.ParseWallClockTime` and reused by transport too.
+- [x] Should be manually enterable if you open the edit window — `ItemDetailSidebar` gets an `ActivityTimeEditor` (Start + End `datetime-local` inputs) when `sectionType === 'activities'`, plus an `ActivityTimeSummary` read-only row.
 
-### Expand Transport - Total Journey Length
-- [ ] Add fields on Transport for total journey length
-- [ ] Expand the LLM tools to be able to parse that information from an image (or as a fallback)
-- [ ] Expand the scraping logic to include those fields if possible?
+### Expand Transport - Total Journey Length ✅
+- [x] Add fields on Transport for total journey length — `outbound_duration_minutes` / `inbound_duration_minutes` int columns added in migration `000015_add_transport_durations`. Stored as integer minutes (e.g. 225 = 3h 45m); covers layovers/multi-stop. Plumbed through transport model, repo, and service.
+- [x] Expand the LLM tools to be able to parse that information from an image (or as a fallback) — `extractionSchema()` extended with two integer properties; both text and image prompts now ask for total leg duration in minutes alongside locations and datetimes.
+- [x] Expand the scraping logic to include those fields if possible? — OG/JSON-LD don't carry leg durations, so values come from Claude. `ScrapeResult` carries `*int32` durations through to the transport service. Sidebar shows formatted "Xh Ym" in the leg summary and exposes a number input in the editor.
 
 
 ### Expand Activities - Location

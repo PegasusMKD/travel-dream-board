@@ -1,6 +1,12 @@
 -- name: CreateActivity :one
-insert into activities (url, title, image_url, board_uuid, user_uuid)
-values (@url, @title, @image_url, @board_uuid, @user_uuid)
+insert into activities (
+    url, title, image_url, board_uuid, user_uuid,
+    start_at, end_at
+)
+values (
+    @url, @title, @image_url, @board_uuid, @user_uuid,
+    @start_at, @end_at
+)
 returning *;
 
 -- name: GetActivityByUuid :one
@@ -29,7 +35,9 @@ set url = @url,
     notes = @notes,
     status = @status,
     booking_reference = @booking_reference,
-    selected = @selected
+    selected = @selected,
+    start_at = @start_at,
+    end_at = @end_at
 where uuid = @uuid;
 
 

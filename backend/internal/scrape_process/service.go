@@ -11,6 +11,7 @@ import (
 
 	"github.com/PegasusMKD/travel-dream-board/internal/db"
 	scrapeaudit "github.com/PegasusMKD/travel-dream-board/internal/scrape_audit"
+	"github.com/PegasusMKD/travel-dream-board/internal/utility"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/sashabaranov/go-openai"
 	"github.com/sashabaranov/go-openai/jsonschema"
@@ -218,7 +219,7 @@ func (s *scrapeProcessServiceImpl) fallbackToClaude(ctx context.Context, uuid st
 		Messages: []openai.ChatCompletionMessage{
 			{
 				Role:    openai.ChatMessageRoleUser,
-				Content: "Extract the details from this text. The text is from the URL: " + actualUrl + ". If the text looks like an error message (like 'Free subscription plan' or bot protection), ignore the text and infer the brand name (e.g., 'Google Flights', 'Austrian Airlines') from the URL. Never output <UNKNOWN>. If this page describes transport (flight, train, bus) with a round-trip booking, populate both the outbound and inbound legs (locations and ISO 8601 datetimes). For one-way trips, leave all inbound_* fields null. " + text,
+				Content: "Extract the details from this text. The text is from the URL: " + actualUrl + ". If the text looks like an error message (like 'Free subscription plan' or bot protection), ignore the text and infer the brand name (e.g., 'Google Flights', 'Austrian Airlines') from the URL. Never output <UNKNOWN>. If this page describes transport (flight, train, bus) with a round-trip booking, populate both the outbound and inbound legs (locations, ISO 8601 datetimes, and total duration in minutes). For one-way trips, leave all inbound_* fields null. If this page describes an activity or event (tour, concert, museum visit, etc.), populate start_at and end_at if shown. " + text,
 			},
 		},
 		Tools: []openai.Tool{
@@ -250,6 +251,7 @@ func (s *scrapeProcessServiceImpl) fallbackToClaude(ctx context.Context, uuid st
 	if len(resp.Choices) > 0 && len(resp.Choices[0].Message.ToolCalls) > 0 {
 		toolCall := resp.Choices[0].Message.ToolCalls[0]
 		if toolCall.Function.Name == "extract_page_details" {
+			log.Info("Claude text extraction raw output", "args", toolCall.Function.Arguments)
 			var extracted AIExtraction
 			if err := json.Unmarshal([]byte(toolCall.Function.Arguments), &extracted); err == nil {
 				if (out.Title == nil || *out.Title == "") && extracted.Title != "" {
@@ -273,6 +275,12 @@ func (s *scrapeProcessServiceImpl) fallbackToClaude(ctx context.Context, uuid st
 				out.InboundArrivingLocation = extracted.InboundArrivingLocation
 				out.InboundDepartingAt = parseLegTime(extracted.InboundDepartingAt)
 				out.InboundArrivingAt = parseLegTime(extracted.InboundArrivingAt)
+
+				out.StartAt = parseLegTime(extracted.StartAt)
+				out.EndAt = parseLegTime(extracted.EndAt)
+
+				out.OutboundDurationMinutes = utility.ParseDurationMinutes(extracted.OutboundDurationMinutes)
+				out.InboundDurationMinutes = utility.ParseDurationMinutes(extracted.InboundDurationMinutes)
 			}
 		}
 	}
@@ -325,6 +333,7 @@ func (s *scrapeProcessServiceImpl) ExtractFromImage(ctx context.Context, urlStr 
 	if len(resp.Choices) > 0 && len(resp.Choices[0].Message.ToolCalls) > 0 {
 		toolCall := resp.Choices[0].Message.ToolCalls[0]
 		if toolCall.Function.Name == "extract_page_details" {
+			log.Info("Claude image extraction raw output", "args", toolCall.Function.Arguments)
 			var extracted AIExtraction
 			if err := json.Unmarshal([]byte(toolCall.Function.Arguments), &extracted); err == nil {
 				if auditRecord != nil {
@@ -354,7 +363,7 @@ func (s *scrapeProcessServiceImpl) imageExtractionClaudeConfig(dataUrl string) o
 				MultiContent: []openai.ChatMessagePart{
 					{
 						Type: openai.ChatMessagePartTypeText,
-						Text: "Extract the details from this image. If it depicts transport (flight, train, bus), populate the outbound and (if round-trip) inbound leg locations and ISO 8601 datetimes. For one-way trips, leave all inbound_* fields null.",
+						Text: "Extract the details from this image. If it depicts transport (flight, train, bus), populate the outbound and (if round-trip) inbound leg locations, ISO 8601 datetimes, and total duration in minutes. For one-way trips, leave all inbound_* fields null. If it depicts an activity or event (tour, concert, museum visit, etc.), populate start_at and end_at if shown.",
 					},
 					{
 						Type: openai.ChatMessagePartTypeImageURL,
@@ -432,6 +441,22 @@ func extractionSchema() jsonschema.Definition {
 				Type:        jsonschema.String,
 				Description: "Return/inbound arrival date and time (YYYY-MM-DDTHH:MM:SS, no timezone offset — wall-clock at the arrival location). Null if one-way or not shown.",
 			},
+			"start_at": {
+				Type:        jsonschema.String,
+				Description: "Activity/event start date and time as shown on the ticket/page. Use ISO 8601 local format YYYY-MM-DDTHH:MM:SS with NO timezone offset — wall-clock time at the venue. Null if not an activity or not shown.",
+			},
+			"end_at": {
+				Type:        jsonschema.String,
+				Description: "Activity/event end date and time (YYYY-MM-DDTHH:MM:SS, no timezone offset — wall-clock at the venue). Null if not an activity or not shown.",
+			},
+			"outbound_duration_minutes": {
+				Type:        jsonschema.String,
+				Description: "Total duration of the outbound transport leg expressed as integer minutes in a numeric string (e.g. '225' for 3h 45m). Includes layovers if multi-stop. Null if not a transport page or not shown.",
+			},
+			"inbound_duration_minutes": {
+				Type:        jsonschema.String,
+				Description: "Total duration of the inbound/return transport leg as integer minutes in a numeric string (e.g. '225'). Null if one-way or not shown.",
+			},
 		},
 		Required: []string{"title", "description", "image_url"},
 	}
@@ -441,7 +466,15 @@ func parseLegTime(s *string) *time.Time {
 	if s == nil || *s == "" {
 		return nil
 	}
-	layouts := []string{time.RFC3339, time.RFC3339Nano, "2006-01-02T15:04:05", "2006-01-02 15:04:05Z07:00", "2006-01-02 15:04:05"}
+	layouts := []string{
+		time.RFC3339,
+		time.RFC3339Nano,
+		"2006-01-02T15:04:05",
+		"2006-01-02T15:04",
+		"2006-01-02 15:04:05Z07:00",
+		"2006-01-02 15:04:05",
+		"2006-01-02 15:04",
+	}
 	for _, layout := range layouts {
 		if t, err := time.Parse(layout, *s); err == nil {
 			// Wall-clock: discard offset, re-anchor components as UTC so

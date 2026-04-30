@@ -18,6 +18,7 @@ import {
   Check,
   ArrowRight,
   CornerUpLeft,
+  Clock,
 } from 'lucide-react'
 import StatusBadge from './StatusBadge'
 import { useLang } from '../context/LanguageContext'
@@ -150,6 +151,10 @@ export default function ItemDetailSidebar({
         inboundArrivingLocation: draft.inboundArrivingLocation,
         inboundDepartingAt: fromDatetimeLocalValue(draft.inboundDepartingAt),
         inboundArrivingAt: fromDatetimeLocalValue(draft.inboundArrivingAt),
+        startAt: fromDatetimeLocalValue(draft.startAt),
+        endAt: fromDatetimeLocalValue(draft.endAt),
+        outboundDurationMinutes: parseDurationMinutes(draft.outboundDurationMinutes),
+        inboundDurationMinutes: parseDurationMinutes(draft.inboundDurationMinutes),
       })
       await itemApi.update(item.id, payload)
       await reloadItem()
@@ -566,10 +571,12 @@ function ItemSidebarBody({
                 toValue={draft.outboundArrivingLocation}
                 departValue={draft.outboundDepartingAt}
                 arriveValue={draft.outboundArrivingAt}
+                durationValue={draft.outboundDurationMinutes}
                 onFrom={(v) => updateDraft('outboundDepartingLocation', v)}
                 onTo={(v) => updateDraft('outboundArrivingLocation', v)}
                 onDepart={(v) => updateDraft('outboundDepartingAt', v)}
                 onArrive={(v) => updateDraft('outboundArrivingAt', v)}
+                onDuration={(v) => updateDraft('outboundDurationMinutes', v)}
                 t={t}
               />
               <TransportLegEditor
@@ -580,10 +587,12 @@ function ItemSidebarBody({
                 toValue={draft.inboundArrivingLocation}
                 departValue={draft.inboundDepartingAt}
                 arriveValue={draft.inboundArrivingAt}
+                durationValue={draft.inboundDurationMinutes}
                 onFrom={(v) => updateDraft('inboundDepartingLocation', v)}
                 onTo={(v) => updateDraft('inboundArrivingLocation', v)}
                 onDepart={(v) => updateDraft('inboundDepartingAt', v)}
                 onArrive={(v) => updateDraft('inboundArrivingAt', v)}
+                onDuration={(v) => updateDraft('inboundDurationMinutes', v)}
                 t={t}
               />
             </div>
@@ -597,6 +606,7 @@ function ItemSidebarBody({
                   to={item.outboundArrivingLocation}
                   departAt={item.outboundDepartingAt}
                   arriveAt={item.outboundArrivingAt}
+                  durationMinutes={item.outboundDurationMinutes}
                   t={t}
                 />
                 <LegSummary
@@ -606,9 +616,27 @@ function ItemSidebarBody({
                   to={item.inboundArrivingLocation}
                   departAt={item.inboundDepartingAt}
                   arriveAt={item.inboundArrivingAt}
+                  durationMinutes={item.inboundDurationMinutes}
                   t={t}
                 />
               </div>
+            )
+          )
+        )}
+
+        {/* Activity start + end times */}
+        {sectionType === 'activities' && (
+          editing ? (
+            <ActivityTimeEditor
+              startValue={draft.startAt}
+              endValue={draft.endAt}
+              onStart={(v) => updateDraft('startAt', v)}
+              onEnd={(v) => updateDraft('endAt', v)}
+              t={t}
+            />
+          ) : (
+            (item.startAt || item.endAt) && (
+              <ActivityTimeSummary startAt={item.startAt} endAt={item.endAt} t={t} />
             )
           )
         )}
@@ -870,6 +898,10 @@ function buildDraft(item) {
     inboundArrivingLocation: item?.inboundArrivingLocation || '',
     inboundDepartingAt: toDatetimeLocalValue(item?.inboundDepartingAt),
     inboundArrivingAt: toDatetimeLocalValue(item?.inboundArrivingAt),
+    startAt: toDatetimeLocalValue(item?.startAt),
+    endAt: toDatetimeLocalValue(item?.endAt),
+    outboundDurationMinutes: item?.outboundDurationMinutes != null ? String(item.outboundDurationMinutes) : '',
+    inboundDurationMinutes: item?.inboundDurationMinutes != null ? String(item.inboundDurationMinutes) : '',
   }
 }
 
@@ -904,13 +936,31 @@ function hasAnyLegData(item) {
     item.inboundDepartingLocation ||
     item.inboundArrivingLocation ||
     item.inboundDepartingAt ||
-    item.inboundArrivingAt
+    item.inboundArrivingAt ||
+    item.outboundDurationMinutes != null ||
+    item.inboundDurationMinutes != null
   )
 }
 
+function parseDurationMinutes(s) {
+  if (s == null || s === '') return null
+  const n = parseInt(s, 10)
+  if (Number.isNaN(n) || n < 0) return null
+  return n
+}
+
+function formatDurationMinutes(mins) {
+  if (mins == null || mins < 0) return null
+  const h = Math.floor(mins / 60)
+  const m = mins % 60
+  if (h && m) return `${h}h ${m}m`
+  if (h) return `${h}h`
+  return `${m}m`
+}
+
 function TransportLegEditor({
-  title, icon: Icon, hint, fromValue, toValue, departValue, arriveValue,
-  onFrom, onTo, onDepart, onArrive, t,
+  title, icon: Icon, hint, fromValue, toValue, departValue, arriveValue, durationValue,
+  onFrom, onTo, onDepart, onArrive, onDuration, t,
 }) {
   const inputClass = 'w-full text-sm text-text-primary bg-surface-50 border border-surface-200 rounded-xl px-3 py-2 focus:outline-none focus:border-accent-400 focus:ring-2 focus:ring-accent-100 placeholder:text-text-muted transition-colors'
   const labelClass = 'text-[11px] font-semibold text-text-tertiary uppercase tracking-wider mb-1 block'
@@ -938,13 +988,24 @@ function TransportLegEditor({
           <label className={labelClass}>{t.transportArrival}</label>
           <input type="datetime-local" value={arriveValue} onChange={(e) => onArrive(e.target.value)} className={inputClass} />
         </div>
+        <div className="col-span-2">
+          <label className={labelClass}>{t.transportDuration}</label>
+          <input
+            type="number"
+            min="0"
+            value={durationValue}
+            onChange={(e) => onDuration(e.target.value)}
+            placeholder={t.transportDurationPlaceholder}
+            className={inputClass}
+          />
+        </div>
       </div>
     </div>
   )
 }
 
-function LegSummary({ icon: Icon, label, from, to, departAt, arriveAt, t }) {
-  if (!from && !to && !departAt && !arriveAt) return null
+function LegSummary({ icon: Icon, label, from, to, departAt, arriveAt, durationMinutes, t }) {
+  if (!from && !to && !departAt && !arriveAt && durationMinutes == null) return null
 
   const formatWhen = (iso) => {
     if (!iso) return null
@@ -957,17 +1018,23 @@ function LegSummary({ icon: Icon, label, from, to, departAt, arriveAt, t }) {
 
   const depart = formatWhen(departAt)
   const arrive = formatWhen(arriveAt)
+  const duration = formatDurationMinutes(durationMinutes)
 
   return (
     <div className="flex items-start gap-2.5 text-sm bg-surface-50 rounded-xl px-3 py-2.5">
       <Icon className="w-4 h-4 text-accent-500 mt-0.5 shrink-0" />
       <div className="min-w-0 flex-1">
         <div className="text-[11px] font-semibold text-text-tertiary uppercase tracking-wider mb-0.5">{label}</div>
-        {(from || to) && (
+        {(from || to || duration) && (
           <div className="flex items-center gap-1.5 text-text-primary font-medium">
             <span className="truncate">{from || '—'}</span>
             <ArrowRight className="w-3.5 h-3.5 text-text-muted shrink-0" />
             <span className="truncate">{to || '—'}</span>
+            {duration && (
+              <span className="ml-auto text-xs font-normal text-text-tertiary shrink-0">
+                {duration}
+              </span>
+            )}
           </div>
         )}
         {(depart || arrive) && (
@@ -977,6 +1044,55 @@ function LegSummary({ icon: Icon, label, from, to, departAt, arriveAt, t }) {
             <span>{arrive || '—'}</span>
           </div>
         )}
+      </div>
+    </div>
+  )
+}
+
+function ActivityTimeEditor({ startValue, endValue, onStart, onEnd, t }) {
+  const inputClass = 'w-full text-sm text-text-primary bg-surface-50 border border-surface-200 rounded-xl px-3 py-2 focus:outline-none focus:border-accent-400 focus:ring-2 focus:ring-accent-100 placeholder:text-text-muted transition-colors'
+  const labelClass = 'text-[11px] font-semibold text-text-tertiary uppercase tracking-wider mb-1 block'
+  return (
+    <div className="border border-surface-200 rounded-xl p-3 space-y-3">
+      <div className="flex items-center gap-2">
+        <Clock className="w-4 h-4 text-accent-500" />
+        <span className="text-xs font-bold text-text-primary uppercase tracking-wider">{t.activityWhen}</span>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className={labelClass}>{t.activityStart}</label>
+          <input type="datetime-local" value={startValue} onChange={(e) => onStart(e.target.value)} className={inputClass} />
+        </div>
+        <div>
+          <label className={labelClass}>{t.activityEnd}</label>
+          <input type="datetime-local" value={endValue} onChange={(e) => onEnd(e.target.value)} className={inputClass} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ActivityTimeSummary({ startAt, endAt, t }) {
+  const formatWhen = (iso) => {
+    if (!iso) return null
+    const d = new Date(iso)
+    if (isNaN(d.getTime())) return null
+    return d.toLocaleString(undefined, {
+      day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
+    })
+  }
+  const start = formatWhen(startAt)
+  const end = formatWhen(endAt)
+  return (
+    <div className="flex items-start gap-2.5 text-sm bg-surface-50 rounded-xl px-3 py-2.5">
+      <Clock className="w-4 h-4 text-accent-500 mt-0.5 shrink-0" />
+      <div className="min-w-0 flex-1">
+        <div className="text-[11px] font-semibold text-text-tertiary uppercase tracking-wider mb-0.5">{t.activityWhen}</div>
+        <div className="flex items-center gap-1.5 text-text-primary font-medium">
+          <span>{start || '—'}</span>
+          <ArrowRight className="w-3.5 h-3.5 text-text-muted shrink-0" />
+          <span>{end || '—'}</span>
+        </div>
       </div>
     </div>
   )

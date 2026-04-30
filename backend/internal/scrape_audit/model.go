@@ -51,4 +51,10 @@ type ScrapeResult struct {
 	InboundArrivingLocation   *string
 	InboundDepartingAt        *time.Time
 	InboundArrivingAt         *time.Time
+
+	StartAt *time.Time
+	EndAt   *time.Time
+
+	OutboundDurationMinutes *int32
+	InboundDurationMinutes  *int32
 }

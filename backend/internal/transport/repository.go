@@ -53,6 +53,9 @@ func (repo *repositoryImpl) CreateTransport(ctx context.Context, data *Transport
 		InboundArrivingLocation:   data.InboundArrivingLocation,
 		InboundDepartingAt:        utility.TimestamptzFromTime(data.InboundDepartingAt),
 		InboundArrivingAt:         utility.TimestamptzFromTime(data.InboundArrivingAt),
+
+		OutboundDurationMinutes: data.OutboundDurationMinutes,
+		InboundDurationMinutes:  data.InboundDurationMinutes,
 	}
 
 	entity, err := repo.queries.CreateTransport(ctx, params)
@@ -126,6 +129,9 @@ func (repo *repositoryImpl) UpdateTransportById(ctx context.Context, uuid string
 		InboundArrivingLocation:   data.InboundArrivingLocation,
 		InboundDepartingAt:        utility.TimestamptzFromTime(data.InboundDepartingAt),
 		InboundArrivingAt:         utility.TimestamptzFromTime(data.InboundArrivingAt),
+
+		OutboundDurationMinutes: data.OutboundDurationMinutes,
+		InboundDurationMinutes:  data.InboundDurationMinutes,
 	}
 
 	return repo.queries.UpdateTransportByUuid(ctx, params)

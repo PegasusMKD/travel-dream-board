@@ -12,7 +12,9 @@ insert into transport (
     inbound_departing_location,
     inbound_arriving_location,
     inbound_departing_at,
-    inbound_arriving_at
+    inbound_arriving_at,
+    outbound_duration_minutes,
+    inbound_duration_minutes
 )
 values (
     @url,
@@ -27,7 +29,9 @@ values (
     @inbound_departing_location,
     @inbound_arriving_location,
     @inbound_departing_at,
-    @inbound_arriving_at
+    @inbound_arriving_at,
+    @outbound_duration_minutes,
+    @inbound_duration_minutes
 )
 returning *;
 
@@ -65,7 +69,9 @@ set url = @url,
     inbound_departing_location = @inbound_departing_location,
     inbound_arriving_location = @inbound_arriving_location,
     inbound_departing_at = @inbound_departing_at,
-    inbound_arriving_at = @inbound_arriving_at
+    inbound_arriving_at = @inbound_arriving_at,
+    outbound_duration_minutes = @outbound_duration_minutes,
+    inbound_duration_minutes = @inbound_duration_minutes
 where uuid = @uuid;
 
 

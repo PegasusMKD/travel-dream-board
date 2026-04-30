@@ -6,6 +6,7 @@ import (
 	"github.com/PegasusMKD/travel-dream-board/internal/comments"
 	"github.com/PegasusMKD/travel-dream-board/internal/db"
 	scrapeprocess "github.com/PegasusMKD/travel-dream-board/internal/scrape_process"
+	"github.com/PegasusMKD/travel-dream-board/internal/utility"
 	"github.com/PegasusMKD/travel-dream-board/internal/votes"
 )
 
@@ -53,6 +54,9 @@ func (svc *accomodationServiceImpl) CreateActivity(ctx context.Context, url stri
 			data.Title = extractedData.Title
 			data.Url = url
 			data.ImageUrl = &url
+
+			data.StartAt = utility.ParseWallClockTime(extractedData.StartAt)
+			data.EndAt = utility.ParseWallClockTime(extractedData.EndAt)
 		} else {
 			data.Title = "Uploaded Image"
 			data.Url = url
@@ -66,6 +70,9 @@ func (svc *accomodationServiceImpl) CreateActivity(ctx context.Context, url stri
 		data.Url = url
 		data.Title = *extractedData.Title
 		data.ImageUrl = extractedData.ImageUrl
+
+		data.StartAt = extractedData.StartAt
+		data.EndAt = extractedData.EndAt
 	}
 
 	return svc.repo.CreateActivity(ctx, &data)

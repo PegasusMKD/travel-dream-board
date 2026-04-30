@@ -31,6 +31,9 @@ type Transport struct {
 	InboundArrivingLocation   *string    `json:"inbound_arriving_location"`
 	InboundDepartingAt        *time.Time `json:"inbound_departing_at"`
 	InboundArrivingAt         *time.Time `json:"inbound_arriving_at"`
+
+	OutboundDurationMinutes *int32 `json:"outbound_duration_minutes"`
+	InboundDurationMinutes  *int32 `json:"inbound_duration_minutes"`
 }
 
 func FromEntity(entity db.Transport) *Transport {
@@ -54,6 +57,9 @@ func FromEntity(entity db.Transport) *Transport {
 		InboundArrivingLocation:   entity.InboundArrivingLocation,
 		InboundDepartingAt:        utility.TimePtrFromTimestamptz(entity.InboundDepartingAt),
 		InboundArrivingAt:         utility.TimePtrFromTimestamptz(entity.InboundArrivingAt),
+
+		OutboundDurationMinutes: entity.OutboundDurationMinutes,
+		InboundDurationMinutes:  entity.InboundDurationMinutes,
 	}
 }
 
@@ -80,6 +86,9 @@ func FromGetTransportRow(entity db.GetTransportByUuidRow) *Transport {
 		InboundArrivingLocation:   entity.InboundArrivingLocation,
 		InboundDepartingAt:        utility.TimePtrFromTimestamptz(entity.InboundDepartingAt),
 		InboundArrivingAt:         utility.TimePtrFromTimestamptz(entity.InboundArrivingAt),
+
+		OutboundDurationMinutes: entity.OutboundDurationMinutes,
+		InboundDurationMinutes:  entity.InboundDurationMinutes,
 	}
 }
 
@@ -106,6 +115,9 @@ func FromFindTransportRow(entity db.FindAllTransportByBoardUuidRow) *Transport {
 		InboundArrivingLocation:   entity.InboundArrivingLocation,
 		InboundDepartingAt:        utility.TimePtrFromTimestamptz(entity.InboundDepartingAt),
 		InboundArrivingAt:         utility.TimePtrFromTimestamptz(entity.InboundArrivingAt),
+
+		OutboundDurationMinutes: entity.OutboundDurationMinutes,
+		InboundDurationMinutes:  entity.InboundDurationMinutes,
 	}
 }
 

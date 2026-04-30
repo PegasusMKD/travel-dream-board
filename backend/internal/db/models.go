@@ -349,6 +349,8 @@ type Activity struct {
 	Selected         bool
 	BoardUuid        pgtype.UUID
 	UserUuid         pgtype.UUID
+	StartAt          pgtype.Timestamptz
+	EndAt            pgtype.Timestamptz
 }
 
 type Board struct {
@@ -424,6 +426,8 @@ type Transport struct {
 	InboundArrivingLocation   *string
 	InboundDepartingAt        pgtype.Timestamptz
 	InboundArrivingAt         pgtype.Timestamptz
+	OutboundDurationMinutes   *int32
+	InboundDurationMinutes    *int32
 }
 
 type User struct {

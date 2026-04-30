@@ -11,7 +11,8 @@
       "Bash(command -v sqlc)",
       "Bash(sqlc generate *)",
       "Bash(echo \"EXIT=$?\")",
-      "Bash(make sqlc-generate *)"
+      "Bash(make sqlc-generate *)",
+      "Bash(make migrate-create *)"
     ]
   }
 }

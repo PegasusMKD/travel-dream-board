@@ -115,6 +115,13 @@ export const translations = {
     transportDeparture: 'Odlot',
     transportArrival: 'Przylot',
     transportInboundHint: 'Puste dla biletu w jedną stronę',
+    transportDuration: 'Czas podróży',
+    transportDurationPlaceholder: 'Czas w minutach (np. 225)',
+
+    // Activity times
+    activityWhen: 'Kiedy',
+    activityStart: 'Początek',
+    activityEnd: 'Koniec',
 
     // Edit board
     editBoard: 'Edytuj tablicę',
@@ -290,6 +297,13 @@ export const translations = {
     transportDeparture: 'Departure',
     transportArrival: 'Arrival',
     transportInboundHint: 'Leave blank for one-way',
+    transportDuration: 'Duration',
+    transportDurationPlaceholder: 'Total minutes (e.g. 225)',
+
+    // Activity times
+    activityWhen: 'When',
+    activityStart: 'Start',
+    activityEnd: 'End',
 
     // Edit board
     editBoard: 'Edit board',
