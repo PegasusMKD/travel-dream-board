@@ -1,6 +1,34 @@
 -- name: CreateTransport :one
-insert into transport (url, title, image_url, board_uuid, user_uuid)
-values (@url, @title, @image_url, @board_uuid, @user_uuid)
+insert into transport (
+    url,
+    title,
+    image_url,
+    board_uuid,
+    user_uuid,
+    outbound_departing_location,
+    outbound_arriving_location,
+    outbound_departing_at,
+    outbound_arriving_at,
+    inbound_departing_location,
+    inbound_arriving_location,
+    inbound_departing_at,
+    inbound_arriving_at
+)
+values (
+    @url,
+    @title,
+    @image_url,
+    @board_uuid,
+    @user_uuid,
+    @outbound_departing_location,
+    @outbound_arriving_location,
+    @outbound_departing_at,
+    @outbound_arriving_at,
+    @inbound_departing_location,
+    @inbound_arriving_location,
+    @inbound_departing_at,
+    @inbound_arriving_at
+)
 returning *;
 
 -- name: GetTransportByUuid :one
@@ -29,7 +57,15 @@ set url = @url,
     notes = @notes,
     status = @status,
     booking_reference = @booking_reference,
-    selected = @selected
+    selected = @selected,
+    outbound_departing_location = @outbound_departing_location,
+    outbound_arriving_location = @outbound_arriving_location,
+    outbound_departing_at = @outbound_departing_at,
+    outbound_arriving_at = @outbound_arriving_at,
+    inbound_departing_location = @inbound_departing_location,
+    inbound_arriving_location = @inbound_arriving_location,
+    inbound_departing_at = @inbound_departing_at,
+    inbound_arriving_at = @inbound_arriving_at
 where uuid = @uuid;
 
 

@@ -404,18 +404,26 @@ type ShareToken struct {
 }
 
 type Transport struct {
-	Uuid             pgtype.UUID
-	UpdatedAt        pgtype.Timestamp
-	CreatedAt        pgtype.Timestamp
-	Url              string
-	Title            string
-	ImageUrl         *string
-	Notes            *string
-	Status           TransportStatus
-	BookingReference *string
-	Selected         bool
-	BoardUuid        pgtype.UUID
-	UserUuid         pgtype.UUID
+	Uuid                      pgtype.UUID
+	UpdatedAt                 pgtype.Timestamp
+	CreatedAt                 pgtype.Timestamp
+	Url                       string
+	Title                     string
+	ImageUrl                  *string
+	Notes                     *string
+	Status                    TransportStatus
+	BookingReference          *string
+	Selected                  bool
+	BoardUuid                 pgtype.UUID
+	UserUuid                  pgtype.UUID
+	OutboundDepartingLocation *string
+	OutboundArrivingLocation  *string
+	OutboundDepartingAt       pgtype.Timestamptz
+	OutboundArrivingAt        pgtype.Timestamptz
+	InboundDepartingLocation  *string
+	InboundArrivingLocation   *string
+	InboundDepartingAt        pgtype.Timestamptz
+	InboundArrivingAt         pgtype.Timestamptz
 }
 
 type User struct {

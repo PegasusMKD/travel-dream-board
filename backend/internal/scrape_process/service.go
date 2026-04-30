@@ -218,7 +218,7 @@ func (s *scrapeProcessServiceImpl) fallbackToClaude(ctx context.Context, uuid st
 		Messages: []openai.ChatCompletionMessage{
 			{
 				Role:    openai.ChatMessageRoleUser,
-				Content: "Extract the details from this text. The text is from the URL: " + actualUrl + ". If the text looks like an error message (like 'Free subscription plan' or bot protection), ignore the text and infer the brand name (e.g., 'Google Flights', 'Austrian Airlines') from the URL. Never output <UNKNOWN>. " + text,
+				Content: "Extract the details from this text. The text is from the URL: " + actualUrl + ". If the text looks like an error message (like 'Free subscription plan' or bot protection), ignore the text and infer the brand name (e.g., 'Google Flights', 'Austrian Airlines') from the URL. Never output <UNKNOWN>. If this page describes transport (flight, train, bus) with a round-trip booking, populate both the outbound and inbound legs (locations and ISO 8601 datetimes). For one-way trips, leave all inbound_* fields null. " + text,
 			},
 		},
 		Tools: []openai.Tool{
@@ -226,25 +226,8 @@ func (s *scrapeProcessServiceImpl) fallbackToClaude(ctx context.Context, uuid st
 				Type: openai.ToolTypeFunction,
 				Function: &openai.FunctionDefinition{
 					Name:        "extract_page_details",
-					Description: "Extracts the main title, description, and primary image URL.",
-					Parameters: jsonschema.Definition{
-						Type: jsonschema.Object,
-						Properties: map[string]jsonschema.Definition{
-							"title": {
-								Type:        jsonschema.String,
-								Description: "The name of the accommodation, activity, or main product.",
-							},
-							"description": {
-								Type:        jsonschema.String,
-								Description: "A short 1-2 sentence description.",
-							},
-							"image_url": {
-								Type:        jsonschema.String,
-								Description: "The absolute URL to the main image.",
-							},
-						},
-						Required: []string{"title", "description", "image_url"},
-					},
+					Description: "Extracts the main title, description, primary image URL, and optional transport leg details.",
+					Parameters:  extractionSchema(),
 				},
 			},
 		},
@@ -281,6 +264,15 @@ func (s *scrapeProcessServiceImpl) fallbackToClaude(ctx context.Context, uuid st
 					commitedUpdate = true
 					out.ImageUrl = &extracted.ImageURL
 				}
+
+				out.OutboundDepartingLocation = extracted.OutboundDepartingLocation
+				out.OutboundArrivingLocation = extracted.OutboundArrivingLocation
+				out.OutboundDepartingAt = parseLegTime(extracted.OutboundDepartingAt)
+				out.OutboundArrivingAt = parseLegTime(extracted.OutboundArrivingAt)
+				out.InboundDepartingLocation = extracted.InboundDepartingLocation
+				out.InboundArrivingLocation = extracted.InboundArrivingLocation
+				out.InboundDepartingAt = parseLegTime(extracted.InboundDepartingAt)
+				out.InboundArrivingAt = parseLegTime(extracted.InboundArrivingAt)
 			}
 		}
 	}
@@ -362,7 +354,7 @@ func (s *scrapeProcessServiceImpl) imageExtractionClaudeConfig(dataUrl string) o
 				MultiContent: []openai.ChatMessagePart{
 					{
 						Type: openai.ChatMessagePartTypeText,
-						Text: "Extract the details from this image.",
+						Text: "Extract the details from this image. If it depicts transport (flight, train, bus), populate the outbound and (if round-trip) inbound leg locations and ISO 8601 datetimes. For one-way trips, leave all inbound_* fields null.",
 					},
 					{
 						Type: openai.ChatMessagePartTypeImageURL,
@@ -378,25 +370,8 @@ func (s *scrapeProcessServiceImpl) imageExtractionClaudeConfig(dataUrl string) o
 				Type: openai.ToolTypeFunction,
 				Function: &openai.FunctionDefinition{
 					Name:        "extract_page_details",
-					Description: "Extracts the main title, description, and primary image URL.",
-					Parameters: jsonschema.Definition{
-						Type: jsonschema.Object,
-						Properties: map[string]jsonschema.Definition{
-							"title": {
-								Type:        jsonschema.String,
-								Description: "The name of the accommodation, activity, or main product.",
-							},
-							"description": {
-								Type:        jsonschema.String,
-								Description: "A short 1-2 sentence description.",
-							},
-							"image_url": {
-								Type:        jsonschema.String,
-								Description: "The absolute URL to the main image.",
-							},
-						},
-						Required: []string{"title", "description", "image_url"},
-					},
+					Description: "Extracts the main title, description, primary image URL, and optional transport leg details.",
+					Parameters:  extractionSchema(),
 				},
 			},
 		},
@@ -407,4 +382,74 @@ func (s *scrapeProcessServiceImpl) imageExtractionClaudeConfig(dataUrl string) o
 			},
 		},
 	}
+}
+
+func extractionSchema() jsonschema.Definition {
+	return jsonschema.Definition{
+		Type: jsonschema.Object,
+		Properties: map[string]jsonschema.Definition{
+			"title": {
+				Type:        jsonschema.String,
+				Description: "The name of the accommodation, activity, transport, or main product.",
+			},
+			"description": {
+				Type:        jsonschema.String,
+				Description: "A short 1-2 sentence description.",
+			},
+			"image_url": {
+				Type:        jsonschema.String,
+				Description: "The absolute URL to the main image.",
+			},
+			"outbound_departing_location": {
+				Type:        jsonschema.String,
+				Description: "Origin (city or airport code) for the outbound/first leg of a transport booking. Null if not shown or not a transport page.",
+			},
+			"outbound_arriving_location": {
+				Type:        jsonschema.String,
+				Description: "Destination for the outbound/first leg of a transport booking. Null if not shown or not a transport page.",
+			},
+			"outbound_departing_at": {
+				Type:        jsonschema.String,
+				Description: "Outbound departure date and time as shown on the ticket/page. Use ISO 8601 local format YYYY-MM-DDTHH:MM:SS with NO timezone offset — just the wall-clock time at the departure location. Null if not shown.",
+			},
+			"outbound_arriving_at": {
+				Type:        jsonschema.String,
+				Description: "Outbound arrival date and time as shown on the ticket/page. Use ISO 8601 local format YYYY-MM-DDTHH:MM:SS with NO timezone offset — wall-clock time at the arrival location. Null if not shown.",
+			},
+			"inbound_departing_location": {
+				Type:        jsonschema.String,
+				Description: "Origin for the inbound/return leg. Null if one-way or not shown.",
+			},
+			"inbound_arriving_location": {
+				Type:        jsonschema.String,
+				Description: "Destination for the inbound/return leg. Null if one-way or not shown.",
+			},
+			"inbound_departing_at": {
+				Type:        jsonschema.String,
+				Description: "Return/inbound departure date and time (YYYY-MM-DDTHH:MM:SS, no timezone offset — wall-clock at the departure location). Null if one-way or not shown.",
+			},
+			"inbound_arriving_at": {
+				Type:        jsonschema.String,
+				Description: "Return/inbound arrival date and time (YYYY-MM-DDTHH:MM:SS, no timezone offset — wall-clock at the arrival location). Null if one-way or not shown.",
+			},
+		},
+		Required: []string{"title", "description", "image_url"},
+	}
+}
+
+func parseLegTime(s *string) *time.Time {
+	if s == nil || *s == "" {
+		return nil
+	}
+	layouts := []string{time.RFC3339, time.RFC3339Nano, "2006-01-02T15:04:05", "2006-01-02 15:04:05Z07:00", "2006-01-02 15:04:05"}
+	for _, layout := range layouts {
+		if t, err := time.Parse(layout, *s); err == nil {
+			// Wall-clock: discard offset, re-anchor components as UTC so
+			// the displayed time matches what's printed on the ticket.
+			wall := time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), 0, time.UTC)
+			return &wall
+		}
+	}
+	log.Warn("Failed parsing leg time from LLM extraction", "value", *s)
+	return nil
 }

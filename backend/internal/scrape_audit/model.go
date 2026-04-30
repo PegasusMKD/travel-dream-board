@@ -1,6 +1,10 @@
 package scrapeaudit
 
-import "github.com/PegasusMKD/travel-dream-board/internal/db"
+import (
+	"time"
+
+	"github.com/PegasusMKD/travel-dream-board/internal/db"
+)
 
 type ScrapeAudit struct {
 	Uuid string
@@ -38,4 +42,13 @@ type ScrapeResult struct {
 	Description *string
 	ImageUrl    *string
 	SiteName    *string
+
+	OutboundDepartingLocation *string
+	OutboundArrivingLocation  *string
+	OutboundDepartingAt       *time.Time
+	OutboundArrivingAt        *time.Time
+	InboundDepartingLocation  *string
+	InboundArrivingLocation   *string
+	InboundDepartingAt        *time.Time
+	InboundArrivingAt         *time.Time
 }

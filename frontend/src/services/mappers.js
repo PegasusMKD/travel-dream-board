@@ -56,6 +56,14 @@ export function mapItem(item) {
     ratingCount: item.rating_count || 0,
     votes: (item.votes || []).map(mapVote),
     comments: (item.comments || []).map(mapComment),
+    outboundDepartingLocation: item.outbound_departing_location || null,
+    outboundArrivingLocation: item.outbound_arriving_location || null,
+    outboundDepartingAt: item.outbound_departing_at || null,
+    outboundArrivingAt: item.outbound_arriving_at || null,
+    inboundDepartingLocation: item.inbound_departing_location || null,
+    inboundArrivingLocation: item.inbound_arriving_location || null,
+    inboundDepartingAt: item.inbound_departing_at || null,
+    inboundArrivingAt: item.inbound_arriving_at || null,
   }
 }
 
@@ -99,6 +107,14 @@ export function toBackendItemPayload(item) {
     status: item.status,
     selected: !!item.isFinal,
     booking_reference: item.bookingRef || null,
+    outbound_departing_location: item.outboundDepartingLocation || null,
+    outbound_arriving_location: item.outboundArrivingLocation || null,
+    outbound_departing_at: item.outboundDepartingAt || null,
+    outbound_arriving_at: item.outboundArrivingAt || null,
+    inbound_departing_location: item.inboundDepartingLocation || null,
+    inbound_arriving_location: item.inboundArrivingLocation || null,
+    inbound_departing_at: item.inboundDepartingAt || null,
+    inbound_arriving_at: item.inboundArrivingAt || null,
   }
 }
 

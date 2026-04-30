@@ -44,6 +44,15 @@ func (repo *repositoryImpl) CreateTransport(ctx context.Context, data *Transport
 		ImageUrl:  data.ImageUrl,
 		BoardUuid: boardUuid,
 		UserUuid:  userUuid,
+
+		OutboundDepartingLocation: data.OutboundDepartingLocation,
+		OutboundArrivingLocation:  data.OutboundArrivingLocation,
+		OutboundDepartingAt:       utility.TimestamptzFromTime(data.OutboundDepartingAt),
+		OutboundArrivingAt:        utility.TimestamptzFromTime(data.OutboundArrivingAt),
+		InboundDepartingLocation:  data.InboundDepartingLocation,
+		InboundArrivingLocation:   data.InboundArrivingLocation,
+		InboundDepartingAt:        utility.TimestamptzFromTime(data.InboundDepartingAt),
+		InboundArrivingAt:         utility.TimestamptzFromTime(data.InboundArrivingAt),
 	}
 
 	entity, err := repo.queries.CreateTransport(ctx, params)
@@ -108,6 +117,15 @@ func (repo *repositoryImpl) UpdateTransportById(ctx context.Context, uuid string
 		BookingReference: data.BookingReference,
 		Selected:         data.Selected,
 		Uuid:             id,
+
+		OutboundDepartingLocation: data.OutboundDepartingLocation,
+		OutboundArrivingLocation:  data.OutboundArrivingLocation,
+		OutboundDepartingAt:       utility.TimestamptzFromTime(data.OutboundDepartingAt),
+		OutboundArrivingAt:        utility.TimestamptzFromTime(data.OutboundArrivingAt),
+		InboundDepartingLocation:  data.InboundDepartingLocation,
+		InboundArrivingLocation:   data.InboundArrivingLocation,
+		InboundDepartingAt:        utility.TimestamptzFromTime(data.InboundDepartingAt),
+		InboundArrivingAt:         utility.TimestamptzFromTime(data.InboundArrivingAt),
 	}
 
 	return repo.queries.UpdateTransportByUuid(ctx, params)

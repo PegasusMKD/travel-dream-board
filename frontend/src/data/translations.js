@@ -107,6 +107,15 @@ export const translations = {
     markAsFinal: 'Oznacz jako wybrane',
     unmarkAsFinal: 'Odznacz jako wybrane',
 
+    // Transport legs
+    transportOutbound: 'Wylot tam',
+    transportInbound: 'Powrót',
+    transportFrom: 'Skąd',
+    transportTo: 'Dokąd',
+    transportDeparture: 'Odlot',
+    transportArrival: 'Przylot',
+    transportInboundHint: 'Puste dla biletu w jedną stronę',
+
     // Edit board
     editBoard: 'Edytuj tablicę',
     editBoardName: 'Nazwa podróży',
@@ -272,6 +281,15 @@ export const translations = {
     changeStatus: 'Change status',
     markAsFinal: 'Mark as selected',
     unmarkAsFinal: 'Unmark as selected',
+
+    // Transport legs
+    transportOutbound: 'Outbound',
+    transportInbound: 'Return',
+    transportFrom: 'From',
+    transportTo: 'To',
+    transportDeparture: 'Departure',
+    transportArrival: 'Arrival',
+    transportInboundHint: 'Leave blank for one-way',
 
     // Edit board
     editBoard: 'Edit board',

@@ -1,4 +1,4 @@
-.PHONY: help build run clean test test-verbose test-coverage mocks sqlc-generate fmt lint tidy docker-up docker-down migrate-up migrate-down migrate-create migrate-force
+.PHONY: help build build-all run clean test test-verbose test-coverage mocks sqlc-generate fmt lint tidy docker-up docker-down migrate-up migrate-down migrate-create migrate-force
 
 ifeq ($(OS),Windows_NT)
     # Windows (CMD)
@@ -27,6 +27,7 @@ DATABASE_URL?=postgres://postgres:password@localhost:5432/travel-dream-board?ssl
 help:
 	@echo "Available targets:"
 	@echo "  make build              - Build the service binary"
+	@echo "  make build-all          - Build FE bundle then BE binary"
 	@echo "  make run                - Run the service locally"
 	@echo "  make clean              - Clean build artifacts and generated files"
 	@echo ""
@@ -53,6 +54,14 @@ help:
 
 # Build the binary
 build:
+	@echo "Building $(BINARY_NAME)..."
+	@go build -o $(BINARY_PATH) $(MAIN_PATH)
+	@echo "Build complete: $(BINARY_PATH)"
+
+# Build FE bundle then BE binary (use this for prod-like local runs).
+build-all:
+	@echo "Building frontend bundle..."
+	@cd ../frontend && npm run build
 	@echo "Building $(BINARY_NAME)..."
 	@go build -o $(BINARY_PATH) $(MAIN_PATH)
 	@echo "Build complete: $(BINARY_PATH)"

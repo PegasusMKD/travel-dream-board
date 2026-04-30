@@ -1,0 +1,9 @@
+alter table transport
+	drop column outbound_departing_location,
+	drop column outbound_arriving_location,
+	drop column outbound_departing_at,
+	drop column outbound_arriving_at,
+	drop column inbound_departing_location,
+	drop column inbound_arriving_location,
+	drop column inbound_departing_at,
+	drop column inbound_arriving_at;

@@ -16,6 +16,8 @@ import {
   Send,
   Loader2,
   Check,
+  ArrowRight,
+  CornerUpLeft,
 } from 'lucide-react'
 import StatusBadge from './StatusBadge'
 import { useLang } from '../context/LanguageContext'
@@ -123,15 +125,8 @@ export default function ItemDetailSidebar({
         const conflicts = itemsToUnselectFor(sectionType, board.sections[sectionType], item.id)
         for (const conflict of conflicts) {
           const conflictPayload = toBackendItemPayload({
-            id: conflict.id,
-            boardUuid: conflict.boardUuid,
-            url: conflict.url,
-            title: conflict.title,
-            image: conflict.image,
-            note: conflict.note,
-            status: conflict.status,
+            ...conflict,
             isFinal: false,
-            bookingRef: conflict.bookingRef,
           })
           await itemApi.update(conflict.id, conflictPayload)
         }
@@ -147,6 +142,14 @@ export default function ItemDetailSidebar({
         status: draft.status,
         isFinal: draft.isFinal,
         bookingRef: draft.bookingRef,
+        outboundDepartingLocation: draft.outboundDepartingLocation,
+        outboundArrivingLocation: draft.outboundArrivingLocation,
+        outboundDepartingAt: fromDatetimeLocalValue(draft.outboundDepartingAt),
+        outboundArrivingAt: fromDatetimeLocalValue(draft.outboundArrivingAt),
+        inboundDepartingLocation: draft.inboundDepartingLocation,
+        inboundArrivingLocation: draft.inboundArrivingLocation,
+        inboundDepartingAt: fromDatetimeLocalValue(draft.inboundDepartingAt),
+        inboundArrivingAt: fromDatetimeLocalValue(draft.inboundArrivingAt),
       })
       await itemApi.update(item.id, payload)
       await reloadItem()
@@ -174,17 +177,7 @@ export default function ItemDetailSidebar({
     setError(null)
     try {
       const itemApi = sectionToItemApi(api, sectionType)
-      const payload = toBackendItemPayload({
-        id: item.id,
-        boardUuid: item.boardUuid,
-        url: item.url,
-        title: item.title,
-        image: item.image,
-        note: item.note,
-        status: next,
-        isFinal: item.isFinal,
-        bookingRef: item.bookingRef,
-      })
+      const payload = toBackendItemPayload({ ...item, status: next })
       await itemApi.update(item.id, payload)
       await reloadItem()
       await onRefresh?.()
@@ -562,6 +555,64 @@ function ItemSidebarBody({
           )}
         </div>
 
+        {/* Transport legs — outbound + optional inbound */}
+        {sectionType === 'transport' && (
+          editing ? (
+            <div className="space-y-4">
+              <TransportLegEditor
+                title={t.transportOutbound}
+                icon={Plane}
+                fromValue={draft.outboundDepartingLocation}
+                toValue={draft.outboundArrivingLocation}
+                departValue={draft.outboundDepartingAt}
+                arriveValue={draft.outboundArrivingAt}
+                onFrom={(v) => updateDraft('outboundDepartingLocation', v)}
+                onTo={(v) => updateDraft('outboundArrivingLocation', v)}
+                onDepart={(v) => updateDraft('outboundDepartingAt', v)}
+                onArrive={(v) => updateDraft('outboundArrivingAt', v)}
+                t={t}
+              />
+              <TransportLegEditor
+                title={t.transportInbound}
+                icon={CornerUpLeft}
+                hint={t.transportInboundHint}
+                fromValue={draft.inboundDepartingLocation}
+                toValue={draft.inboundArrivingLocation}
+                departValue={draft.inboundDepartingAt}
+                arriveValue={draft.inboundArrivingAt}
+                onFrom={(v) => updateDraft('inboundDepartingLocation', v)}
+                onTo={(v) => updateDraft('inboundArrivingLocation', v)}
+                onDepart={(v) => updateDraft('inboundDepartingAt', v)}
+                onArrive={(v) => updateDraft('inboundArrivingAt', v)}
+                t={t}
+              />
+            </div>
+          ) : (
+            hasAnyLegData(item) && (
+              <div className="space-y-2">
+                <LegSummary
+                  icon={Plane}
+                  label={t.transportOutbound}
+                  from={item.outboundDepartingLocation}
+                  to={item.outboundArrivingLocation}
+                  departAt={item.outboundDepartingAt}
+                  arriveAt={item.outboundArrivingAt}
+                  t={t}
+                />
+                <LegSummary
+                  icon={CornerUpLeft}
+                  label={t.transportInbound}
+                  from={item.inboundDepartingLocation}
+                  to={item.inboundArrivingLocation}
+                  departAt={item.inboundDepartingAt}
+                  arriveAt={item.inboundArrivingAt}
+                  t={t}
+                />
+              </div>
+            )
+          )
+        )}
+
         {/* Booking ref — only relevant when status is booked */}
         {editing && draft.status === 'booked' ? (
           <div>
@@ -811,7 +862,124 @@ function buildDraft(item) {
     status: item?.status || 'considering',
     isFinal: !!item?.isFinal,
     bookingRef: item?.bookingRef || '',
+    outboundDepartingLocation: item?.outboundDepartingLocation || '',
+    outboundArrivingLocation: item?.outboundArrivingLocation || '',
+    outboundDepartingAt: toDatetimeLocalValue(item?.outboundDepartingAt),
+    outboundArrivingAt: toDatetimeLocalValue(item?.outboundArrivingAt),
+    inboundDepartingLocation: item?.inboundDepartingLocation || '',
+    inboundArrivingLocation: item?.inboundArrivingLocation || '',
+    inboundDepartingAt: toDatetimeLocalValue(item?.inboundDepartingAt),
+    inboundArrivingAt: toDatetimeLocalValue(item?.inboundArrivingAt),
   }
+}
+
+// Times are stored as "floating" wall-clock values: the ISO string is marked UTC
+// but the Y/M/D H:M components are the literal clock reading at the location
+// (e.g., 14:30 at the airport stays 14:30 regardless of browser TZ).
+function toDatetimeLocalValue(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return ''
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`
+}
+
+function fromDatetimeLocalValue(s) {
+  if (!s) return null
+  // Don't use new Date().toISOString() — that shifts by browser TZ.
+  // Treat the raw input components as wall-clock, mark as UTC.
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(s)
+  if (!m) return null
+  const [, y, mo, d, h, mi, se] = m
+  return `${y}-${mo}-${d}T${h}:${mi}:${se || '00'}.000Z`
+}
+
+function hasAnyLegData(item) {
+  if (!item) return false
+  return !!(
+    item.outboundDepartingLocation ||
+    item.outboundArrivingLocation ||
+    item.outboundDepartingAt ||
+    item.outboundArrivingAt ||
+    item.inboundDepartingLocation ||
+    item.inboundArrivingLocation ||
+    item.inboundDepartingAt ||
+    item.inboundArrivingAt
+  )
+}
+
+function TransportLegEditor({
+  title, icon: Icon, hint, fromValue, toValue, departValue, arriveValue,
+  onFrom, onTo, onDepart, onArrive, t,
+}) {
+  const inputClass = 'w-full text-sm text-text-primary bg-surface-50 border border-surface-200 rounded-xl px-3 py-2 focus:outline-none focus:border-accent-400 focus:ring-2 focus:ring-accent-100 placeholder:text-text-muted transition-colors'
+  const labelClass = 'text-[11px] font-semibold text-text-tertiary uppercase tracking-wider mb-1 block'
+  return (
+    <div className="border border-surface-200 rounded-xl p-3 space-y-3">
+      <div className="flex items-center gap-2">
+        <Icon className="w-4 h-4 text-accent-500" />
+        <span className="text-xs font-bold text-text-primary uppercase tracking-wider">{title}</span>
+        {hint && <span className="text-[11px] text-text-muted ml-auto italic">{hint}</span>}
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className={labelClass}>{t.transportFrom}</label>
+          <input type="text" value={fromValue} onChange={(e) => onFrom(e.target.value)} className={inputClass} />
+        </div>
+        <div>
+          <label className={labelClass}>{t.transportTo}</label>
+          <input type="text" value={toValue} onChange={(e) => onTo(e.target.value)} className={inputClass} />
+        </div>
+        <div>
+          <label className={labelClass}>{t.transportDeparture}</label>
+          <input type="datetime-local" value={departValue} onChange={(e) => onDepart(e.target.value)} className={inputClass} />
+        </div>
+        <div>
+          <label className={labelClass}>{t.transportArrival}</label>
+          <input type="datetime-local" value={arriveValue} onChange={(e) => onArrive(e.target.value)} className={inputClass} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function LegSummary({ icon: Icon, label, from, to, departAt, arriveAt, t }) {
+  if (!from && !to && !departAt && !arriveAt) return null
+
+  const formatWhen = (iso) => {
+    if (!iso) return null
+    const d = new Date(iso)
+    if (isNaN(d.getTime())) return null
+    return d.toLocaleString(undefined, {
+      day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
+    })
+  }
+
+  const depart = formatWhen(departAt)
+  const arrive = formatWhen(arriveAt)
+
+  return (
+    <div className="flex items-start gap-2.5 text-sm bg-surface-50 rounded-xl px-3 py-2.5">
+      <Icon className="w-4 h-4 text-accent-500 mt-0.5 shrink-0" />
+      <div className="min-w-0 flex-1">
+        <div className="text-[11px] font-semibold text-text-tertiary uppercase tracking-wider mb-0.5">{label}</div>
+        {(from || to) && (
+          <div className="flex items-center gap-1.5 text-text-primary font-medium">
+            <span className="truncate">{from || '—'}</span>
+            <ArrowRight className="w-3.5 h-3.5 text-text-muted shrink-0" />
+            <span className="truncate">{to || '—'}</span>
+          </div>
+        )}
+        {(depart || arrive) && (
+          <div className="flex items-center gap-1.5 text-text-secondary text-xs mt-0.5">
+            <span>{depart || '—'}</span>
+            <ArrowRight className="w-3 h-3 text-text-muted shrink-0" />
+            <span>{arrive || '—'}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }
 
 function StarPicker({ value, onChange }) {

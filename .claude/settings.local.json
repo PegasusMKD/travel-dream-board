@@ -10,7 +10,8 @@
       "Bash(grep -E \"\\\\.\\(go|ts\\)$\")",
       "Bash(command -v sqlc)",
       "Bash(sqlc generate *)",
-      "Bash(echo \"EXIT=$?\")"
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(make sqlc-generate *)"
     ]
   }
 }

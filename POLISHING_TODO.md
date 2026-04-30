@@ -2,11 +2,11 @@
 
 ## Polishing Features
 
-### Expand Transport - Departure and Arrival Times
-- [ ] Add fields on Transport for the exact departure and arrival times
-- [ ] Expand the LLM tools to be able to parse that information from an image (or as a fallback)
-- [ ] Expand the scraping logic to include those fields if possible?
-- [ ] Should be manually editable
+### Expand Transport - Legs (Times + Locations) ✅
+- [x] Add fields on Transport for the exact departure and arrival times (outbound + inbound, each with from/to locations + datetimes — `outbound_departing_location`, `outbound_arriving_location`, `outbound_departing_at`, `outbound_arriving_at`, and `inbound_*` mirrors). Migration `000013_add_transport_legs`.
+- [x] Expand the LLM tools to be able to parse that information from an image (or as a fallback) — shared `extractionSchema()` used by both text-fallback and image-extraction tool calls; prompts hint at round-trip vs one-way.
+- [x] Expand the scraping logic to include those fields if possible? — OG/JSON-LD don't carry leg data in practice, so values come from Claude (text or image). `ScrapeResult` carries parsed `*time.Time` through to the transport service.
+- [x] Should be manually editable — `ItemDetailSidebar` gets an Outbound + Return panel (4 inputs each: From, To, Departure, Arrival) when `sectionType === 'transport'`, plus a compact read-only summary with route arrow + formatted date/time.
 
 ### Expand Activities - Start and End Times
 - [ ] Add fields on Activities for the exact start and end times

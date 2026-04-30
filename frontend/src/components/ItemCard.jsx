@@ -7,6 +7,7 @@ import {
   Plane,
   MapPinned,
   Loader2,
+  CornerUpLeft,
 } from 'lucide-react'
 import StatusBadge from './StatusBadge'
 import { useLang } from '../context/LanguageContext'
@@ -94,6 +95,29 @@ export default function ItemCard({ item, sectionType, onClick }) {
 
         <StatusBadge status={item.status} />
 
+        {sectionType === 'transport' && (item.outboundDepartingAt || item.inboundDepartingAt) && (
+          <div className="mt-2.5 space-y-1 text-xs">
+            {item.outboundDepartingAt && (
+              <div className="flex items-center gap-1.5 text-text-secondary">
+                <Plane className="w-3.5 h-3.5 text-accent-500 shrink-0" />
+                <span className="font-semibold text-text-primary">{formatDepartureShort(item.outboundDepartingAt)}</span>
+                {item.outboundDepartingLocation && (
+                  <span className="text-text-tertiary truncate">· {item.outboundDepartingLocation}</span>
+                )}
+              </div>
+            )}
+            {item.inboundDepartingAt && (
+              <div className="flex items-center gap-1.5 text-text-secondary">
+                <CornerUpLeft className="w-3.5 h-3.5 text-accent-500 shrink-0" />
+                <span className="font-semibold text-text-primary">{formatDepartureShort(item.inboundDepartingAt)}</span>
+                {item.inboundDepartingLocation && (
+                  <span className="text-text-tertiary truncate">· {item.inboundDepartingLocation}</span>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {item.note && (
           <p className="mt-2.5 text-xs text-text-secondary bg-surface-50 rounded-lg p-2.5 leading-relaxed">
             {item.note}
@@ -142,4 +166,14 @@ export default function ItemCard({ item, sectionType, onClick }) {
       </div>
     </div>
   )
+}
+
+// Times are wall-clock (UTC-marked) — display in UTC so they match the airport clock.
+function formatDepartureShort(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return ''
+  return d.toLocaleString(undefined, {
+    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
+  })
 }

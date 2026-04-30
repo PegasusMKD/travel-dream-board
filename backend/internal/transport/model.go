@@ -1,8 +1,11 @@
 package transport
 
 import (
+	"time"
+
 	"github.com/PegasusMKD/travel-dream-board/internal/comments"
 	"github.com/PegasusMKD/travel-dream-board/internal/db"
+	"github.com/PegasusMKD/travel-dream-board/internal/utility"
 	"github.com/PegasusMKD/travel-dream-board/internal/votes"
 )
 
@@ -19,6 +22,15 @@ type Transport struct {
 	UserUuid         string             `json:"user_uuid"`
 	AvgRating        float64            `json:"avg_rating"`
 	RatingCount      int32              `json:"rating_count"`
+
+	OutboundDepartingLocation *string    `json:"outbound_departing_location"`
+	OutboundArrivingLocation  *string    `json:"outbound_arriving_location"`
+	OutboundDepartingAt       *time.Time `json:"outbound_departing_at"`
+	OutboundArrivingAt        *time.Time `json:"outbound_arriving_at"`
+	InboundDepartingLocation  *string    `json:"inbound_departing_location"`
+	InboundArrivingLocation   *string    `json:"inbound_arriving_location"`
+	InboundDepartingAt        *time.Time `json:"inbound_departing_at"`
+	InboundArrivingAt         *time.Time `json:"inbound_arriving_at"`
 }
 
 func FromEntity(entity db.Transport) *Transport {
@@ -33,6 +45,15 @@ func FromEntity(entity db.Transport) *Transport {
 		BookingReference: entity.BookingReference,
 		Selected:         entity.Selected,
 		UserUuid:         entity.UserUuid.String(),
+
+		OutboundDepartingLocation: entity.OutboundDepartingLocation,
+		OutboundArrivingLocation:  entity.OutboundArrivingLocation,
+		OutboundDepartingAt:       utility.TimePtrFromTimestamptz(entity.OutboundDepartingAt),
+		OutboundArrivingAt:        utility.TimePtrFromTimestamptz(entity.OutboundArrivingAt),
+		InboundDepartingLocation:  entity.InboundDepartingLocation,
+		InboundArrivingLocation:   entity.InboundArrivingLocation,
+		InboundDepartingAt:        utility.TimePtrFromTimestamptz(entity.InboundDepartingAt),
+		InboundArrivingAt:         utility.TimePtrFromTimestamptz(entity.InboundArrivingAt),
 	}
 }
 
@@ -50,6 +71,15 @@ func FromGetTransportRow(entity db.GetTransportByUuidRow) *Transport {
 		UserUuid:         entity.UserUuid.String(),
 		AvgRating:        entity.AvgRating,
 		RatingCount:      entity.RatingCount,
+
+		OutboundDepartingLocation: entity.OutboundDepartingLocation,
+		OutboundArrivingLocation:  entity.OutboundArrivingLocation,
+		OutboundDepartingAt:       utility.TimePtrFromTimestamptz(entity.OutboundDepartingAt),
+		OutboundArrivingAt:        utility.TimePtrFromTimestamptz(entity.OutboundArrivingAt),
+		InboundDepartingLocation:  entity.InboundDepartingLocation,
+		InboundArrivingLocation:   entity.InboundArrivingLocation,
+		InboundDepartingAt:        utility.TimePtrFromTimestamptz(entity.InboundDepartingAt),
+		InboundArrivingAt:         utility.TimePtrFromTimestamptz(entity.InboundArrivingAt),
 	}
 }
 
@@ -67,6 +97,15 @@ func FromFindTransportRow(entity db.FindAllTransportByBoardUuidRow) *Transport {
 		UserUuid:         entity.UserUuid.String(),
 		AvgRating:        entity.AvgRating,
 		RatingCount:      entity.RatingCount,
+
+		OutboundDepartingLocation: entity.OutboundDepartingLocation,
+		OutboundArrivingLocation:  entity.OutboundArrivingLocation,
+		OutboundDepartingAt:       utility.TimePtrFromTimestamptz(entity.OutboundDepartingAt),
+		OutboundArrivingAt:        utility.TimePtrFromTimestamptz(entity.OutboundArrivingAt),
+		InboundDepartingLocation:  entity.InboundDepartingLocation,
+		InboundArrivingLocation:   entity.InboundArrivingLocation,
+		InboundDepartingAt:        utility.TimePtrFromTimestamptz(entity.InboundDepartingAt),
+		InboundArrivingAt:         utility.TimePtrFromTimestamptz(entity.InboundArrivingAt),
 	}
 }
 
