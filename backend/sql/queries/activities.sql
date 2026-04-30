@@ -1,11 +1,11 @@
 -- name: CreateActivity :one
 insert into activities (
     url, title, image_url, board_uuid, user_uuid,
-    start_at, end_at
+    start_at, end_at, location
 )
 values (
     @url, @title, @image_url, @board_uuid, @user_uuid,
-    @start_at, @end_at
+    @start_at, @end_at, @location
 )
 returning *;
 
@@ -37,7 +37,8 @@ set url = @url,
     booking_reference = @booking_reference,
     selected = @selected,
     start_at = @start_at,
-    end_at = @end_at
+    end_at = @end_at,
+    location = @location
 where uuid = @uuid;
 
 

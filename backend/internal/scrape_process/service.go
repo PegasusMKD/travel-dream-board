@@ -219,7 +219,7 @@ func (s *scrapeProcessServiceImpl) fallbackToClaude(ctx context.Context, uuid st
 		Messages: []openai.ChatCompletionMessage{
 			{
 				Role:    openai.ChatMessageRoleUser,
-				Content: "Extract the details from this text. The text is from the URL: " + actualUrl + ". If the text looks like an error message (like 'Free subscription plan' or bot protection), ignore the text and infer the brand name (e.g., 'Google Flights', 'Austrian Airlines') from the URL. Never output <UNKNOWN>. If this page describes transport (flight, train, bus) with a round-trip booking, populate both the outbound and inbound legs (locations, ISO 8601 datetimes, and total duration in minutes). For one-way trips, leave all inbound_* fields null. If this page describes an activity or event (tour, concert, museum visit, etc.), populate start_at and end_at if shown. " + text,
+				Content: "Extract the details from this text. The text is from the URL: " + actualUrl + ". If the text looks like an error message (like 'Free subscription plan' or bot protection), ignore the text and infer the brand name (e.g., 'Google Flights', 'Austrian Airlines') from the URL. Never output <UNKNOWN>. If this page describes transport (flight, train, bus) with a round-trip booking, populate both the outbound and inbound legs (locations, ISO 8601 datetimes, and total duration in minutes). For one-way trips, leave all inbound_* fields null. If this page describes an activity or event (tour, concert, museum visit, etc.), populate start_at, end_at, and location (venue name + city, or full address if shown) if available. " + text,
 			},
 		},
 		Tools: []openai.Tool{
@@ -278,6 +278,7 @@ func (s *scrapeProcessServiceImpl) fallbackToClaude(ctx context.Context, uuid st
 
 				out.StartAt = parseLegTime(extracted.StartAt)
 				out.EndAt = parseLegTime(extracted.EndAt)
+				out.Location = extracted.Location
 
 				out.OutboundDurationMinutes = utility.ParseDurationMinutes(extracted.OutboundDurationMinutes)
 				out.InboundDurationMinutes = utility.ParseDurationMinutes(extracted.InboundDurationMinutes)
@@ -363,7 +364,7 @@ func (s *scrapeProcessServiceImpl) imageExtractionClaudeConfig(dataUrl string) o
 				MultiContent: []openai.ChatMessagePart{
 					{
 						Type: openai.ChatMessagePartTypeText,
-						Text: "Extract the details from this image. If it depicts transport (flight, train, bus), populate the outbound and (if round-trip) inbound leg locations, ISO 8601 datetimes, and total duration in minutes. For one-way trips, leave all inbound_* fields null. If it depicts an activity or event (tour, concert, museum visit, etc.), populate start_at and end_at if shown.",
+						Text: "Extract the details from this image. If it depicts transport (flight, train, bus), populate the outbound and (if round-trip) inbound leg locations, ISO 8601 datetimes, and total duration in minutes. For one-way trips, leave all inbound_* fields null. If it depicts an activity or event (tour, concert, museum visit, etc.), populate start_at, end_at, and location (venue name + city, or full address if shown).",
 					},
 					{
 						Type: openai.ChatMessagePartTypeImageURL,
@@ -448,6 +449,10 @@ func extractionSchema() jsonschema.Definition {
 			"end_at": {
 				Type:        jsonschema.String,
 				Description: "Activity/event end date and time (YYYY-MM-DDTHH:MM:SS, no timezone offset — wall-clock at the venue). Null if not an activity or not shown.",
+			},
+			"location": {
+				Type:        jsonschema.String,
+				Description: "Activity/event venue or location — venue name with city (e.g. 'Stadion Narodowy, Warsaw') or a full street address if shown. Null if not an activity or not shown.",
 			},
 			"outbound_duration_minutes": {
 				Type:        jsonschema.String,

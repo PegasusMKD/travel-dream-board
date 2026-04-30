@@ -153,6 +153,7 @@ export default function ItemDetailSidebar({
         inboundArrivingAt: fromDatetimeLocalValue(draft.inboundArrivingAt),
         startAt: fromDatetimeLocalValue(draft.startAt),
         endAt: fromDatetimeLocalValue(draft.endAt),
+        location: draft.location?.trim() || null,
         outboundDurationMinutes: parseDurationMinutes(draft.outboundDurationMinutes),
         inboundDurationMinutes: parseDurationMinutes(draft.inboundDurationMinutes),
       })
@@ -641,6 +642,19 @@ function ItemSidebarBody({
           )
         )}
 
+        {/* Activity location */}
+        {sectionType === 'activities' && (
+          editing ? (
+            <ActivityLocationEditor
+              value={draft.location}
+              onChange={(v) => updateDraft('location', v)}
+              t={t}
+            />
+          ) : (
+            item.location && <ActivityLocationSummary location={item.location} t={t} />
+          )
+        )}
+
         {/* Booking ref — only relevant when status is booked */}
         {editing && draft.status === 'booked' ? (
           <div>
@@ -900,6 +914,7 @@ function buildDraft(item) {
     inboundArrivingAt: toDatetimeLocalValue(item?.inboundArrivingAt),
     startAt: toDatetimeLocalValue(item?.startAt),
     endAt: toDatetimeLocalValue(item?.endAt),
+    location: item?.location || '',
     outboundDurationMinutes: item?.outboundDurationMinutes != null ? String(item.outboundDurationMinutes) : '',
     inboundDurationMinutes: item?.inboundDurationMinutes != null ? String(item.inboundDurationMinutes) : '',
   }
@@ -1067,6 +1082,37 @@ function ActivityTimeEditor({ startValue, endValue, onStart, onEnd, t }) {
           <label className={labelClass}>{t.activityEnd}</label>
           <input type="datetime-local" value={endValue} onChange={(e) => onEnd(e.target.value)} className={inputClass} />
         </div>
+      </div>
+    </div>
+  )
+}
+
+function ActivityLocationEditor({ value, onChange, t }) {
+  const inputClass = 'w-full text-sm text-text-primary bg-surface-50 border border-surface-200 rounded-xl px-3 py-2 focus:outline-none focus:border-accent-400 focus:ring-2 focus:ring-accent-100 placeholder:text-text-muted transition-colors'
+  return (
+    <div className="border border-surface-200 rounded-xl p-3 space-y-2">
+      <div className="flex items-center gap-2">
+        <MapPinned className="w-4 h-4 text-accent-500" />
+        <span className="text-xs font-bold text-text-primary uppercase tracking-wider">{t.activityLocation}</span>
+      </div>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={t.activityLocationPlaceholder}
+        className={inputClass}
+      />
+    </div>
+  )
+}
+
+function ActivityLocationSummary({ location, t }) {
+  return (
+    <div className="flex items-start gap-2.5 text-sm bg-surface-50 rounded-xl px-3 py-2.5">
+      <MapPinned className="w-4 h-4 text-accent-500 mt-0.5 shrink-0" />
+      <div className="min-w-0 flex-1">
+        <div className="text-[11px] font-semibold text-text-tertiary uppercase tracking-wider mb-0.5">{t.activityLocation}</div>
+        <div className="text-text-primary font-medium truncate">{location}</div>
       </div>
     </div>
   )

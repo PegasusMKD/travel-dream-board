@@ -20,11 +20,11 @@
 - [x] Expand the scraping logic to include those fields if possible? — OG/JSON-LD don't carry leg durations, so values come from Claude. `ScrapeResult` carries `*int32` durations through to the transport service. Sidebar shows formatted "Xh Ym" in the leg summary and exposes a number input in the editor.
 
 
-### Expand Activities - Location
-- [ ] Add fields on Activities for exact location of the event
-- [ ] Expand the LLM tools to be able to parse that information from an image (or as a fallback)
-- [ ] Expand the scraping logic to include those fields if possible?
-- [ ] Should be manually editable if you open the edit window
+### Expand Activities - Location ✅
+- [x] Add fields on Activities for exact location of the event — `location` text column added in migration `000016_add_activity_location`. Plumbed through Activity model, repo, and service.
+- [x] Expand the LLM tools to be able to parse that information from an image (or as a fallback) — `extractionSchema()` extended with a `location` property; both `fallbackToClaude` (text) and `ExtractFromImage` prompts ask for venue + city or full address.
+- [x] Expand the scraping logic to include those fields if possible? — OG/JSON-LD don't carry venue strings reliably, so values come from Claude. `ScrapeResult` carries `*string Location` through to the activity service.
+- [x] Should be manually editable if you open the edit window — `ItemDetailSidebar`'s `ActivityTimeEditor` gains a Location text input; `ActivityTimeSummary` renders it on a separate row with a `MapPinned` icon when present.
 
 ### Expand All Items - Price & Description
 - [ ] Add fields to denote an extracted price from the link

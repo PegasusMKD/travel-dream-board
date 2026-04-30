@@ -14,13 +14,13 @@ import (
 const createActivity = `-- name: CreateActivity :one
 insert into activities (
     url, title, image_url, board_uuid, user_uuid,
-    start_at, end_at
+    start_at, end_at, location
 )
 values (
     $1, $2, $3, $4, $5,
-    $6, $7
+    $6, $7, $8
 )
-returning uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid, user_uuid, start_at, end_at
+returning uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid, user_uuid, start_at, end_at, location
 `
 
 type CreateActivityParams struct {
@@ -31,6 +31,7 @@ type CreateActivityParams struct {
 	UserUuid  pgtype.UUID
 	StartAt   pgtype.Timestamptz
 	EndAt     pgtype.Timestamptz
+	Location  *string
 }
 
 func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) (Activity, error) {
@@ -42,6 +43,7 @@ func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) 
 		arg.UserUuid,
 		arg.StartAt,
 		arg.EndAt,
+		arg.Location,
 	)
 	var i Activity
 	err := row.Scan(
@@ -59,6 +61,7 @@ func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) 
 		&i.UserUuid,
 		&i.StartAt,
 		&i.EndAt,
+		&i.Location,
 	)
 	return i, err
 }
@@ -74,7 +77,7 @@ func (q *Queries) DeleteActivityByUuid(ctx context.Context, uuid pgtype.UUID) er
 }
 
 const findAllActivitiesByBoardUuid = `-- name: FindAllActivitiesByBoardUuid :many
-select a.uuid, a.updated_at, a.created_at, a.url, a.title, a.image_url, a.notes, a.status, a.booking_reference, a.selected, a.board_uuid, a.user_uuid, a.start_at, a.end_at,
+select a.uuid, a.updated_at, a.created_at, a.url, a.title, a.image_url, a.notes, a.status, a.booking_reference, a.selected, a.board_uuid, a.user_uuid, a.start_at, a.end_at, a.location,
     coalesce(avg(v.rank)::float, 0)::float as avg_rating,
     count(v.uuid)::int as rating_count
 from activities a
@@ -98,6 +101,7 @@ type FindAllActivitiesByBoardUuidRow struct {
 	UserUuid         pgtype.UUID
 	StartAt          pgtype.Timestamptz
 	EndAt            pgtype.Timestamptz
+	Location         *string
 	AvgRating        float64
 	RatingCount      int32
 }
@@ -126,6 +130,7 @@ func (q *Queries) FindAllActivitiesByBoardUuid(ctx context.Context, boardUuid pg
 			&i.UserUuid,
 			&i.StartAt,
 			&i.EndAt,
+			&i.Location,
 			&i.AvgRating,
 			&i.RatingCount,
 		); err != nil {
@@ -140,7 +145,7 @@ func (q *Queries) FindAllActivitiesByBoardUuid(ctx context.Context, boardUuid pg
 }
 
 const getActivityByUuid = `-- name: GetActivityByUuid :one
-select a.uuid, a.updated_at, a.created_at, a.url, a.title, a.image_url, a.notes, a.status, a.booking_reference, a.selected, a.board_uuid, a.user_uuid, a.start_at, a.end_at,
+select a.uuid, a.updated_at, a.created_at, a.url, a.title, a.image_url, a.notes, a.status, a.booking_reference, a.selected, a.board_uuid, a.user_uuid, a.start_at, a.end_at, a.location,
     coalesce(avg(v.rank)::float, 0)::float as avg_rating,
     count(v.uuid)::int as rating_count
 from activities a
@@ -164,6 +169,7 @@ type GetActivityByUuidRow struct {
 	UserUuid         pgtype.UUID
 	StartAt          pgtype.Timestamptz
 	EndAt            pgtype.Timestamptz
+	Location         *string
 	AvgRating        float64
 	RatingCount      int32
 }
@@ -186,6 +192,7 @@ func (q *Queries) GetActivityByUuid(ctx context.Context, uuid pgtype.UUID) (GetA
 		&i.UserUuid,
 		&i.StartAt,
 		&i.EndAt,
+		&i.Location,
 		&i.AvgRating,
 		&i.RatingCount,
 	)
@@ -202,8 +209,9 @@ set url = $1,
     booking_reference = $6,
     selected = $7,
     start_at = $8,
-    end_at = $9
-where uuid = $10
+    end_at = $9,
+    location = $10
+where uuid = $11
 `
 
 type UpdateActivityByUuidParams struct {
@@ -216,6 +224,7 @@ type UpdateActivityByUuidParams struct {
 	Selected         bool
 	StartAt          pgtype.Timestamptz
 	EndAt            pgtype.Timestamptz
+	Location         *string
 	Uuid             pgtype.UUID
 }
 
@@ -230,6 +239,7 @@ func (q *Queries) UpdateActivityByUuid(ctx context.Context, arg UpdateActivityBy
 		arg.Selected,
 		arg.StartAt,
 		arg.EndAt,
+		arg.Location,
 		arg.Uuid,
 	)
 	return err

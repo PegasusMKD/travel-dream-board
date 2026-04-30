@@ -66,6 +66,7 @@ export function mapItem(item) {
     inboundArrivingAt: item.inbound_arriving_at || null,
     startAt: item.start_at || null,
     endAt: item.end_at || null,
+    location: item.location || null,
     outboundDurationMinutes: item.outbound_duration_minutes ?? null,
     inboundDurationMinutes: item.inbound_duration_minutes ?? null,
   }
@@ -121,6 +122,7 @@ export function toBackendItemPayload(item) {
     inbound_arriving_at: item.inboundArrivingAt || null,
     start_at: item.startAt || null,
     end_at: item.endAt || null,
+    location: item.location || null,
     outbound_duration_minutes: item.outboundDurationMinutes ?? null,
     inbound_duration_minutes: item.inboundDurationMinutes ?? null,
   }

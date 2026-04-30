@@ -23,8 +23,9 @@ type Activity struct {
 	AvgRating        float64             `json:"avg_rating"`
 	RatingCount      int32               `json:"rating_count"`
 
-	StartAt *time.Time `json:"start_at"`
-	EndAt   *time.Time `json:"end_at"`
+	StartAt  *time.Time `json:"start_at"`
+	EndAt    *time.Time `json:"end_at"`
+	Location *string    `json:"location"`
 }
 
 func FromEntity(entity db.Activity) *Activity {
@@ -41,6 +42,7 @@ func FromEntity(entity db.Activity) *Activity {
 		UserUuid:         entity.UserUuid.String(),
 		StartAt:          utility.TimePtrFromTimestamptz(entity.StartAt),
 		EndAt:            utility.TimePtrFromTimestamptz(entity.EndAt),
+		Location:         entity.Location,
 	}
 }
 
@@ -60,6 +62,7 @@ func FromGetActivityRow(entity db.GetActivityByUuidRow) *Activity {
 		RatingCount:      entity.RatingCount,
 		StartAt:          utility.TimePtrFromTimestamptz(entity.StartAt),
 		EndAt:            utility.TimePtrFromTimestamptz(entity.EndAt),
+		Location:         entity.Location,
 	}
 }
 
@@ -79,6 +82,7 @@ func FromFindActivitiesRow(entity db.FindAllActivitiesByBoardUuidRow) *Activity 
 		RatingCount:      entity.RatingCount,
 		StartAt:          utility.TimePtrFromTimestamptz(entity.StartAt),
 		EndAt:            utility.TimePtrFromTimestamptz(entity.EndAt),
+		Location:         entity.Location,
 	}
 }
 

@@ -46,6 +46,7 @@ func (repo *repositoryImpl) CreateActivity(ctx context.Context, data *Activity) 
 		UserUuid:  userUuid,
 		StartAt:   utility.TimestamptzFromTime(data.StartAt),
 		EndAt:     utility.TimestamptzFromTime(data.EndAt),
+		Location:  data.Location,
 	}
 
 	entity, err := repo.queries.CreateActivity(ctx, params)
@@ -112,6 +113,7 @@ func (repo *repositoryImpl) UpdateActivityById(ctx context.Context, uuid string,
 		Uuid:             id,
 		StartAt:          utility.TimestamptzFromTime(data.StartAt),
 		EndAt:            utility.TimestamptzFromTime(data.EndAt),
+		Location:         data.Location,
 	}
 
 	return repo.queries.UpdateActivityByUuid(ctx, params)

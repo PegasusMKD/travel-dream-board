@@ -57,6 +57,7 @@ func (svc *accomodationServiceImpl) CreateActivity(ctx context.Context, url stri
 
 			data.StartAt = utility.ParseWallClockTime(extractedData.StartAt)
 			data.EndAt = utility.ParseWallClockTime(extractedData.EndAt)
+			data.Location = extractedData.Location
 		} else {
 			data.Title = "Uploaded Image"
 			data.Url = url
@@ -73,6 +74,7 @@ func (svc *accomodationServiceImpl) CreateActivity(ctx context.Context, url stri
 
 		data.StartAt = extractedData.StartAt
 		data.EndAt = extractedData.EndAt
+		data.Location = extractedData.Location
 	}
 
 	return svc.repo.CreateActivity(ctx, &data)

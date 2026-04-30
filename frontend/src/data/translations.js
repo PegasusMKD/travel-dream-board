@@ -122,6 +122,8 @@ export const translations = {
     activityWhen: 'Kiedy',
     activityStart: 'Początek',
     activityEnd: 'Koniec',
+    activityLocation: 'Miejsce',
+    activityLocationPlaceholder: 'np. Stadion Narodowy, Warszawa',
 
     // Edit board
     editBoard: 'Edytuj tablicę',
@@ -304,6 +306,8 @@ export const translations = {
     activityWhen: 'When',
     activityStart: 'Start',
     activityEnd: 'End',
+    activityLocation: 'Location',
+    activityLocationPlaceholder: 'e.g. Wembley Stadium, London',
 
     // Edit board
     editBoard: 'Edit board',

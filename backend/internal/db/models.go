@@ -351,6 +351,7 @@ type Activity struct {
 	UserUuid         pgtype.UUID
 	StartAt          pgtype.Timestamptz
 	EndAt            pgtype.Timestamptz
+	Location         *string
 }
 
 type Board struct {

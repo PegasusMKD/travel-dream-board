@@ -15,8 +15,9 @@ type AIExtraction struct {
 	InboundDepartingAt        *string `json:"inbound_departing_at,omitempty"`
 	InboundArrivingAt         *string `json:"inbound_arriving_at,omitempty"`
 
-	StartAt *string `json:"start_at,omitempty"`
-	EndAt   *string `json:"end_at,omitempty"`
+	StartAt  *string `json:"start_at,omitempty"`
+	EndAt    *string `json:"end_at,omitempty"`
+	Location *string `json:"location,omitempty"`
 
 	OutboundDurationMinutes *string `json:"outbound_duration_minutes,omitempty"`
 	InboundDurationMinutes  *string `json:"inbound_duration_minutes,omitempty"`
