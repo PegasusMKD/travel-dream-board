@@ -29,7 +29,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /app/bin/service 
 # Stage 3 — Runtime
 FROM alpine:3.21
 
-RUN apk --no-cache add ca-certificates tzdata
+RUN apk --no-cache add ca-certificates tzdata su-exec
 
 RUN addgroup -g 1000 appuser && \
     adduser -D -u 1000 -G appuser appuser
@@ -38,11 +38,12 @@ WORKDIR /app
 
 COPY --from=builder /app/bin/service /app/service
 COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
+COPY entrypoint.sh /entrypoint.sh
 
-RUN chown -R appuser:appuser /app
-
-USER appuser
+RUN chown -R appuser:appuser /app && \
+    chmod +x /entrypoint.sh
 
 EXPOSE 8080
 
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/app/service"]
