@@ -17,6 +17,7 @@ import (
 	"github.com/PegasusMKD/travel-dream-board/internal/config"
 	"github.com/PegasusMKD/travel-dream-board/internal/database"
 	"github.com/PegasusMKD/travel-dream-board/internal/db"
+	"github.com/PegasusMKD/travel-dream-board/internal/memories"
 	"github.com/PegasusMKD/travel-dream-board/internal/middleware"
 	scrapeaudit "github.com/PegasusMKD/travel-dream-board/internal/scrape_audit"
 	scrapeprocess "github.com/PegasusMKD/travel-dream-board/internal/scrape_process"
@@ -164,6 +165,10 @@ func (srv *GinServer) setupRoutes(router *gin.Engine, queries *db.Queries, cfg *
 	boardsService := boards.NewService(boardsRepository, accomodationsService, activitiesService, transportService)
 	boardsHandler := boards.NewHandler(boardsService)
 
+	memoriesRepository := memories.NewRepository(queries)
+	memoriesService := memories.NewService(memoriesRepository)
+	memoriesHandler := memories.NewHandler(memoriesService)
+
 	// Public routes (no auth required)
 	v1Public := router.Group("/api/v1")
 	{
@@ -180,6 +185,7 @@ func (srv *GinServer) setupRoutes(router *gin.Engine, queries *db.Queries, cfg *
 		accomodationsHandler.RegisterOwnerRoutes(v1Auth)
 		activitiesHandler.RegisterOwnerRoutes(v1Auth)
 		transportHandler.RegisterOwnerRoutes(v1Auth)
+		memoriesHandler.RegisterOwnerRoutes(v1Auth)
 	}
 
 	// Collaborator routes (JWT owner OR valid share token)
@@ -193,6 +199,7 @@ func (srv *GinServer) setupRoutes(router *gin.Engine, queries *db.Queries, cfg *
 		transportHandler.RegisterCollabRoutes(v1Collab)
 		commentsHandler.RegisterCollabRoutes(v1Collab)
 		votesHandler.RegisterCollabRoutes(v1Collab)
+		memoriesHandler.RegisterCollabRoutes(v1Collab)
 	}
 }
 

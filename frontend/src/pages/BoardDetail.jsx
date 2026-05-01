@@ -26,7 +26,7 @@ import DisplayNamePrompt from '../components/DisplayNamePrompt'
 import ErrorState from '../components/ErrorState'
 import { ItemCardSkeleton } from '../components/Skeleton'
 import { api, NetworkError } from '../services/api'
-import { mapAggregatedBoard, backendVoteTarget, sectionToItemApi } from '../services/mappers'
+import { mapAggregatedBoard, mapMemory, backendVoteTarget, sectionToItemApi } from '../services/mappers'
 
 const sectionConfig = {
   accommodation: { key: 'accommodation', icon: Bed, emoji: '\u{1F3E8}' },
@@ -61,6 +61,8 @@ export default function BoardDetail() {
   const [selectedSection, setSelectedSection] = useState(null)
   const [showEditBoard, setShowEditBoard] = useState(false)
   const [pending, setPending] = useState({ accommodation: [], transport: [], activities: [] })
+  const [memories, setMemories] = useState([])
+  const [uploadingMemory, setUploadingMemory] = useState(false)
 
   const loadBoard = useCallback(async () => {
     try {
@@ -71,6 +73,34 @@ export default function BoardDetail() {
       setError(err)
     }
   }, [id])
+
+  const loadMemories = useCallback(async () => {
+    try {
+      const list = await api.memories.list(id)
+      setMemories((list || []).map((m) => mapMemory(m, shareToken)))
+    } catch {
+      setMemories([])
+    }
+  }, [id, shareToken])
+
+  useEffect(() => {
+    loadMemories()
+  }, [loadMemories])
+
+  const handleUploadMemory = useCallback(async (file) => {
+    setUploadingMemory(true)
+    try {
+      await api.memories.create({ boardUuid: id, file, uploadedBy: !user ? voterUuid : undefined })
+      await loadMemories()
+    } finally {
+      setUploadingMemory(false)
+    }
+  }, [id, loadMemories, user, voterUuid])
+
+  const handleDeleteMemory = useCallback(async (memoryId) => {
+    await api.memories.delete(memoryId)
+    await loadMemories()
+  }, [loadMemories])
 
   useEffect(() => {
     setLoading(true)
@@ -175,7 +205,7 @@ export default function BoardDetail() {
     )
   }
 
-  const memoryCount = board.memories?.length || 0
+  const memoryCount = memories.length
 
   return (
     <div className="pt-6">
@@ -345,7 +375,13 @@ export default function BoardDetail() {
       )}
 
       {activeTab === 'memories' && (
-        <MemoryGallery memories={board.memories || []} />
+        <MemoryGallery
+          memories={memories}
+          onUpload={handleUploadMemory}
+          onDelete={!isGuest ? handleDeleteMemory : undefined}
+          canDelete={!isGuest}
+          uploading={uploadingMemory}
+        />
       )}
 
       {/* Modals */}

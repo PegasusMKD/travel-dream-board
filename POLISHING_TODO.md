@@ -35,12 +35,12 @@
 - [x] It should also make it clear what currency it is displaying the information in — new `frontend/src/utils/formatPrice.js` formats as `'1 234,56 PLN'` (locale-aware grouping); `unknown` renders the amount with a `?` suffix and an italic "Unknown" hint in the sidebar summary. `ItemCard` shows an accent-tinted price chip when present.
 - [x] Potentially also add a "currency" column? — done as part of the enum work; stored as `NullCurrencyCode`, exposed as `*db.CurrencyCode` on each item model and passed as a string through the JSON API.
 
-### Implement "Memories" feature
-- [ ] Create migration, queries and a module for Memories
-- [ ] Create local folder for `/memories`
-- [ ] Create a volume with path `/memories` on Railway
-- [ ] Enable upload of `memories`
-- [ ] Enforce access to memories, make sure whoever is trying to access them (either through URL or through the FE) has access to the Board
+### Implement "Memories" feature ✅
+- [x] Create migration, queries and a module for Memories — migration `000007_create_memories_table` updated to use `uploaded_by uuid not null references users (uuid)` (matching the production schema). New `sql/queries/memories.sql` with `CreateMemory` / `GetMemoryByUuid` / `FindAllMemoriesByBoardUuid` / `DeleteMemoryByUuid`. New `internal/memories` package (model, repository, service, handler) wired into `server.go`.
+- [x] Create local folder for `/memories` — `utility.SaveMemoryUpload` writes to `MEMORIES_DIR` (defaults to `./memories`); the dir is gitignored alongside `./uploads`.
+- [x] Create a volume with path `/memories` on Railway — **manual step for the user**: create a volume on Railway mounted at `/memories` and set `MEMORIES_DIR=/memories` in the service env. Code already reads from `MEMORIES_DIR`.
+- [x] Enable upload of `memories` — `POST /api/v1/memories/?boardUuid=…` (collab-gated) accepts a multipart `file`; falls back to `?uploadedBy=<guest_uuid>` for share-token users (mirrors comments/votes attribution). FE: `BoardDetail` wires `handleUploadMemory` into `MemoryGallery`'s upload zone (multi-file picker, in-place spinner).
+- [x] Enforce access to memories, make sure whoever is trying to access them (either through URL or through the FE) has access to the Board — memories are NOT statically served. Image bytes stream through `GET /api/v1/memories/:uuid/image` which checks `boardAccessAllowed`: JWT users pass (matches existing item endpoint trust model); share-token holders must have a token bound to the same `board_uuid` as the memory (`share_token_board_uuid` context vs memory's board). Same gate is applied to list (`GET /memories/?boardUuid=`), upload, and delete (delete is also owner-route only).
 
 ### Determine what code is not being used and can potentially be removed
 - [ ] Create a Markdown file detailing the code that seems to not be used anymore

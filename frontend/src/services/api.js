@@ -110,6 +110,21 @@ export const api = {
   accomodations: itemEndpoints('accomodations'),
   activities: itemEndpoints('activities'),
   transport: itemEndpoints('transport'),
+  memories: {
+    list: (boardUuid) => request(`/memories/?boardUuid=${encodeURIComponent(boardUuid)}`),
+    create: ({ boardUuid, file, uploadedBy }) => {
+      const fd = new FormData()
+      fd.append('file', file, file.name)
+      const qs = new URLSearchParams({ boardUuid })
+      if (uploadedBy) qs.set('uploadedBy', uploadedBy)
+      return request(`/memories/?${qs.toString()}`, { method: 'POST', body: fd })
+    },
+    delete: (uuid) => request(`/memories/${uuid}`, { method: 'DELETE' }),
+    imageUrl: (uuid, shareToken) => {
+      const base = `${API_BASE}/memories/${uuid}/image`
+      return shareToken ? `${base}?token=${encodeURIComponent(shareToken)}` : base
+    },
+  },
   comments: {
     create: (data) => request('/comments/', { method: 'POST', body: JSON.stringify(data) }),
     update: (uuid, content) => request(`/comments/${uuid}`, {

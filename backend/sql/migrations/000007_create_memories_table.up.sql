@@ -3,7 +3,7 @@ create table memories (
 	updated_at timestamp not null default now(),
 	created_at timestamp not null default now(),
 
-	uploaded_by text not null,
+	uploaded_by uuid not null references users (uuid),
 	board_uuid uuid not null references boards (uuid),
 
 	image_url text not null

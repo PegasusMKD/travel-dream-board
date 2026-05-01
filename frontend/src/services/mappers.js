@@ -75,6 +75,19 @@ export function mapItem(item) {
   }
 }
 
+export function mapMemory(m, shareToken) {
+  const base = `/api/v1/memories/${m.uuid}/image`
+  return {
+    id: m.uuid,
+    src: shareToken ? `${base}?token=${encodeURIComponent(shareToken)}` : base,
+    takenAt: m.created_at || null,
+    boardUuid: m.board_uuid,
+    uploadedBy: m.uploaded_by,
+    caption: '',
+    location: '',
+  }
+}
+
 export function mapVote(v) {
   return {
     id: v.uuid,
