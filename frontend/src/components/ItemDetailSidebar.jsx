@@ -19,7 +19,9 @@ import {
   ArrowRight,
   CornerUpLeft,
   Clock,
+  Tag,
 } from 'lucide-react'
+import { formatPrice } from '../utils/formatPrice'
 import StatusBadge from './StatusBadge'
 import { useLang } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
@@ -52,7 +54,7 @@ export default function ItemDetailSidebar({
   guestName,
   board,
 }) {
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const { user } = useAuth()
   const voterUuid = voterUuidProp || user?.uuid || null
 
@@ -156,6 +158,9 @@ export default function ItemDetailSidebar({
         location: draft.location?.trim() || null,
         outboundDurationMinutes: parseDurationMinutes(draft.outboundDurationMinutes),
         inboundDurationMinutes: parseDurationMinutes(draft.inboundDurationMinutes),
+        price: normalizePriceInput(draft.price),
+        currency: draft.currency || null,
+        description: draft.description?.trim() || null,
       })
       await itemApi.update(item.id, payload)
       await reloadItem()
@@ -359,6 +364,7 @@ export default function ItemDetailSidebar({
             voterUuid={voterUuid}
             isGuest={isGuest}
             t={t}
+            lang={lang}
             FallbackIcon={FallbackIcon}
             commentText={commentText}
             setCommentText={setCommentText}
@@ -395,7 +401,7 @@ export default function ItemDetailSidebar({
 }
 
 function ItemSidebarBody({
-  item, sectionType, editing, draft, updateDraft, error, user, voterUuid, isGuest, t, FallbackIcon,
+  item, sectionType, editing, draft, updateDraft, error, user, voterUuid, isGuest, t, lang, FallbackIcon,
   commentText, setCommentText, postingComment, handleAddComment,
   editingCommentId, commentDraft, setCommentDraft, commentBusyId,
   startEditingComment, cancelEditingComment, handleSaveComment, handleDeleteComment,
@@ -560,6 +566,29 @@ function ItemSidebarBody({
             </div>
           )}
         </div>
+
+        {/* Price + currency + description (all section types) */}
+        {editing ? (
+          <PriceEditor
+            priceValue={draft.price}
+            currencyValue={draft.currency}
+            descriptionValue={draft.description}
+            onPrice={(v) => updateDraft('price', v)}
+            onCurrency={(v) => updateDraft('currency', v)}
+            onDescription={(v) => updateDraft('description', v)}
+            t={t}
+          />
+        ) : (
+          (item.price || item.description) && (
+            <PriceSummary
+              price={item.price}
+              currency={item.currency}
+              description={item.description}
+              t={t}
+              lang={lang}
+            />
+          )
+        )}
 
         {/* Transport legs — outbound + optional inbound */}
         {sectionType === 'transport' && (
@@ -917,6 +946,9 @@ function buildDraft(item) {
     location: item?.location || '',
     outboundDurationMinutes: item?.outboundDurationMinutes != null ? String(item.outboundDurationMinutes) : '',
     inboundDurationMinutes: item?.inboundDurationMinutes != null ? String(item.inboundDurationMinutes) : '',
+    price: item?.price ?? '',
+    currency: item?.currency ?? '',
+    description: item?.description ?? '',
   }
 }
 
@@ -1142,6 +1174,92 @@ function ActivityTimeSummary({ startAt, endAt, t }) {
       </div>
     </div>
   )
+}
+
+function PriceEditor({ priceValue, currencyValue, descriptionValue, onPrice, onCurrency, onDescription, t }) {
+  const inputClass = 'w-full text-sm text-text-primary bg-surface-50 border border-surface-200 rounded-xl px-3 py-2 focus:outline-none focus:border-accent-400 focus:ring-2 focus:ring-accent-100 placeholder:text-text-muted transition-colors'
+  const labelClass = 'text-[11px] font-semibold text-text-tertiary uppercase tracking-wider mb-1 block'
+  return (
+    <div className="border border-surface-200 rounded-xl p-3 space-y-3">
+      <div className="flex items-center gap-2">
+        <Tag className="w-4 h-4 text-accent-500" />
+        <span className="text-xs font-bold text-text-primary uppercase tracking-wider">{t.priceLabel}</span>
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <div className="col-span-2">
+          <label className={labelClass}>{t.priceLabel}</label>
+          <input
+            type="number"
+            inputMode="decimal"
+            min="0"
+            step="0.01"
+            value={priceValue}
+            onChange={(e) => onPrice(e.target.value)}
+            placeholder={t.pricePlaceholder}
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className={labelClass}>{t.currencyLabel}</label>
+          <select
+            value={currencyValue}
+            onChange={(e) => onCurrency(e.target.value)}
+            className={inputClass}
+          >
+            <option value="">—</option>
+            <option value="PLN">PLN</option>
+            <option value="EUR">EUR</option>
+            <option value="MKD">MKD</option>
+            <option value="unknown">{t.currencyUnknown}</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label className={labelClass}>{t.descriptionLabel}</label>
+        <textarea
+          value={descriptionValue}
+          onChange={(e) => onDescription(e.target.value)}
+          placeholder={t.descriptionPlaceholder}
+          rows={3}
+          className={inputClass + ' resize-y'}
+        />
+      </div>
+    </div>
+  )
+}
+
+function PriceSummary({ price, currency, description, t, lang }) {
+  const formatted = formatPrice({ price, currency, lang })
+  return (
+    <div className="flex items-start gap-2.5 text-sm bg-surface-50 rounded-xl px-3 py-2.5">
+      <Tag className="w-4 h-4 text-accent-500 mt-0.5 shrink-0" />
+      <div className="min-w-0 flex-1 space-y-1">
+        {formatted && (
+          <>
+            <div className="text-[11px] font-semibold text-text-tertiary uppercase tracking-wider">
+              {t.priceLabel}
+              {currency === 'unknown' && (
+                <span className="ml-1.5 normal-case text-text-muted italic">({t.currencyUnknown})</span>
+              )}
+            </div>
+            <div className="text-text-primary font-medium">{formatted}</div>
+          </>
+        )}
+        {description && (
+          <div className={(formatted ? 'pt-1.5 mt-1.5 border-t border-surface-200 ' : '') + 'text-text-secondary whitespace-pre-line'}>
+            {description}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function normalizePriceInput(s) {
+  if (s == null || s === '') return null
+  const n = Number(s)
+  if (Number.isNaN(n) || n < 0) return null
+  return n.toFixed(2)
 }
 
 function StarPicker({ value, onChange }) {

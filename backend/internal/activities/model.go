@@ -26,6 +26,10 @@ type Activity struct {
 	StartAt  *time.Time `json:"start_at"`
 	EndAt    *time.Time `json:"end_at"`
 	Location *string    `json:"location"`
+
+	Price       *string          `json:"price"`
+	Currency    *db.CurrencyCode `json:"currency"`
+	Description *string          `json:"description"`
 }
 
 func FromEntity(entity db.Activity) *Activity {
@@ -43,6 +47,9 @@ func FromEntity(entity db.Activity) *Activity {
 		StartAt:          utility.TimePtrFromTimestamptz(entity.StartAt),
 		EndAt:            utility.TimePtrFromTimestamptz(entity.EndAt),
 		Location:         entity.Location,
+		Price:            utility.NumericToString(entity.Price),
+		Currency:         utility.CurrencyPtrFromNull(entity.Currency),
+		Description:      entity.Description,
 	}
 }
 
@@ -63,6 +70,9 @@ func FromGetActivityRow(entity db.GetActivityByUuidRow) *Activity {
 		StartAt:          utility.TimePtrFromTimestamptz(entity.StartAt),
 		EndAt:            utility.TimePtrFromTimestamptz(entity.EndAt),
 		Location:         entity.Location,
+		Price:            utility.NumericToString(entity.Price),
+		Currency:         utility.CurrencyPtrFromNull(entity.Currency),
+		Description:      entity.Description,
 	}
 }
 
@@ -83,6 +93,9 @@ func FromFindActivitiesRow(entity db.FindAllActivitiesByBoardUuidRow) *Activity 
 		StartAt:          utility.TimePtrFromTimestamptz(entity.StartAt),
 		EndAt:            utility.TimePtrFromTimestamptz(entity.EndAt),
 		Location:         entity.Location,
+		Price:            utility.NumericToString(entity.Price),
+		Currency:         utility.CurrencyPtrFromNull(entity.Currency),
+		Description:      entity.Description,
 	}
 }
 

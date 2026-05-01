@@ -34,6 +34,10 @@ type Transport struct {
 
 	OutboundDurationMinutes *int32 `json:"outbound_duration_minutes"`
 	InboundDurationMinutes  *int32 `json:"inbound_duration_minutes"`
+
+	Price       *string          `json:"price"`
+	Currency    *db.CurrencyCode `json:"currency"`
+	Description *string          `json:"description"`
 }
 
 func FromEntity(entity db.Transport) *Transport {
@@ -60,6 +64,10 @@ func FromEntity(entity db.Transport) *Transport {
 
 		OutboundDurationMinutes: entity.OutboundDurationMinutes,
 		InboundDurationMinutes:  entity.InboundDurationMinutes,
+
+		Price:       utility.NumericToString(entity.Price),
+		Currency:    utility.CurrencyPtrFromNull(entity.Currency),
+		Description: entity.Description,
 	}
 }
 
@@ -89,6 +97,10 @@ func FromGetTransportRow(entity db.GetTransportByUuidRow) *Transport {
 
 		OutboundDurationMinutes: entity.OutboundDurationMinutes,
 		InboundDurationMinutes:  entity.InboundDurationMinutes,
+
+		Price:       utility.NumericToString(entity.Price),
+		Currency:    utility.CurrencyPtrFromNull(entity.Currency),
+		Description: entity.Description,
 	}
 }
 
@@ -118,6 +130,10 @@ func FromFindTransportRow(entity db.FindAllTransportByBoardUuidRow) *Transport {
 
 		OutboundDurationMinutes: entity.OutboundDurationMinutes,
 		InboundDurationMinutes:  entity.InboundDurationMinutes,
+
+		Price:       utility.NumericToString(entity.Price),
+		Currency:    utility.CurrencyPtrFromNull(entity.Currency),
+		Description: entity.Description,
 	}
 }
 

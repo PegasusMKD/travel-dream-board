@@ -66,6 +66,13 @@ func (svc *accomodationServiceImpl) CreateTransport(ctx context.Context, url str
 
 			data.OutboundDurationMinutes = utility.ParseDurationMinutes(extractedData.OutboundDurationMinutes)
 			data.InboundDurationMinutes = utility.ParseDurationMinutes(extractedData.InboundDurationMinutes)
+
+			data.Price = extractedData.Price
+			data.Currency = utility.ParseCurrencyCode(extractedData.Currency)
+			if extractedData.Description != "" {
+				desc := extractedData.Description
+				data.Description = &desc
+			}
 		} else {
 			data.Title = "Uploaded Image"
 			data.Url = url
@@ -91,6 +98,10 @@ func (svc *accomodationServiceImpl) CreateTransport(ctx context.Context, url str
 
 		data.OutboundDurationMinutes = extractedData.OutboundDurationMinutes
 		data.InboundDurationMinutes = extractedData.InboundDurationMinutes
+
+		data.Price = extractedData.Price
+		data.Currency = extractedData.Currency
+		data.Description = extractedData.Description
 	}
 
 	return svc.repo.CreateTransport(ctx, &data)

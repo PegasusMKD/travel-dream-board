@@ -8,9 +8,11 @@ import {
   MapPinned,
   Loader2,
   CornerUpLeft,
+  Tag,
 } from 'lucide-react'
 import StatusBadge from './StatusBadge'
 import { useLang } from '../context/LanguageContext'
+import { formatPrice } from '../utils/formatPrice'
 
 const sectionIcons = {
   accommodation: Bed,
@@ -19,7 +21,7 @@ const sectionIcons = {
 }
 
 export default function ItemCard({ item, sectionType, onClick }) {
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const avgRating = item.avgRating ?? 0
   const ratingCount = item.ratingCount ?? 0
   const FallbackIcon = sectionIcons[sectionType] || MapPinned
@@ -94,6 +96,13 @@ export default function ItemCard({ item, sectionType, onClick }) {
         </div>
 
         <StatusBadge status={item.status} />
+
+        {item.price && (
+          <div className="mt-2 inline-flex items-center gap-1.5 bg-accent-50 text-accent-700 text-[11px] font-semibold px-2 py-1 rounded-md">
+            <Tag className="w-3 h-3" />
+            {formatPrice({ price: item.price, currency: item.currency, lang })}
+          </div>
+        )}
 
         {sectionType === 'transport' && (item.outboundDepartingAt || item.inboundDepartingAt) && (
           <div className="mt-2.5 space-y-1 text-xs">

@@ -69,6 +69,9 @@ export function mapItem(item) {
     location: item.location || null,
     outboundDurationMinutes: item.outbound_duration_minutes ?? null,
     inboundDurationMinutes: item.inbound_duration_minutes ?? null,
+    price: item.price ?? null,
+    currency: item.currency ?? null,
+    description: item.description ?? null,
   }
 }
 
@@ -125,6 +128,9 @@ export function toBackendItemPayload(item) {
     location: item.location || null,
     outbound_duration_minutes: item.outboundDurationMinutes ?? null,
     inbound_duration_minutes: item.inboundDurationMinutes ?? null,
+    price: item.price ?? null,
+    currency: item.currency ?? null,
+    description: item.description ?? null,
   }
 }
 

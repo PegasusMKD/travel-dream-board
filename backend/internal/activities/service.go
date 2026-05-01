@@ -58,6 +58,13 @@ func (svc *accomodationServiceImpl) CreateActivity(ctx context.Context, url stri
 			data.StartAt = utility.ParseWallClockTime(extractedData.StartAt)
 			data.EndAt = utility.ParseWallClockTime(extractedData.EndAt)
 			data.Location = extractedData.Location
+
+			data.Price = extractedData.Price
+			data.Currency = utility.ParseCurrencyCode(extractedData.Currency)
+			if extractedData.Description != "" {
+				desc := extractedData.Description
+				data.Description = &desc
+			}
 		} else {
 			data.Title = "Uploaded Image"
 			data.Url = url
@@ -75,6 +82,10 @@ func (svc *accomodationServiceImpl) CreateActivity(ctx context.Context, url stri
 		data.StartAt = extractedData.StartAt
 		data.EndAt = extractedData.EndAt
 		data.Location = extractedData.Location
+
+		data.Price = extractedData.Price
+		data.Currency = extractedData.Currency
+		data.Description = extractedData.Description
 	}
 
 	return svc.repo.CreateActivity(ctx, &data)

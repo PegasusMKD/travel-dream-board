@@ -56,6 +56,10 @@ func (repo *repositoryImpl) CreateTransport(ctx context.Context, data *Transport
 
 		OutboundDurationMinutes: data.OutboundDurationMinutes,
 		InboundDurationMinutes:  data.InboundDurationMinutes,
+
+		Price:       utility.NumericFromString(data.Price),
+		Currency:    utility.NullCurrencyFromPtr(data.Currency),
+		Description: data.Description,
 	}
 
 	entity, err := repo.queries.CreateTransport(ctx, params)
@@ -132,6 +136,10 @@ func (repo *repositoryImpl) UpdateTransportById(ctx context.Context, uuid string
 
 		OutboundDurationMinutes: data.OutboundDurationMinutes,
 		InboundDurationMinutes:  data.InboundDurationMinutes,
+
+		Price:       utility.NumericFromString(data.Price),
+		Currency:    utility.NullCurrencyFromPtr(data.Currency),
+		Description: data.Description,
 	}
 
 	return repo.queries.UpdateTransportByUuid(ctx, params)

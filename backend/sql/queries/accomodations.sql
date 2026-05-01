@@ -1,6 +1,12 @@
 -- name: CreateAccomodation :one
-insert into accomodations (url, title, image_url, board_uuid, user_uuid)
-values (@url, @title, @image_url, @board_uuid, @user_uuid)
+insert into accomodations (
+    url, title, image_url, board_uuid, user_uuid,
+    price, currency, description
+)
+values (
+    @url, @title, @image_url, @board_uuid, @user_uuid,
+    @price, @currency, @description
+)
 returning *;
 
 -- name: GetAccomodationByUuid :one
@@ -29,12 +35,13 @@ set url = @url,
     notes = @notes,
     status = @status,
     booking_reference = @booking_reference,
-    selected = @selected
+    selected = @selected,
+    price = @price,
+    currency = @currency,
+    description = @description
 where uuid = @uuid;
 
 
 -- name: DeleteAccomodationByUuid :exec
 delete from accomodations
 where uuid = @uuid;
-
-

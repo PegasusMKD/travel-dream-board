@@ -39,11 +39,14 @@ func (repo *repositoryImpl) CreateAccomodation(ctx context.Context, data *Accomo
 	}
 
 	params := db.CreateAccomodationParams{
-		Url:       data.Url,
-		Title:     data.Title,
-		ImageUrl:  data.ImageUrl,
-		BoardUuid: boardUuid,
-		UserUuid:  userUuid,
+		Url:         data.Url,
+		Title:       data.Title,
+		ImageUrl:    data.ImageUrl,
+		BoardUuid:   boardUuid,
+		UserUuid:    userUuid,
+		Price:       utility.NumericFromString(data.Price),
+		Currency:    utility.NullCurrencyFromPtr(data.Currency),
+		Description: data.Description,
 	}
 
 	entity, err := repo.queries.CreateAccomodation(ctx, params)
@@ -108,6 +111,9 @@ func (repo *repositoryImpl) UpdateAccomodationById(ctx context.Context, uuid str
 		BookingReference: data.BookingReference,
 		Selected:         data.Selected,
 		Uuid:             id,
+		Price:            utility.NumericFromString(data.Price),
+		Currency:         utility.NullCurrencyFromPtr(data.Currency),
+		Description:      data.Description,
 	}
 
 	return repo.queries.UpdateAccomodationByUuid(ctx, params)

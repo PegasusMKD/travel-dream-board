@@ -125,6 +125,14 @@ export const translations = {
     activityLocation: 'Miejsce',
     activityLocationPlaceholder: 'np. Stadion Narodowy, Warszawa',
 
+    // Price + description (all sections)
+    priceLabel: 'Cena',
+    pricePlaceholder: 'np. 1234.56',
+    currencyLabel: 'Waluta',
+    currencyUnknown: 'Nieznana',
+    descriptionLabel: 'Opis',
+    descriptionPlaceholder: 'Krótki opis…',
+
     // Edit board
     editBoard: 'Edytuj tablicę',
     editBoardName: 'Nazwa podróży',
@@ -308,6 +316,14 @@ export const translations = {
     activityEnd: 'End',
     activityLocation: 'Location',
     activityLocationPlaceholder: 'e.g. Wembley Stadium, London',
+
+    // Price + description (all sections)
+    priceLabel: 'Price',
+    pricePlaceholder: 'e.g. 1234.56',
+    currencyLabel: 'Currency',
+    currencyUnknown: 'Unknown',
+    descriptionLabel: 'Description',
+    descriptionPlaceholder: 'Short description…',
 
     // Edit board
     editBoard: 'Edit board',

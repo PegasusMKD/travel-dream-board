@@ -187,6 +187,50 @@ func (ns NullCommentedOn) Value() (driver.Value, error) {
 	return string(ns.CommentedOn), nil
 }
 
+type CurrencyCode string
+
+const (
+	CurrencyCodePLN     CurrencyCode = "PLN"
+	CurrencyCodeEUR     CurrencyCode = "EUR"
+	CurrencyCodeMKD     CurrencyCode = "MKD"
+	CurrencyCodeUnknown CurrencyCode = "unknown"
+)
+
+func (e *CurrencyCode) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = CurrencyCode(s)
+	case string:
+		*e = CurrencyCode(s)
+	default:
+		return fmt.Errorf("unsupported scan type for CurrencyCode: %T", src)
+	}
+	return nil
+}
+
+type NullCurrencyCode struct {
+	CurrencyCode CurrencyCode
+	Valid        bool // Valid is true if CurrencyCode is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullCurrencyCode) Scan(value interface{}) error {
+	if value == nil {
+		ns.CurrencyCode, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.CurrencyCode.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullCurrencyCode) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.CurrencyCode), nil
+}
+
 type ScrapeStatus string
 
 const (
@@ -334,6 +378,9 @@ type Accomodation struct {
 	Selected         bool
 	BoardUuid        pgtype.UUID
 	UserUuid         pgtype.UUID
+	Price            pgtype.Numeric
+	Currency         NullCurrencyCode
+	Description      *string
 }
 
 type Activity struct {
@@ -352,6 +399,9 @@ type Activity struct {
 	StartAt          pgtype.Timestamptz
 	EndAt            pgtype.Timestamptz
 	Location         *string
+	Price            pgtype.Numeric
+	Currency         NullCurrencyCode
+	Description      *string
 }
 
 type Board struct {
@@ -429,6 +479,9 @@ type Transport struct {
 	InboundArrivingAt         pgtype.Timestamptz
 	OutboundDurationMinutes   *int32
 	InboundDurationMinutes    *int32
+	Price                     pgtype.Numeric
+	Currency                  NullCurrencyCode
+	Description               *string
 }
 
 type User struct {

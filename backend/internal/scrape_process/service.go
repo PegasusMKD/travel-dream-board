@@ -219,7 +219,7 @@ func (s *scrapeProcessServiceImpl) fallbackToClaude(ctx context.Context, uuid st
 		Messages: []openai.ChatCompletionMessage{
 			{
 				Role:    openai.ChatMessageRoleUser,
-				Content: "Extract the details from this text. The text is from the URL: " + actualUrl + ". If the text looks like an error message (like 'Free subscription plan' or bot protection), ignore the text and infer the brand name (e.g., 'Google Flights', 'Austrian Airlines') from the URL. Never output <UNKNOWN>. If this page describes transport (flight, train, bus) with a round-trip booking, populate both the outbound and inbound legs (locations, ISO 8601 datetimes, and total duration in minutes). For one-way trips, leave all inbound_* fields null. If this page describes an activity or event (tour, concert, museum visit, etc.), populate start_at, end_at, and location (venue name + city, or full address if shown) if available. " + text,
+				Content: "Extract the details from this text. The text is from the URL: " + actualUrl + ". If the text looks like an error message (like 'Free subscription plan' or bot protection), ignore the text and infer the brand name (e.g., 'Google Flights', 'Austrian Airlines') from the URL. Never output <UNKNOWN>. If this page describes transport (flight, train, bus) with a round-trip booking, populate both the outbound and inbound legs (locations, ISO 8601 datetimes, and total duration in minutes). For one-way trips, leave all inbound_* fields null. If this page describes an activity or event (tour, concert, museum visit, etc.), populate start_at, end_at, and location (venue name + city, or full address if shown) if available. If a total/displayed price is visible on the page, populate price (numeric string with up to 2 decimals) and currency (PLN, EUR, MKD, or 'unknown' if a different/unrecognized currency). " + text,
 			},
 		},
 		Tools: []openai.Tool{
@@ -282,6 +282,9 @@ func (s *scrapeProcessServiceImpl) fallbackToClaude(ctx context.Context, uuid st
 
 				out.OutboundDurationMinutes = utility.ParseDurationMinutes(extracted.OutboundDurationMinutes)
 				out.InboundDurationMinutes = utility.ParseDurationMinutes(extracted.InboundDurationMinutes)
+
+				out.Price = extracted.Price
+				out.Currency = utility.ParseCurrencyCode(extracted.Currency)
 			}
 		}
 	}
@@ -364,7 +367,7 @@ func (s *scrapeProcessServiceImpl) imageExtractionClaudeConfig(dataUrl string) o
 				MultiContent: []openai.ChatMessagePart{
 					{
 						Type: openai.ChatMessagePartTypeText,
-						Text: "Extract the details from this image. If it depicts transport (flight, train, bus), populate the outbound and (if round-trip) inbound leg locations, ISO 8601 datetimes, and total duration in minutes. For one-way trips, leave all inbound_* fields null. If it depicts an activity or event (tour, concert, museum visit, etc.), populate start_at, end_at, and location (venue name + city, or full address if shown).",
+						Text: "Extract the details from this image. If it depicts transport (flight, train, bus), populate the outbound and (if round-trip) inbound leg locations, ISO 8601 datetimes, and total duration in minutes. For one-way trips, leave all inbound_* fields null. If it depicts an activity or event (tour, concert, museum visit, etc.), populate start_at, end_at, and location (venue name + city, or full address if shown). If a price is shown, populate price (numeric string with up to 2 decimals) and currency (PLN, EUR, MKD, or 'unknown' if a different/unrecognized currency).",
 					},
 					{
 						Type: openai.ChatMessagePartTypeImageURL,
@@ -461,6 +464,14 @@ func extractionSchema() jsonschema.Definition {
 			"inbound_duration_minutes": {
 				Type:        jsonschema.String,
 				Description: "Total duration of the inbound/return transport leg as integer minutes in a numeric string (e.g. '225'). Null if one-way or not shown.",
+			},
+			"price": {
+				Type:        jsonschema.String,
+				Description: "Numeric price as a string with up to 2 decimals (e.g. '1234.56'). Use the total/displayed price for the booking. Null if no price is shown.",
+			},
+			"currency": {
+				Type:        jsonschema.String,
+				Description: "ISO 4217 currency code if recognizable: 'PLN', 'EUR', or 'MKD'. If a price is shown but the currency is unclear or different (USD, GBP, etc.), return 'unknown'. Null if no price.",
 			},
 		},
 		Required: []string{"title", "description", "image_url"},

@@ -58,4 +58,7 @@ type ScrapeResult struct {
 
 	OutboundDurationMinutes *int32
 	InboundDurationMinutes  *int32
+
+	Price    *string
+	Currency *db.CurrencyCode
 }

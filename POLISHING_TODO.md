@@ -26,14 +26,14 @@
 - [x] Expand the scraping logic to include those fields if possible? — OG/JSON-LD don't carry venue strings reliably, so values come from Claude. `ScrapeResult` carries `*string Location` through to the activity service.
 - [x] Should be manually editable if you open the edit window — `ItemDetailSidebar`'s `ActivityTimeEditor` gains a Location text input; `ActivityTimeSummary` renders it on a separate row with a `MapPinned` icon when present.
 
-### Expand All Items - Price & Description
-- [ ] Add fields to denote an extracted price from the link
-- [ ] Expand the LLM tools to be able to parse that information from an image (or as a fallback)
-- [ ] Expand the scraping logic to include those fields if possible?
-- [ ] Should be manually editable
-- [ ] The "price" field should support at least 3 currencies, PLN (zloty), EUR (euro), MKD (Macedonian Denar)
-- [ ] It should also make it clear what currency it is displaying the information in
-- [ ] Potentially also add a "currency" column?
+### Expand All Items - Price & Description ✅
+- [x] Add fields to denote an extracted price from the link — `price numeric(12,2)` + `description text` columns added to `accomodations`, `transport`, and `activities` in migration `000017_add_item_price_currency_description`. Plumbed through all three model/repo/service stacks via shared `utility.NumericFromString` / `utility.NumericToString` helpers.
+- [x] Expand the LLM tools to be able to parse that information from an image (or as a fallback) — `extractionSchema()` extended with `price` (numeric string) and `currency` properties; both `fallbackToClaude` (text) and `ExtractFromImage` prompts now ask for total price + currency.
+- [x] Expand the scraping logic to include those fields if possible? — OG/JSON-LD don't carry reliable price data, so values come from Claude. `ScrapeResult` now carries `*string Price` + `*db.CurrencyCode Currency`; services propagate them and the existing `Description` to each item.
+- [x] Should be manually editable — `ItemDetailSidebar` gets a shared `PriceEditor` block (number input + currency `<select>` + description `<textarea>`) rendered for all section types, plus a compact `PriceSummary` read-only card with `Tag` icon.
+- [x] The "price" field should support at least 3 currencies, PLN (zloty), EUR (euro), MKD (Macedonian Denar) — new `currency_code` Postgres enum with values `PLN`, `EUR`, `MKD`, `unknown`. `utility.ParseCurrencyCode` normalizes Claude output (handles `zł`, `€`, `ден`, full names) and falls back to `unknown` for unrecognized symbols.
+- [x] It should also make it clear what currency it is displaying the information in — new `frontend/src/utils/formatPrice.js` formats as `'1 234,56 PLN'` (locale-aware grouping); `unknown` renders the amount with a `?` suffix and an italic "Unknown" hint in the sidebar summary. `ItemCard` shows an accent-tinted price chip when present.
+- [x] Potentially also add a "currency" column? — done as part of the enum work; stored as `NullCurrencyCode`, exposed as `*db.CurrencyCode` on each item model and passed as a string through the JSON API.
 
 ### Implement "Memories" feature
 - [ ] Create migration, queries and a module for Memories

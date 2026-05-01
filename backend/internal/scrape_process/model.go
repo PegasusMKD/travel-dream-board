@@ -21,4 +21,7 @@ type AIExtraction struct {
 
 	OutboundDurationMinutes *string `json:"outbound_duration_minutes,omitempty"`
 	InboundDurationMinutes  *string `json:"inbound_duration_minutes,omitempty"`
+
+	Price    *string `json:"price,omitempty"`
+	Currency *string `json:"currency,omitempty"`
 }

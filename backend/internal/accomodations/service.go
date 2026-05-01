@@ -6,6 +6,7 @@ import (
 	"github.com/PegasusMKD/travel-dream-board/internal/comments"
 	"github.com/PegasusMKD/travel-dream-board/internal/db"
 	scrapeprocess "github.com/PegasusMKD/travel-dream-board/internal/scrape_process"
+	"github.com/PegasusMKD/travel-dream-board/internal/utility"
 	"github.com/PegasusMKD/travel-dream-board/internal/votes"
 )
 
@@ -52,6 +53,13 @@ func (svc *accomodationServiceImpl) CreateAccomodation(ctx context.Context, url 
 			data.Url = url // In handler we will pass the local uploaded path as `url`
 			// Set the ImageUrl to be the local url since we uploaded it
 			data.ImageUrl = &url
+
+			data.Price = extractedData.Price
+			data.Currency = utility.ParseCurrencyCode(extractedData.Currency)
+			if extractedData.Description != "" {
+				desc := extractedData.Description
+				data.Description = &desc
+			}
 		} else {
 			data.Title = "Uploaded Image"
 			data.Url = url
@@ -65,6 +73,10 @@ func (svc *accomodationServiceImpl) CreateAccomodation(ctx context.Context, url 
 		data.Url = url
 		data.Title = *extractedData.Title
 		data.ImageUrl = extractedData.ImageUrl
+
+		data.Price = extractedData.Price
+		data.Currency = extractedData.Currency
+		data.Description = extractedData.Description
 	}
 
 	return svc.repo.CreateAccomodation(ctx, &data)

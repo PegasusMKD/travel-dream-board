@@ -12,17 +12,26 @@ import (
 )
 
 const createAccomodation = `-- name: CreateAccomodation :one
-insert into accomodations (url, title, image_url, board_uuid, user_uuid)
-values ($1, $2, $3, $4, $5)
-returning uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid, user_uuid
+insert into accomodations (
+    url, title, image_url, board_uuid, user_uuid,
+    price, currency, description
+)
+values (
+    $1, $2, $3, $4, $5,
+    $6, $7, $8
+)
+returning uuid, updated_at, created_at, url, title, image_url, notes, status, booking_reference, selected, board_uuid, user_uuid, price, currency, description
 `
 
 type CreateAccomodationParams struct {
-	Url       string
-	Title     string
-	ImageUrl  *string
-	BoardUuid pgtype.UUID
-	UserUuid  pgtype.UUID
+	Url         string
+	Title       string
+	ImageUrl    *string
+	BoardUuid   pgtype.UUID
+	UserUuid    pgtype.UUID
+	Price       pgtype.Numeric
+	Currency    NullCurrencyCode
+	Description *string
 }
 
 func (q *Queries) CreateAccomodation(ctx context.Context, arg CreateAccomodationParams) (Accomodation, error) {
@@ -32,6 +41,9 @@ func (q *Queries) CreateAccomodation(ctx context.Context, arg CreateAccomodation
 		arg.ImageUrl,
 		arg.BoardUuid,
 		arg.UserUuid,
+		arg.Price,
+		arg.Currency,
+		arg.Description,
 	)
 	var i Accomodation
 	err := row.Scan(
@@ -47,6 +59,9 @@ func (q *Queries) CreateAccomodation(ctx context.Context, arg CreateAccomodation
 		&i.Selected,
 		&i.BoardUuid,
 		&i.UserUuid,
+		&i.Price,
+		&i.Currency,
+		&i.Description,
 	)
 	return i, err
 }
@@ -62,7 +77,7 @@ func (q *Queries) DeleteAccomodationByUuid(ctx context.Context, uuid pgtype.UUID
 }
 
 const findAllAccomodationsByBoardUuid = `-- name: FindAllAccomodationsByBoardUuid :many
-select a.uuid, a.updated_at, a.created_at, a.url, a.title, a.image_url, a.notes, a.status, a.booking_reference, a.selected, a.board_uuid, a.user_uuid,
+select a.uuid, a.updated_at, a.created_at, a.url, a.title, a.image_url, a.notes, a.status, a.booking_reference, a.selected, a.board_uuid, a.user_uuid, a.price, a.currency, a.description,
     coalesce(avg(v.rank)::float, 0)::float as avg_rating,
     count(v.uuid)::int as rating_count
 from accomodations a
@@ -84,6 +99,9 @@ type FindAllAccomodationsByBoardUuidRow struct {
 	Selected         bool
 	BoardUuid        pgtype.UUID
 	UserUuid         pgtype.UUID
+	Price            pgtype.Numeric
+	Currency         NullCurrencyCode
+	Description      *string
 	AvgRating        float64
 	RatingCount      int32
 }
@@ -110,6 +128,9 @@ func (q *Queries) FindAllAccomodationsByBoardUuid(ctx context.Context, boardUuid
 			&i.Selected,
 			&i.BoardUuid,
 			&i.UserUuid,
+			&i.Price,
+			&i.Currency,
+			&i.Description,
 			&i.AvgRating,
 			&i.RatingCount,
 		); err != nil {
@@ -124,7 +145,7 @@ func (q *Queries) FindAllAccomodationsByBoardUuid(ctx context.Context, boardUuid
 }
 
 const getAccomodationByUuid = `-- name: GetAccomodationByUuid :one
-select a.uuid, a.updated_at, a.created_at, a.url, a.title, a.image_url, a.notes, a.status, a.booking_reference, a.selected, a.board_uuid, a.user_uuid,
+select a.uuid, a.updated_at, a.created_at, a.url, a.title, a.image_url, a.notes, a.status, a.booking_reference, a.selected, a.board_uuid, a.user_uuid, a.price, a.currency, a.description,
     coalesce(avg(v.rank)::float, 0)::float as avg_rating,
     count(v.uuid)::int as rating_count
 from accomodations a
@@ -146,6 +167,9 @@ type GetAccomodationByUuidRow struct {
 	Selected         bool
 	BoardUuid        pgtype.UUID
 	UserUuid         pgtype.UUID
+	Price            pgtype.Numeric
+	Currency         NullCurrencyCode
+	Description      *string
 	AvgRating        float64
 	RatingCount      int32
 }
@@ -166,6 +190,9 @@ func (q *Queries) GetAccomodationByUuid(ctx context.Context, uuid pgtype.UUID) (
 		&i.Selected,
 		&i.BoardUuid,
 		&i.UserUuid,
+		&i.Price,
+		&i.Currency,
+		&i.Description,
 		&i.AvgRating,
 		&i.RatingCount,
 	)
@@ -180,8 +207,11 @@ set url = $1,
     notes = $4,
     status = $5,
     booking_reference = $6,
-    selected = $7
-where uuid = $8
+    selected = $7,
+    price = $8,
+    currency = $9,
+    description = $10
+where uuid = $11
 `
 
 type UpdateAccomodationByUuidParams struct {
@@ -192,6 +222,9 @@ type UpdateAccomodationByUuidParams struct {
 	Status           AccomodationsStatus
 	BookingReference *string
 	Selected         bool
+	Price            pgtype.Numeric
+	Currency         NullCurrencyCode
+	Description      *string
 	Uuid             pgtype.UUID
 }
 
@@ -204,6 +237,9 @@ func (q *Queries) UpdateAccomodationByUuid(ctx context.Context, arg UpdateAccomo
 		arg.Status,
 		arg.BookingReference,
 		arg.Selected,
+		arg.Price,
+		arg.Currency,
+		arg.Description,
 		arg.Uuid,
 	)
 	return err
